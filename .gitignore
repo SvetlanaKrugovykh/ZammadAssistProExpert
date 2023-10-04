@@ -1,0 +1,7 @@
+keys
+path
+node_modules
+.env*
+.vscode
+.idea
+.eslint*
