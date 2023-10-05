@@ -9,25 +9,27 @@ const pool = new Pool({
 })
 
 async function execPgQuery(query, values, commit = false) {
+  let client
   try {
-    pool.connect()
-    const data = await pool.query(query, values)
-    if (commit) await pool.query('COMMIT')
-    pool.end()
-    return data.rows
+    client = await pool.connect()
+    const data = await client.query(query, values)
+    if (commit) await client.query('COMMIT')
+    if (data.rows.length === 0) return null
+    return data.rows[0]
   } catch (error) {
     console.error(`Error in execQuery ${query},${values.toString()}:`, error)
-    if (commit) await pool.query('ROLLBACK')
-    pool.end()
+    if (commit) await client.query('ROLLBACK')
     return null
+  } finally {
+    if (client) client.release()
   }
 }
 
 async function findUserById(user_id) {
   try {
     if (!/^\d{7,12}$/.test(user_id)) return null
-    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [user_id])
-    return data[0]
+    const data = await execPgQuery('SELECT * FROM users WHERE login = $1', [user_id])
+    return data
   } catch (error) {
     console.error('Error in findUserById:', error)
     return null
@@ -36,8 +38,13 @@ async function findUserById(user_id) {
 
 async function createUserInBotDb(chatId, user_info) {
   try {
-    const query = 'INSERT INTO users (id, phone_number, first_name, last_name, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+    const query = 'INSERT INTO users (created_at, updated_at, created_by_id, organization_id, updated_by_id, login, phone, firstname, lastname, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
     const values = [
+      new Date(),
+      new Date(),
+      1,
+      1,
+      1,
       chatId,
       user_info.phoneNumber,
       user_info?.PIB,
