@@ -1,5 +1,6 @@
-const GROUP_ID = Number(process.env.GROUP_ID)
 const { createUserInBotDb } = require('../db/tgUsersService')
+const GROUP_ID = Number(process.env.GROUP_ID)
+const SENDER = process.env.SENDER
 
 async function signUpForm(bot, msg, webAppUrl) {
   const chatId = msg.chat.id;

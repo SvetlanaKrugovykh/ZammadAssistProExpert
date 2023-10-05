@@ -11,7 +11,7 @@ app.listen({ port: process.env.PORT || 7999, host: HOST }, (err, address) => {
   console.log(`${new Date()}:[API] Service listening on ${address}`)
 })
 
-assistApiServer.listen({ port: process.env.PORT_FOR_assist_API || 8002, host: HOST }, (err, address) => {
+assistApiServer.listen({ port: process.env.PORT_FOR_ASSIST_API || 8002, host: HOST }, (err, address) => {
   if (err) {
     assistApiServer.log.error(err)
     console.error(err)

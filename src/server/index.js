@@ -30,7 +30,7 @@ bot.on('message', async (msg) => {
   if (text === '/start') {
     console.log(new Date())
     console.log(ctx.chat)
-    //const registeredUser = users.find(user => user.id === ctx.chat.id)
+    const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
     const registeredUser = await findUserById(msg.chat.id)
 
     if (!registeredUser) {
@@ -73,10 +73,5 @@ app.post('/submit-form', formController.handleFormSubmit)
 const assistApiServer = Fastify({
   trustProxy: true,
 })
-
-
-//assistApiServer.register(assistPlugin)
-//assistApiServer.register(require('./routes/assistApi.route'), { prefix: '/assist-api' })
-
 
 module.exports = { app, assistApiServer }

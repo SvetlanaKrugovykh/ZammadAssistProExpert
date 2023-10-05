@@ -1,8 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdmin, clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { bookOnLineScene, bookMasterScene, bookServiceScene, bookAnyScene,
-  masterOrServiceOrAnyScene } = require('./bookOnLine')
+const { bookOnLineScene } = require('./bookOnLine')
 const signUpForm = require('./signUp').signUpForm
 
 const selectedByUser = {} // {chatId: {location_id: '1_1', Masters: ['Майстер 1'], Services: ['Послуга 1']}}
@@ -39,21 +38,6 @@ async function handler(bot, msg, webAppUrl) {
     case '0_4':
       await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
       break
-    case '1_30':
-      await bookMasterScene(bot, msg, selectedByUser)
-      break
-    case '1_31':
-      await bookServiceScene(bot, msg, selectedByUser)
-      break
-    case '1_32':
-      await bookAnyScene(bot, msg, selectedByUser)
-      break
-    case '1_34':
-      //await schedullerScene(bot, msg)
-      break
-    case '1_37':
-      await masterOrServiceOrAnyScene(bot, msg)
-      break
     case '2_1':
       await clientsAdmin(bot, msg)
       break
@@ -77,7 +61,7 @@ async function handler(bot, msg, webAppUrl) {
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
   try {
-    if (/[🏠✔️📘➕⬆️↗️➡️↘️⬇️↙️⬅️↖️↩️↪️⤴️⤵️]/.test(msg.text)) {
+    if (/[🏠✔️📘➕📗💹❌↩️↪️]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }

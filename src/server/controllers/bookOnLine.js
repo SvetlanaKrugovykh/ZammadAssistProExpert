@@ -1,5 +1,4 @@
 
-const sendReqToDB = require('../modules/tlg_to_DB')
 const { buttonsConfig } = require('../modules/keyboard')
 const inputLineScene = require('./inputLine')
 
@@ -18,20 +17,6 @@ async function bookOnLineScene(bot, msg) {
   }
 }
 
-async function masterOrServiceOrAnyScene(bot, msg) {
-  try {
-    const chatId = msg.chat.id
-    await bot.sendMessage(chatId, buttonsConfig["masterOrServiceButtons"].title, {
-      reply_markup: {
-        keyboard: buttonsConfig["masterOrServiceButtons"].buttons,
-        resize_keyboard: true
-      }
-    })
-
-  } catch (err) {
-    console.log(err)
-  }
-}
 //#endregion
 
 async function bookMasterScene(bot, msg, selectedByUser) {
@@ -42,7 +27,7 @@ async function bookMasterScene(bot, msg, selectedByUser) {
       return
     }
     const location_id = selectedByUser[chatId].location_id
-    const data = await sendReqToDB('__GetMasters__', msg.chat, location_id)
+    const data = 'XXX'
     const parsedData = JSON.parse(data).ResponseArray
     if (parsedData.length !== 0 && parsedData[0] !== null && parsedData[0] !== 'nothing found') {
       const mastersButtons = {
@@ -106,31 +91,4 @@ async function bookServiceScene(bot, msg, selectedByUser) {
   }
 }
 
-async function bookAnyScene(bot, msg, selectedByUser) {
-  try {
-    const chatId = msg.chat.id
-    if (selectedByUser === undefined || !selectedByUser[chatId]?.location_id) {
-      await bot.sendMessage(chatId, 'Оберіть будь ласка локацію')
-      return
-    }
-    await bot.sendMessage(msg.chat.id, buttonsConfig["anyChoiceButtons"].title, {
-      reply_markup: {
-        keyboard: buttonsConfig["anyChoiceButtons"].buttons,
-        resize_keyboard: true
-      }
-    })
-
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-async function bookTimeScene(bot, msg, selectedByUser) {
-  try {
-    const chatId = msg.chat.id
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-module.exports = { bookOnLineScene, bookMasterScene, bookServiceScene, bookAnyScene, bookTimeScene, masterOrServiceOrAnyScene }
+module.exports = { bookOnLineScene, bookMasterScene, bookServiceScene }

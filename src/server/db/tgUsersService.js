@@ -1,66 +1,55 @@
-const { Client } = require('pg')
-const client = new Client({
+const { Pool } = require('pg')
+
+const pool = new Pool({
   user: process.env.ZAMMAD_DB_USER,
   host: process.env.ZAMMAD_DB_HOST,
   database: process.env.ZAMMAD_DB_NAME,
   password: process.env.ZAMMAD_DB_PASSWORD,
-  port: process.env.ZAMMAD_DB_PORT.toString(),
+  port: Number(process.env.ZAMMAD_DB_PORT) || 5432,
 })
 
-async function findUserById(user_id) {
+async function execPgQuery(query, values, commit = false) {
   try {
-    await client.connect()
-
-    const query = 'SELECT * FROM users WHERE user_id = $1'
-    const result = await client.query(query, [user_id])
-
-    if (result.rows.length > 0) {
-      const user_info = result.rows[0]
-      const user_info_dict = {
-        'user_id': user_info.user_id,
-        'phone_number': user_info.phone_number,
-        'first_name': user_info.first_name,
-        'last_name': user_info.last_name,
-        'email': user_info.email,
-        'zammad_user_id': user_info.zammad_user_id
-      }
-      return user_info_dict
-    } else {
-      return null
-    }
+    pool.connect()
+    const data = await pool.query(query, values)
+    if (commit) await pool.query('COMMIT')
+    pool.end()
+    return data.rows
   } catch (error) {
-    console.error('Error in findUserById:', error)
+    console.error(`Error in execQuery ${query},${values.toString()}:`, error)
+    if (commit) await pool.query('ROLLBACK')
+    pool.end()
     return null
-  } finally {
-    await client.end()
   }
 }
 
-async function createUserInBotDb(user_info) {
+async function findUserById(user_id) {
   try {
-    await client.connect()
-
-    //return (text + '#' + data?.email + '#' + data?.phoneNumber + '#' + data?.password + '#' + data?.PIB + '#' + data?.contract + '#' + data?.address + '#' + //text)
-    const query = `
-      INSERT INTO users (user_id, phone_number, first_name, last_name, email, zammad_user_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `
-    const values = [
-      user_info.user_id,
-      user_info.phone,
-      user_info.first_name,
-      user_info.last_name,
-      user_info.email,
-      user_info.zammad_user_id
-    ]
-
-    await client.query(query, values)
-    await client.query('COMMIT')
+    if (!/^\d{7,12}$/.test(user_id)) return null
+    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [user_id])
+    return data[0]
   } catch (error) {
-    console.error('Ошибка при создании записи в базе данных бота:', error)
-    await client.query('ROLLBACK')
-  } finally {
-    await client.end()
+    console.error('Error in findUserById:', error)
+    return null
+  }
+}
+
+async function createUserInBotDb(chatId, user_info) {
+  try {
+    const query = 'INSERT INTO users (id, phone_number, first_name, last_name, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+    const values = [
+      chatId,
+      user_info.phoneNumber,
+      user_info?.PIB,
+      user_info?.contract,
+      user_info.email,
+      user_info?.address,
+      false
+    ]
+    const data = await execPgQuery(query, values, true)
+    return data[0]
+  } catch (error) {
+    console.error('Error of record new user data into the bot-database:', error)
   }
 }
 
