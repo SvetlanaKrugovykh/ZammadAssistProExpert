@@ -20,6 +20,7 @@
 		"fastify": "^4.20.0",
 		"fastify-plugin": "^4.5.1",
 		"http-errors": "^2.0.0",
+		"https": "^1.0.0",
 		"ip-range-check": "^0.2.0",
 		"node-cron": "^3.0.2",
 		"node-telegram-bot-api": "^0.61.0",

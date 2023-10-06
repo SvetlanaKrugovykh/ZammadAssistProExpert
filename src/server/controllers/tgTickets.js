@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 const { findUserById, getTickets } = require('../db/tgUsersService')
-const { get } = require('https')
+const https = require('https')
 
 
 //#region staticKeyboad
@@ -102,9 +102,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
 }
 
 async function create_ticket(user, subject, body) {
-  const headers = {
-    Authorization: `Bearer ${process.env.ZAMMAD_API_TOKEN}`, 'Content-Type': 'application/json'
-  }
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let customer_id = user['id']
   if (process.env.ZAMMAD_USER_TEST_MODE === 'true') customer_id = Number(process.env.ZAMMAD_USER_TEST_ID)
   const data = {
@@ -118,8 +116,9 @@ async function create_ticket(user, subject, body) {
       'internal': false
     }
   }
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
   const url = `${process.env.ZAMMAD_API_URL}/tickets`
-  const response = await axios.post(url, data, { headers })
+  const response = await axios.post(url, data, { headers, httpsAgent })
 
   const ticket = response.data
   console.log(`Crete ticket number: ${ticket}`)
