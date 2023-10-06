@@ -3,6 +3,8 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./client
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
 const signUpForm = require('./signUp').signUpForm
+const { findUserById } = require('../db/tgUsersService')
+const { users } = require('../users/users.model')
 
 const selectedByUser = {}
 
@@ -33,7 +35,12 @@ async function handler(bot, msg, webAppUrl) {
       await signUpForm(bot, msg, webAppUrl)
       break
     case '0_4':
-      await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
+      const adminUser = users.find(user => user.id === msg.chat.id)
+      if (adminUser) {
+        await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
+      } else {
+        await usersStarterMenu(bot, msg)
+      }
       break
     case '2_1':
       selectedByUser[msg.chat.id] = {}
@@ -55,7 +62,7 @@ async function handler(bot, msg, webAppUrl) {
       await clientsAdminResponseToRequest(bot, msg)
       break
     case '3_3':
-      await registeredUserMenu(bot, msg, standardStartButtons)
+      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
       break
     case '5_1':
       selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
@@ -80,7 +87,7 @@ async function handler(bot, msg, webAppUrl) {
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
   try {
-    if (/[🏠🟣🔵🧷📌✔️📘➕📗💹❌↩️↪️]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✔️📘➕📗💹❌]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }
@@ -94,16 +101,36 @@ async function switchDynamicSceenes(bot, msg) {
 async function goBack(bot, msg) {
   try {
     if (msg.text.includes('🏠')) {
-      await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
+      const adminUser = users.find(user => user.id === msg.chat.id)
+      if (adminUser) {
+        await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
+      } else {
+        await usersStarterMenu(bot, msg)
+      }
     } else if (msg.text.includes('↩️')) {
-      //await bookOnLineScene(bot, msg)
+      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
     }
   } catch (error) { console.log(error) }
 }
 
 //#endregion
 
-
+async function usersStarterMenu(bot, msg) {
+  const registeredUser = await findUserById(msg.chat.id)
+  if (registeredUser === null) {
+    try {
+      await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
+    } catch (err) {
+      console.log(err)
+    }
+  } else {
+    try {
+      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
 //#region mainScrnes
 async function guestMenu(bot, msg, guestStartButtons) {
   await bot.sendMessage(msg.chat.id, `Чат-бот <b>${process.env.BRAND_NAME}</b> вітає Вас, <b>${msg.chat.first_name} ${msg.chat.last_name}</b>!`, { parse_mode: "HTML" })
@@ -126,4 +153,4 @@ async function registeredUserMenu(bot, msg, standardStartButtons) {
 }
 //#endregion
 
-module.exports = { handler, guestMenu, registeredUserMenu }
+module.exports = { handler, guestMenu, registeredUserMenu, usersStarterMenu }

@@ -1,15 +1,12 @@
 const Fastify = require('fastify')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
-
 const { buttonsConfig } = require('./modules/keyboard')
 const { users } = require('./users/users.model')
-const { handler, guestMenu, registeredUserMenu } = require('./controllers/switcher')
+const { handler, usersStarterMenu } = require('./controllers/switcher')
+const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
 const singUpDataSave = require('./controllers/signUp').singUpDataSave
 const formController = require('./controllers/formController')
-
-const { findUserById } = require('./db/tgUsersService')
-
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 
@@ -31,20 +28,10 @@ bot.on('message', async (msg) => {
     console.log(new Date())
     console.log(ctx.chat)
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
-    const registeredUser = await findUserById(msg.chat.id)
-
-    if (registeredUser === null) {
-      try {
-        await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
-      } catch (err) {
-        console.log(err)
-      }
+    if (adminUser) {
+      await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
     } else {
-      try {
-        await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
-      } catch (err) {
-        console.log(err)
-      }
+      await usersStarterMenu(bot, msg)
     }
   } else {
     await handler(bot, msg, webAppUrl)

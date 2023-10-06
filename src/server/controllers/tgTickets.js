@@ -168,7 +168,7 @@ async function checkUserTickets(bot, msg, menuItem) {
           { text: `${statusIcon} №${ticket.number}: ${ticket.title} `, callback_data: `43_${ticket.id}` }
         ])
       }
-      ticketsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
+      ticketsButtons.buttons.push([{ text: '↩️', callback_data: '0_1' }])
       await bot.sendMessage(chatId, ticketsButtons.title, {
         reply_markup: {
           keyboard: ticketsButtons.buttons,
