@@ -33,7 +33,7 @@ bot.on('message', async (msg) => {
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
     const registeredUser = await findUserById(msg.chat.id)
 
-    if (!registeredUser) {
+    if (registeredUser === null) {
       try {
         await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
       } catch (err) {

@@ -22,7 +22,8 @@ function getCallbackData(text) {
 
 async function handler(bot, msg, webAppUrl) {
   const data = getCallbackData(msg.text)
-  if (!selectedByUser[msg.chat.id]) selectedByUser[msg.chat.id] = {}
+  const chatId = msg.chat.id
+  if (!selectedByUser[chatId]) selectedByUser[chatId] = {}
   console.log('The choise is:', data)
   switch (data) {
     case '0_2':
@@ -57,16 +58,16 @@ async function handler(bot, msg, webAppUrl) {
       await registeredUserMenu(bot, msg, standardStartButtons)
       break
     case '5_1':
-      selectedByUser[msg.chat.id] = await ticketsTextInput(bot, msg, data, selectedByUser[msg.chat.id])
+      selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
       break
     case '5_2':
-      selectedByUser[msg.chat.id] = await ticketsTextInput(bot, msg, data, selectedByUser[msg.chat.id])
+      selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
       break
     case '5_3':
-      selectedByUser[msg.chat.id] = await askForAttachment(bot, msg, selectedByUser[msg.chat.id])
+      selectedByUser[chatId] = await askForAttachment(bot, msg, selectedByUser[chatId])
       break
     case '5_4':
-      await ticketRegistration(bot, msg, selectedByUser[msg.chat.id])
+      await ticketRegistration(bot, msg, selectedByUser[chatId])
       break
     default:
       console.log(`default: ${msg.text}`)

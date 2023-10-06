@@ -73,9 +73,8 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       file.on('error', reject)
     })
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
-    fileNames.push(fileName)
-    selectedByUser = { ...selectedByUser, ticketAttacmentFileNames: fileNames }
-    return selectedByUser
+    const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
+    return newSelectedByUser
   } catch (err) {
     console.log(err)
     return selectedByUser
@@ -91,8 +90,8 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     let attachmnts = ''
     const user = findUserById(msg.chat.id)
     const subject = selectedByUser.ticketTitle
-    if (selectedByUser?.ticketAttacmentFileNames) {
-      attachmnts = 'Attachments: ' + selectedByUser.ticketAttacmentFileNames.toString().join('\n')
+    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
+      attachmnts = 'Attachments: ' + selectedByUser.ticketAttacmentFileNames.join('\n')
     }
     const body = selectedByUser.ticketBody + '\n\n' + attachmnts
     const ticket = await create_ticket(user, subject, body)
