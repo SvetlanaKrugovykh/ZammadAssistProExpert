@@ -88,10 +88,10 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
 }
 
 
-async function getTickets(user, state_id) {
+async function getTickets(user, state_id, customer_id) {
   try {
-    const query = 'SELECT * FROM tickets WHERE customer_id = $1 AND status = $2'
-    const values = [user.id, state_id]
+    const query = 'SELECT * FROM tickets WHERE customer_id = $1' // AND status = $2
+    const values = [customer_id]   //, state_id]
     const data = await execPgQuery(query, values)
     return data
   } catch (error) {

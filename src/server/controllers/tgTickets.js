@@ -88,7 +88,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       return
     }
     let attachmnts = ''
-    const user = findUserById(msg.chat.id)
+    const user = await findUserById(msg.chat.id)
     const subject = selectedByUser.ticketTitle
     if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
       attachmnts = 'Attachments: ' + selectedByUser.ticketAttacmentFileNames.join('\n')
@@ -102,11 +102,15 @@ async function ticketRegistration(bot, msg, selectedByUser) {
 }
 
 async function create_ticket(user, subject, body) {
-  const headers = { 'Authorization': `Bearer ${process.env.ZAMMAD_API_TOKEN}` }
+  const headers = {
+    Authorization: `Bearer ${process.env.ZAMMAD_API_TOKEN}`, 'Content-Type': 'application/json'
+  }
+  let customer_id = user['id']
+  if (process.env.ZAMMAD_USER_TEST_MODE === 'true') customer_id = Number(process.env.ZAMMAD_USER_TEST_ID)
   const data = {
     'title': subject,
-    'group_id': user['organization_id'],
-    'customer_id': user['id'],
+    'group_id': 1,
+    'customer_id': customer_id,
     'article': {
       'subject': subject,
       'body': body,
@@ -116,6 +120,7 @@ async function create_ticket(user, subject, body) {
   }
   const url = `${process.env.ZAMMAD_API_URL}/tickets`
   const response = await axios.post(url, data, { headers })
+
   const ticket = response.data
   console.log(`Crete ticket number: ${ticket}`)
   return ticket
@@ -124,6 +129,11 @@ async function create_ticket(user, subject, body) {
 async function checkUserTickets(bot, msg, menuItem) {
   try {
     const chatId = msg.chat.id
+    const user = await findUserById(msg.chat.id)
+    if (user === null) return null
+    let customer_id = user['id']
+    if (process.env.ZAMMAD_USER_TEST_MODE === 'true') customer_id = Number(process.env.ZAMMAD_USER_TEST_ID)
+
     let statusIcon = ''
     let state_id = 0
     switch (menuItem) {
@@ -143,20 +153,25 @@ async function checkUserTickets(bot, msg, menuItem) {
         break
     }
 
-    const data = await getTickets(chatId, state_id)
-    const parsedData = JSON.parse(data).ResponseArray
-    if (parsedData.length !== 0 && parsedData[0] !== null && parsedData[0] !== 'nothing found') {
-      const servicesButtons = {
+    const data = await getTickets(chatId, state_id, customer_id)
+    let parsedData
+    if (Array.isArray(data) && typeof data[0] === 'object') {
+      parsedData = data
+    } else {
+      parsedData = [data]
+    }
+    if (parsedData.length !== 0 && parsedData[0] !== null) {
+      const ticketsButtons = {
         title: 'Оберіть будь ласка заявку',
         options: [{ resize_keyboard: true }],
         buttons: parsedData.map(ticket => [
-          { text: `${statusIcon} ${ticket.Title} `, callback_data: `43_${ticket.id}` }
+          { text: `${statusIcon} №${ticket.number}: ${ticket.title} `, callback_data: `43_${ticket.id}` }
         ])
       }
-      servicesButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
-      await bot.sendMessage(chatId, servicesButtons.title, {
+      ticketsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
+      await bot.sendMessage(chatId, ticketsButtons.title, {
         reply_markup: {
-          keyboard: servicesButtons.buttons,
+          keyboard: ticketsButtons.buttons,
           resize_keyboard: true
         }
       })
