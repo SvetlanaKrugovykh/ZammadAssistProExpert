@@ -1,6 +1,7 @@
 keys
 path
 node_modules
+temp
 .env*
 .vscode
 .idea

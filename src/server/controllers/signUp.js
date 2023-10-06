@@ -1,4 +1,4 @@
-const { createUserInBotDb } = require('../db/tgUsersService')
+const { createOrUpdateUserIntoDb } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
 const SENDER = process.env.SENDER
 
@@ -17,7 +17,7 @@ async function signUpForm(bot, msg, webAppUrl) {
 
 async function singUpDataSave(bot, chatId, data) {
   console.log(chatId, data);
-  const signUpRezult = await createUserInBotDb(chatId, data)
+  const signUpRezult = await createOrUpdateUserIntoDb(chatId, data)
   console.log(signUpRezult)
   const message = {
     from: SENDER,

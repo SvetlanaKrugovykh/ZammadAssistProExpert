@@ -1,10 +1,10 @@
 const { buttonsConfig } = require('../modules/keyboard')
-const { clientsAdmin, clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
+const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { bookOnLineScene } = require('./bookOnLine')
+const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
 const signUpForm = require('./signUp').signUpForm
 
-const selectedByUser = {} // {chatId: {location_id: '1_1', Masters: ['Майстер 1'], Services: ['Послуга 1']}}
+const selectedByUser = {}
 
 //#region staticKeyboad
 function getCallbackData(text) {
@@ -25,10 +25,6 @@ async function handler(bot, msg, webAppUrl) {
   if (!selectedByUser[msg.chat.id]) selectedByUser[msg.chat.id] = {}
   console.log('The choise is:', data)
   switch (data) {
-    case '0_1':
-      selectedByUser[msg.chat.id] = {}
-      await bookOnLineScene(bot, msg)
-      break
     case '0_2':
       await supportScene(bot, msg, false)
       break
@@ -39,7 +35,17 @@ async function handler(bot, msg, webAppUrl) {
       await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
       break
     case '2_1':
-      await clientsAdmin(bot, msg)
+      selectedByUser[msg.chat.id] = {}
+      await ticketCreateScene(bot, msg)
+      break
+    case '2_2':
+      await checkUserTickets(bot, msg, data)
+      break
+    case '2_3':
+      await checkUserTickets(bot, msg, data)
+      break
+    case '2_4':
+      await checkUserTickets(bot, msg, data)
       break
     case '3_1':
       await clientsAdminGetInfo(bot, msg)
@@ -49,6 +55,18 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '3_3':
       await registeredUserMenu(bot, msg, standardStartButtons)
+      break
+    case '5_1':
+      selectedByUser[msg.chat.id] = await ticketsTextInput(bot, msg, data, selectedByUser[msg.chat.id])
+      break
+    case '5_2':
+      selectedByUser[msg.chat.id] = await ticketsTextInput(bot, msg, data, selectedByUser[msg.chat.id])
+      break
+    case '5_3':
+      selectedByUser[msg.chat.id] = await askForAttachment(bot, msg, selectedByUser[msg.chat.id])
+      break
+    case '5_4':
+      await ticketRegistration(bot, msg, selectedByUser[msg.chat.id])
       break
     default:
       console.log(`default: ${msg.text}`)
@@ -61,14 +79,14 @@ async function handler(bot, msg, webAppUrl) {
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
   try {
-    if (/[🏠✔️📘➕📗💹❌↩️↪️]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✔️📘➕📗💹❌↩️↪️]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }
-    if (msg.text.includes('🕒')) {
-      //await schedullerScene(bot, msg)
-      return
-    }
+    // if (msg.text.includes('🕒')) {
+    //   //await schedullerScene(bot, msg)
+    //   return
+    // }
   } catch (error) { console.log(error) }
 }
 
@@ -77,7 +95,7 @@ async function goBack(bot, msg) {
     if (msg.text.includes('🏠')) {
       await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
     } else if (msg.text.includes('↩️')) {
-      await bookOnLineScene(bot, msg)
+      //await bookOnLineScene(bot, msg)
     }
   } catch (error) { console.log(error) }
 }
