@@ -7,7 +7,8 @@ ZammadAssistProExpert is a powerful tool for managing service-desk data, handlin
 ## Features
 
 - Manage of tickets with schedulled events
-- Telegram bot: Add, remove, and modify tasks
+- Telegram bot: Add, remove, and modify users and tickets
+- Attaments File Storage with download service
 - Check services
 
 ## Requirements
