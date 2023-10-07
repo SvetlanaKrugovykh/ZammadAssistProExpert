@@ -1,5 +1,5 @@
 const Fastify = require('fastify')
-const fastifyStatic = require('fastify-static')
+const fastifyStatic = require('@fastify/static')
 const path = require('path')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
@@ -23,9 +23,11 @@ const downloadApp = Fastify({
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 
 app.register(require('@fastify/cors'), {})
+
+const prefix = process.env.DOWNLOAD_PREFIX.replace('/', '').replace('\\', '')
 downloadApp.register(fastifyStatic, {
-  root: path.join(__dirname, 'attachments'),
-  prefix: '/attachments',
+  root: path.join(__dirname, process.env.DOWNLOAD_APP_PATH),
+  prefix: `/${prefix}`
 })
 
 bot.on('message', async (msg) => {

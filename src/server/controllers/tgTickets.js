@@ -64,7 +64,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     const fileId = msg.document.file_id
     const fileExtension = path.extname(msg.document.file_name)
     const fileName = `attachment_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
-    const filePath = path.join(process.env.TEMP_CATALOG, fileName)
+    const filePath = path.join(process.env.DOWNLOAD_APP_PATH, fileName)
     const file = fs.createWriteStream(filePath)
     const fileStream = await bot.getFileStream(fileId)
     fileStream.pipe(file)
@@ -87,14 +87,22 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Не заповнені всі поля. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    let attachmnts = ''
     const user = await findUserById(msg.chat.id)
     const subject = selectedByUser.ticketTitle
-    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
-      attachmnts = 'Attachments: ' + selectedByUser.ticketAttacmentFileNames.join('\n')
-    }
-    const body = selectedByUser.ticketBody + '\n\n' + attachmnts
+    const body = selectedByUser.ticketBody
     const ticket = await create_ticket(user, subject, body)
+    if (ticket === null) {
+      await bot.sendMessage(msg.chat.id, 'Під час реєстрації заявки виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return null
+    }
+    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
+      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
+      if (updatedTicket === null) {
+        await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return null
+      }
+    }
+
     await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка зареєстрована. Номер заявки: ${ticket.number}`)
   } catch (err) {
     console.log(err)
@@ -118,12 +126,59 @@ async function create_ticket(user, subject, body) {
   }
   const httpsAgent = new https.Agent({ rejectUnauthorized: false })
   const url = `${process.env.ZAMMAD_API_URL}/tickets`
-  const response = await axios.post(url, data, { headers, httpsAgent })
-
-  const ticket = response.data
-  console.log(`Crete ticket number: ${ticket}`)
-  return ticket
+  try {
+    const response = await axios.post(url, data, { headers, httpsAgent })
+    const ticket = response.data
+    console.log(`Crete ticket: ${ticket.id}`)
+    return ticket
+  } catch (err) {
+    console.log(err)
+    return null
+  }
 }
+
+async function update_ticket(ticketId, body, fileNames) {
+
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  let bodyWithAttachments = body
+  const slash = process.env.SLASH
+
+  for (const element of fileNames) {
+    const file_name = element.replace(process.env.DOWNLOAD_APP_PATH, '')
+    const old_file_name = `${process.env.DOWNLOAD_APP_PATH}${slash}${file_name}`
+    const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
+    const newFilePath = `${newCatalog}${slash}${file_name}`
+    try {
+      await fs.promises.mkdir(newCatalog, { recursive: true })
+      await fs.promises.rename(old_file_name, newFilePath)
+      console.log(`File ${element} moved to ${newFilePath}`)
+    } catch (err) {
+      console.log(err)
+      continue
+    }
+    const fileUrl = `${process.env.DOWNLOAD_URL}/${ticketId}/${file_name}`
+    bodyWithAttachments += `\n${fileUrl}`
+  }
+
+  const data = {
+    'article': {
+      'body': bodyWithAttachments || body,
+    }
+  }
+
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+  const url = `${process.env.ZAMMAD_API_URL}/tickets/${ticketId}`
+  try {
+    const response = await axios.put(url, data, { headers, httpsAgent })
+    const ticket = response.data
+    console.log(`update ticket: ${ticket.id}`)
+    return ticket
+  } catch (err) {
+    console.log(err)
+    return null
+  }
+}
+
 
 async function checkUserTickets(bot, msg, menuItem) {
   try {
