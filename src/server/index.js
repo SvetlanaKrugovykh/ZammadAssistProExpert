@@ -24,10 +24,10 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 
 app.register(require('@fastify/cors'), {})
 
-const prefix = process.env.DOWNLOAD_PREFIX.replace('/', '').replace('\\', '')
+const downloadPath = process.env.DOWNLOAD_APP_PATH || 'C:\\Temp\\attachments'
 downloadApp.register(fastifyStatic, {
-  root: path.join(__dirname, process.env.DOWNLOAD_APP_PATH),
-  prefix: `/${prefix}`
+  root: downloadPath,
+  prefix: `/`
 })
 
 bot.on('message', async (msg) => {
