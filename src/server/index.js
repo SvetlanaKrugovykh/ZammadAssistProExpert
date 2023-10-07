@@ -1,4 +1,6 @@
 const Fastify = require('fastify')
+const fastifyStatic = require('fastify-static')
+const path = require('path')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
@@ -14,9 +16,17 @@ const app = Fastify({
   trustProxy: true
 })
 
+const downloadApp = Fastify({
+  trustProxy: true
+})
+
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 
 app.register(require('@fastify/cors'), {})
+downloadApp.register(fastifyStatic, {
+  root: path.join(__dirname, 'attachments'),
+  prefix: '/attachments',
+})
 
 bot.on('message', async (msg) => {
 
@@ -61,4 +71,4 @@ const assistApiServer = Fastify({
   trustProxy: true,
 })
 
-module.exports = { app, assistApiServer }
+module.exports = { app, assistApiServer, downloadApp }
