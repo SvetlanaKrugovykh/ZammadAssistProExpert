@@ -36,6 +36,17 @@ async function findUserById(tg_id) {
   }
 }
 
+async function findUserByEmail(email) {
+  try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
+    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email])
+    return data
+  } catch (error) {
+    console.error('Error in findUserById:', error)
+    return null
+  }
+}
+
 // async function findUserByEmail(email) {
 //   try {
 //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
@@ -49,7 +60,8 @@ async function findUserById(tg_id) {
 
 async function createOrUpdateUserIntoDb(chatId, user_info) {
   try {
-    const existingUser = await findUserById(chatId)
+    let existingUser = await findUserById(chatId)
+    if (!existingUser) existingUser = await findUserByEmail(user_info.email.replace(/\s+/g, ''))
     if (existingUser) {
       const query = 'UPDATE users SET updated_at = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE login = $7'
       const values = [
