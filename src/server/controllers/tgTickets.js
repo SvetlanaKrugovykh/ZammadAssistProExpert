@@ -15,7 +15,8 @@ async function ticketCreateScene(bot, msg) {
     await bot.sendMessage(chatId, buttonsConfig["ticketCreate"].title, {
       reply_markup: {
         keyboard: buttonsConfig["ticketCreate"].buttons,
-        resize_keyboard: true
+        resize_keyboard: true,
+        one_time_keyboard: false
       }
     })
   } catch (err) {

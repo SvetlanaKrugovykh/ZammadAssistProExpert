@@ -43,7 +43,8 @@ async function signUpOldForm(bot, msg) {
     await bot.sendMessage(chatId, buttonsConfig["userCreateButtons"].title, {
       reply_markup: {
         keyboard: buttonsConfig["userCreateButtons"].buttons,
-        resize_keyboard: true
+        resize_keyboard: true,
+        one_time_keyboard: false
       }
     })
   } catch (err) {
@@ -57,15 +58,21 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
     const txtCommand = await inputLineScene(bot, msg)
     if (menuItem === '0_10') {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(txtCommand)) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення email. Операцію скасовано\n', { parse_mode: 'HTML' })
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>email</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
+      bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести Прізвище та ім`я</b>\n', { parse_mode: 'HTML' })
       selectedByUser = { ...selectedByUser, userEmail: txtCommand }
     } else if (menuItem === '0_11') {
+      if (txtCommand.length < 5) {
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>Прізвища та ім`я</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return selectedByUser
+      }
+      await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести номер телефону</b>\n', { parse_mode: 'HTML' })
       selectedByUser = { ...selectedByUser, userPIB: txtCommand }
     } else if (menuItem === '0_12') {
-      if (!/^\d{7,12}$/.test(txtCommand)) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення email. Операцію скасовано\n', { parse_mode: 'HTML' })
+      if (!/^\+?\d{7,12}$/.test(txtCommand)) {
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>омеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
       selectedByUser = { ...selectedByUser, userPhoneNumber: txtCommand }

@@ -46,7 +46,6 @@ async function findUserByEmail(email) {
     return null
   }
 }
-
 // async function findUserByEmail(email) {
 //   try {
 //     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
