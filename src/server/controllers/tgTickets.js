@@ -160,7 +160,7 @@ async function update_ticket(ticketId, body, fileNames) {
       console.log(err)
       continue
     }
-    const fileUrl = `${process.env.DOWNLOAD_URL}/${ticketId}/${file_name}`
+    const fileUrl = `${process.env.DOWNLOAD_URL}${ticketId}/${file_name}`
     bodyWithAttachments += `\n${fileUrl}`
   }
 
