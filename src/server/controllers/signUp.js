@@ -34,6 +34,82 @@ async function singUpDataSave(bot, chatId, data) {
     console.log(err);
   }
 }
-module.exports = { signUpForm, singUpDataSave };
+
+async function signUpOldForm(bot, msg) {
+  try {
+    const chatId = msg.chat.id
+    await bot.sendMessage(chatId, buttonsConfig["userCreate"].title, {
+      reply_markup: {
+        keyboard: buttonsConfig["userCreate"].buttons,
+        resize_keyboard: true
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+
+async function usersTextInput(bot, msg, menuItem, selectedByUser) {
+  try {
+    const txtCommand = await inputLineScene(bot, msg)
+    if (menuItem === '0_10') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(txtCommand)) {
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення email. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return selectedByUser
+      }
+      selectedByUser = { ...selectedByUser, userEmail: txtCommand }
+    } else if (menuItem === '0_11') {
+      selectedByUser = { ...selectedByUser, userPIB: txtCommand }
+    } else if (menuItem === '0_12') {
+      if (!/^\d{7,12}$/.test(txtCommand)) {
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення email. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return selectedByUser
+      }
+      selectedByUser = { ...selectedByUser, userPhoneNumber: txtCommand }
+    }
+    return selectedByUser
+  } catch (err) {
+    console.log(err)
+    return selectedByUser
+  }
+}
+
+async function usersRegistration(bot, msg, selectedByUser) {
+  try {
+    if (!selectedByUser?.userEmail) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен Email. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+    if (!selectedByUser?.userPIB) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнені прізвище та ім`я. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+    if (!selectedByUser?.userPhoneNumber) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен ермер телефону. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+
+    const data = {
+      email: selectedByUser?.userEmail,
+      PIB: selectedByUser?.userPIB,
+      phoneNumber: selectedByUser?.userPhoneNumber,
+      contract: '',
+      address: '',
+    }
+
+    console.log(data)
+    await singUpDataSave(bot, msg.chat.id, data)
+    await bot.sendMessage(msg.chat.id, 'Дякую, Реєстрація пройшла успішно!')
+    await bot.sendMessage(msg.chat.id, 'Ваш emal: ' + data?.email)
+    await bot.sendMessage(msg.chat.id, 'Ваші прізвище та ім`я: ' + data?.PIB)
+    await bot.sendMessage(msg.chat.id, 'Ваш номер телефону: ' + data?.phoneNumber)
+    await bot.sendMessage(msg.chat.id, 'Всю необхідну інформацію Ви можете отримувати в цьому чаті. Якщо у Вас виникли питання, звертайтесь через меню /"Надіслати повідомлення/". Зараз для переходу в головне меню натисніть /start')
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+module.exports = { signUpForm, singUpDataSave, signUpOldForm, usersTextInput, usersRegistration }
 
 

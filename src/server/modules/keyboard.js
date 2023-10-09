@@ -4,11 +4,22 @@ const buttonsConfig = {
     options: [{ resize_keyboard: true }],
     buttons: [
       [{ text: 'Надіслати повідомлення', callback_data: '0_2' }],
+      [{ text: 'Зареєструватися (!для старих Windows | Unix)', callback_data: '0_4' }],
       [{ text: 'Зареєструватися', callback_data: '0_3' }],
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
-
+  userCreate: {
+    title: 'Оберіть, будь ласка, дію',
+    options: [{ resize_keyboard: true }],
+    buttons: [
+      [{ text: '📧 Ввести email', callback_data: '0_10' }],
+      [{ text: '🧑🏼 Ввести Прізвище та ім`я', callback_data: '0_11' }],
+      [{ text: '📞 Ввести номер телефону', callback_data: '0_12' }],
+      [{ text: '📌 Зареєструвати користувача', callback_data: '0_13' }],
+      [{ text: '🏠', callback_data: '0_4' }]
+    ]
+  },
   standardStartButtons: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],
@@ -20,7 +31,6 @@ const buttonsConfig = {
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
-
   ticketCreate: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],

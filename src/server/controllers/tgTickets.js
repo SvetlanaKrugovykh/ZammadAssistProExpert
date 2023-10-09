@@ -83,8 +83,12 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
 
 async function ticketRegistration(bot, msg, selectedByUser) {
   try {
-    if (!selectedByUser?.ticketTitle || !selectedByUser?.ticketBody) {
-      await bot.sendMessage(msg.chat.id, 'Не заповнені всі поля. Операцію скасовано\n', { parse_mode: 'HTML' })
+    if (!selectedByUser?.ticketTitle) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнена тема заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+    if (!selectedByUser?.ticketBody) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен зміст заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
     const user = await findUserById(msg.chat.id)

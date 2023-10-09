@@ -2,7 +2,7 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
-const signUpForm = require('./signUp').signUpForm
+const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp').signUpForm
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
 
@@ -33,6 +33,22 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '0_3':
       await signUpForm(bot, msg, webAppUrl)
+      break
+    case '0_5':
+      selectedByUser[msg.chat.id] = {}
+      await signUpOldForm(bot, msg)
+      break
+    case '0_10':
+      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
+      break
+    case '0_11':
+      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
+      break
+    case '0_12':
+      selectedByUser[chatId] = await usersTextInput(bot, msg, selectedByUser[chatId])
+      break
+    case '0_13':
+      await usersRegistration(bot, msg, selectedByUser[chatId])
       break
     case '0_4':
       const adminUser = users.find(user => user.id === msg.chat.id)
