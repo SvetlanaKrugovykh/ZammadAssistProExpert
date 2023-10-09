@@ -2,7 +2,7 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
-const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp').signUpForm
+const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
 
@@ -45,7 +45,7 @@ async function handler(bot, msg, webAppUrl) {
       selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
       break
     case '0_12':
-      selectedByUser[chatId] = await usersTextInput(bot, msg, selectedByUser[chatId])
+      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
       break
     case '0_13':
       await usersRegistration(bot, msg, selectedByUser[chatId])

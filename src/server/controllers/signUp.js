@@ -1,3 +1,5 @@
+const { buttonsConfig } = require('../modules/keyboard')
+const inputLineScene = require('./inputLine')
 const { createOrUpdateUserIntoDb } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
 const SENDER = process.env.SENDER
@@ -38,14 +40,14 @@ async function singUpDataSave(bot, chatId, data) {
 async function signUpOldForm(bot, msg) {
   try {
     const chatId = msg.chat.id
-    await bot.sendMessage(chatId, buttonsConfig["userCreate"].title, {
+    await bot.sendMessage(chatId, buttonsConfig["userCreateButtons"].title, {
       reply_markup: {
-        keyboard: buttonsConfig["userCreate"].buttons,
+        keyboard: buttonsConfig["userCreateButtons"].buttons,
         resize_keyboard: true
       }
     })
   } catch (err) {
-    console.log(err)
+    userCreateButtonsconsole.log(err)
   }
 }
 
