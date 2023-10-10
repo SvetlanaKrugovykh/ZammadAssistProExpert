@@ -1,7 +1,11 @@
 const { ticketApprovalScene, ticketApprove, ticketReturn } = require('../modules/notifications')
+const { execPgQuery } = require('../db/common')
+
 
 function checkAndReplaceTicketsStatuses(bot) {
-  // Your code to check and replace ticket statuses goes here
+  const ticketSubject = 'Test ticket subject 1'
+  // await execPgQuery('SELECT title FROM tickets WHERE id = $1', [ticketID])
+  ticketApprovalScene(593, bot, 701079281, ticketSubject)
 }
 
 

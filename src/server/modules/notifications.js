@@ -1,13 +1,12 @@
 const { buttonsConfig } = require('./keyboard')
-const { execPgQuery } = require('../db/common')
 
-async function ticketApprovalScene(ticketID, bot, chatId) {
-  let ticketSubject = 'Тема заявки'
+async function ticketApprovalScene(ticketID, bot, chatId, ticketSubject) {
   try {
-    ticketSubject = await execPgQuery('SELECT title FROM tickets WHERE id = $1', [ticketID])
     buttonsConfig["ticketApproval"].title = ticketSubject
-    for (const button of buttonsConfig["ticketApproval"].buttons) {
-      button.text = button.text + '№_' + ticketID.toString()
+    const buttons = buttonsConfig["ticketApproval"].buttons
+    for (const button of buttons) {
+      if (button.callback_data === '3_3') break
+      button.text = buttons.text + '№_' + ticketID.toString()
     }
     await bot.sendMessage(chatId, buttonsConfig["ticketApproval"].title, {
       reply_markup: {
