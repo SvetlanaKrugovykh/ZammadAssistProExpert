@@ -10,7 +10,8 @@ async function signUpForm(bot, msg, webAppUrl) {
     reply_markup: {
       keyboard: [
         // [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/form' } }]
-        [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/reg-form-tg-bot' } }]
+        [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/reg-form-tg-bot' } }],
+        [{ text: '🏠', callback_data: '0_4' }]
       ],
       resize_keyboard: true
     }
@@ -52,7 +53,6 @@ async function signUpOldForm(bot, msg) {
   }
 }
 
-
 async function usersTextInput(bot, msg, menuItem, selectedByUser) {
   try {
     const txtCommand = await inputLineScene(bot, msg)
@@ -71,11 +71,13 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести номер телефону</b>\n', { parse_mode: 'HTML' })
       selectedByUser = { ...selectedByUser, userPIB: txtCommand }
     } else if (menuItem === '0_12') {
-      if (!/^\+?\d{7,12}$/.test(txtCommand)) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>омеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+      const newtxtCommand = txtCommand.replace(/\D/g, '')
+      if (/^\d{7,12}$/.test(newtxtCommand)) {
+        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>Номеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
-      selectedByUser = { ...selectedByUser, userPhoneNumber: txtCommand }
+      await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Зареєструвати користувача</b>\n', { parse_mode: 'HTML' })
+      selectedByUser = { ...selectedByUser, userPhoneNumber: newtxtCommand }
     }
     return selectedByUser
   } catch (err) {
