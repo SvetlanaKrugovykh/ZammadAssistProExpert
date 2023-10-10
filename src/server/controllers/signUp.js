@@ -58,7 +58,7 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
     const txtCommand = await inputLineScene(bot, msg)
     if (menuItem === '0_10') {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(txtCommand)) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>email</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+        await bot.sendMessage(msg.chat.id, 'Невірний формат <b>email</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
       bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести Прізвище та ім`я</b>\n', { parse_mode: 'HTML' })
@@ -72,12 +72,15 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
       selectedByUser = { ...selectedByUser, userPIB: txtCommand }
     } else if (menuItem === '0_12') {
       const newtxtCommand = txtCommand.replace(/\D/g, '')
-      if (/^\d{7,12}$/.test(newtxtCommand)) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>Номеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+      if (!/^\d{7,12}$/.test(newtxtCommand)) {
+        await bot.sendMessage(msg.chat.id, 'Невірний формат <b>Номеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
       await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Зареєструвати користувача</b>\n', { parse_mode: 'HTML' })
       selectedByUser = { ...selectedByUser, userPhoneNumber: newtxtCommand }
+      if (!selectedByUser?.userEmail) {
+        await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести email</b>\n', { parse_mode: 'HTML' })
+      }
     }
     return selectedByUser
   } catch (err) {
@@ -89,7 +92,7 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
 async function usersRegistration(bot, msg, selectedByUser) {
   try {
     if (!selectedByUser?.userEmail) {
-      await bot.sendMessage(msg.chat.id, 'Не заповнен Email. Операцію скасовано\n', { parse_mode: 'HTML' })
+      await bot.sendMessage(msg.chat.id, 'Не заповнено Email. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
     if (!selectedByUser?.userPIB) {
