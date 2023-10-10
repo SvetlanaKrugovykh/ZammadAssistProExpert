@@ -76,7 +76,7 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
         await bot.sendMessage(msg.chat.id, 'Невірний формат <b>Номеру телефону</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }
-      await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Зареєструвати користувача</b>\n', { parse_mode: 'HTML' })
+      if (selectedByUser?.userEmail) await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Зареєструвати користувача</b>\n', { parse_mode: 'HTML' })
       selectedByUser = { ...selectedByUser, userPhoneNumber: newtxtCommand }
       if (!selectedByUser?.userEmail) {
         await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести email</b>\n', { parse_mode: 'HTML' })

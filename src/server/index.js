@@ -73,4 +73,4 @@ const assistApiServer = Fastify({
   trustProxy: true,
 })
 
-module.exports = { app, assistApiServer, downloadApp }
+module.exports = { app, assistApiServer, downloadApp, bot }

@@ -3,6 +3,7 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./client
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
+const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
 
@@ -91,6 +92,12 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '5_4':
       await ticketRegistration(bot, msg, selectedByUser[chatId])
+      break
+    case '7_1':
+      await ticketApprove(bot, msg)
+      break
+    case '7_2':
+      await ticketReturn(bot, msg)
       break
     default:
       console.log(`default: ${msg.text}`)

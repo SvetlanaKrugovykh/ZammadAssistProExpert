@@ -4,7 +4,8 @@ const inputLineScene = require('./inputLine')
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
-const { findUserById, getTickets } = require('../db/tgUsersService')
+const { getTickets } = require('../db/ticketsDbService')
+const { findUserById } = require('../db/tgUsersService')
 const https = require('https')
 
 

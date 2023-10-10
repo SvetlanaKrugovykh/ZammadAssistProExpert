@@ -1,29 +1,4 @@
-const { Pool } = require('pg')
-
-const pool = new Pool({
-  user: process.env.ZAMMAD_DB_USER,
-  host: process.env.ZAMMAD_DB_HOST,
-  database: process.env.ZAMMAD_DB_NAME,
-  password: process.env.ZAMMAD_DB_PASSWORD,
-  port: Number(process.env.ZAMMAD_DB_PORT) || 5432,
-})
-
-async function execPgQuery(query, values, commit = false) {
-  let client
-  try {
-    client = await pool.connect()
-    const data = await client.query(query, values)
-    if (commit) await client.query('COMMIT')
-    if (data.rows.length === 0) return null
-    return data.rows[0]
-  } catch (error) {
-    console.error(`Error in execQuery ${query},${values.toString()}:`, error)
-    if (commit) await client.query('ROLLBACK')
-    return null
-  } finally {
-    if (client) client.release()
-  }
-}
+const execPgQuery = require('./common').execPgQuery
 
 async function findUserById(tg_id) {
   try {
@@ -46,16 +21,6 @@ async function findUserByEmail(email) {
     return null
   }
 }
-// async function findUserByEmail(email) {
-//   try {
-//     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-//     const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email])
-//     return data
-//   } catch (error) {
-//     console.error('Error in findUserById:', error)
-//     return null
-//   }
-// }
 
 async function createOrUpdateUserIntoDb(chatId, user_info) {
   try {
@@ -98,17 +63,4 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
   }
 }
 
-
-async function getTickets(user, state_id, customer_id) {
-  try {
-    const query = 'SELECT * FROM tickets WHERE customer_id = $1' // AND status = $2
-    const values = [customer_id]   //, state_id]
-    const data = await execPgQuery(query, values)
-    return data
-  } catch (error) {
-    console.error('Error of record new user data into the bot-database:', error)
-  }
-}
-
-
-module.exports = { findUserById, createOrUpdateUserIntoDb, getTickets }
+module.exports = { findUserById, createOrUpdateUserIntoDb }
