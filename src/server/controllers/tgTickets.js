@@ -244,4 +244,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets }
+module.exports = { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket }
