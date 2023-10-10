@@ -1,12 +1,13 @@
 const Fastify = require('fastify')
 const fastifyStatic = require('@fastify/static')
-const path = require('path')
+const cron = require('node-cron')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
 const { users } = require('./users/users.model')
 const { handler, usersStarterMenu } = require('./controllers/switcher')
 const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
+const { checkAndReplaceTicketsStatuses } = require('./services/scheduledTasks')
 const singUpDataSave = require('./controllers/signUp').singUpDataSave
 const formController = require('./controllers/formController')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -21,6 +22,14 @@ const downloadApp = Fastify({
 })
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+
+const CLOSED_TICKET_SCAN_INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES) || 10
+
+cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 7-23 * * *`, () => {
+  const currentTime = new Date().toLocaleString()
+  console.log(`Running cron checkAndReplaceTicketsStatuses job...... Current time: ${currentTime}`)
+  checkAndReplaceTicketsStatuses(bot)
+})
 
 app.register(require('@fastify/cors'), {})
 

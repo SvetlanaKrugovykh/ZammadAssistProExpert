@@ -94,14 +94,16 @@ async function handler(bot, msg, webAppUrl) {
       await ticketRegistration(bot, msg, selectedByUser[chatId])
       break
     case '7_1':
-      await ticketApprove(bot, msg)
+      let ticketID = selectedByUser[chatId]?.ticketID
+      await ticketApprove(ticketID, bot, msg)
       break
     case '7_2':
-      await ticketReturn(bot, msg)
+      ticketID = selectedByUser[chatId]?.ticketID
+      if (ticketID > 0) await ticketReturn(ticketID, bot, msg)
       break
     default:
       console.log(`default: ${msg.text}`)
-      switchDynamicSceenes(bot, msg)
+      if (ticketID > 0) switchDynamicSceenes(bot, msg)
       break
   }
 }
