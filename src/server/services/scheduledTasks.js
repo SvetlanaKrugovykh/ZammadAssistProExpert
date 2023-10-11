@@ -22,7 +22,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
         `Вам необхідно завтвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутній відповідь, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
-      await changeStatusFromCloseToPendingClose(ticketID)
+      await changeStatusFromCloseToPendingClose(ticketID, ticket)
       await ticketApprovalScene(ticketID, bot, customer_id, ticketSubject)
     }
   } catch (err) {
@@ -45,7 +45,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} автоматично закрита.\n` +
         `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу .\n` +
         `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів`
-      await changeStatusFromPendingCloseToClose(ticketID)
+      await changeStatusFromPendingCloseToClose(ticketID, ticket)
       await bot.sendMessage(customer_id, ticketSubject)
     }
   } catch (err) {
@@ -53,7 +53,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
   }
 }
 
-async function changeStatusFromCloseToPendingClose(ticketID) {
+async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
   try {
     const currentDate = new Date()
     currentDate.setSeconds(currentDate.getSeconds() + 3600)
@@ -64,14 +64,21 @@ async function changeStatusFromCloseToPendingClose(ticketID) {
       "type": "note",
       "internal": false
     }
-    const updatedTicket = await update_ticket(ticketID, { state_id: 7, pending_time: pending_time, article }, [])
+    const { title, group_id, priority_id, state_id, customer_id } = ticket_body
+    const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
+
+    newTicketBody.state_id = 7
+    newTicketBody.pending_time = pending_time
+    newTicketBody.article = article
+
+    const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
   } catch (err) {
     console.log(err)
   }
 }
 
-async function changeStatusFromPendingCloseToClose(ticketID) {
+async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
   try {
     const INTERVAL_DAYS = process.env.CLOSED_TICKET_SCAN_INTERVAL_DAYS || 3
     const article = {
@@ -80,7 +87,14 @@ async function changeStatusFromPendingCloseToClose(ticketID) {
       "type": "note",
       "internal": false
     }
-    const updatedTicket = await update_ticket(ticketID, { state_id: 4, article }, [])
+
+    const { title, group_id, priority_id, state_id, customer_id } = ticket_body
+    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+
+    newTicketBody.state_id = 4
+    newTicketBody.article = article
+
+    const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
   } catch (err) {
     console.log(err)

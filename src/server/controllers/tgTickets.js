@@ -143,7 +143,7 @@ async function create_ticket(user, subject, body) {
   }
 }
 
-async function update_ticket(ticketId, body, fileNames) {
+async function update_ticket(ticketId, body, fileNames, override = false) {
 
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let bodyWithAttachments = body
@@ -166,11 +166,12 @@ async function update_ticket(ticketId, body, fileNames) {
     bodyWithAttachments += `\n${fileUrl}`
   }
 
-  const data = {
+  let data = {
     'article': {
       'body': bodyWithAttachments || body,
     }
   }
+  if (override) data = body
 
   const httpsAgent = new https.Agent({ rejectUnauthorized: false })
   const url = `${process.env.ZAMMAD_API_URL}/tickets/${ticketId}`
