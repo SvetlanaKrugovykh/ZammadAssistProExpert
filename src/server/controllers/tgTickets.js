@@ -204,17 +204,17 @@ async function checkUserTickets(bot, msg, menuItem) {
         break
       case '2_3':
         statusIcon = '🟦'
-        state_id = 4
+        state_id = 7
         break
       case '2_4':
         statusIcon = '🟩'
-        state_id = 6
+        state_id = 4
         break
       default:
         break
     }
 
-    const data = await getTickets(chatId, state_id, customer_id)
+    const data = await getTickets(state_id, customer_id)
     let parsedData
     if (Array.isArray(data) && typeof data[0] === 'object') {
       parsedData = data
