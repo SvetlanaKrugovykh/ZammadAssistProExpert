@@ -9,13 +9,14 @@ const pool = new Pool({
 })
 
 
-async function execPgQuery(query, values, commit = false) {
+async function execPgQuery(query, values, commit = false, all = false) {
   let client
   try {
     client = await pool.connect()
     const data = await client.query(query, values)
     if (commit) await client.query('COMMIT')
     if (data.rows.length === 0) return null
+    if (all) return data.rows
     return data.rows[0]
   } catch (error) {
     console.error(`Error in execQuery ${query},${values.toString()}:`, error)
