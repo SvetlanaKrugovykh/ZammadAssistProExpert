@@ -42,24 +42,32 @@ async function ticketApprove(bot, msg) {
   const match = msg.text.match(/№_(\d+)/)
   const ticketID = match[1]
   let body = await getTicketData(ticketID)
-  const currentDate = new Date()
-  currentDate.setSeconds(currentDate.getSeconds() + 3600)
-  const pending_time = currentDate.toISOString()
-  body = { ...body, state_id: 7, pending_time: pending_time }
+  const article = {
+    "subject": "Кінцеве затверження замовником заявки",
+    "body": "Заявку затверджено замовником. Заявка закрита.",
+    "type": "note",
+    "internal": false
+  }
+  body = { ...body, state_id: 4, article }
   const updatedTicket = await update_ticket(ticketID, body, [])
-
-  // Send a message to the user indicating that the ticket has been approved
+  if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
 
 async function ticketReturn(bot, msg) {
-  if (!(ticketID > 0)) return null
-
-  // Code to return the ticket with the given ID
-  // ...
-
-  // Send a message to the user indicating that the ticket has been returned
-  await bot.sendMessage(msg.chat.id, `Ticket ${ticketID} has been returned.`)
+  const match = msg.text.match(/№_(\d+)/)
+  const ticketID = match[1]
+  let body = await getTicketData(ticketID)
+  const article = {
+    "subject": "Заявку повернуто на доопрацювання",
+    "body": "Повернення заявки на доопрацювання. Заявка перевідена в статус 'Відкрита'",
+    "type": "note",
+    "internal": false
+  }
+  body = { ...body, state_id: 2, article }
+  const updatedTicket = await update_ticket(ticketID, body, [])
+  if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
+  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
 
 module.exports = { ticketApprovalScene, ticketApprove, ticketReturn, getTicketData }
