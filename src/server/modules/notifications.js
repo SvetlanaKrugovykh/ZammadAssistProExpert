@@ -53,7 +53,7 @@ async function ticketApprove(bot, msg) {
   newTicketBody.state_id = 4
   newTicketBody.article = article
 
-  const updatedTicket = await update_ticket(ticketID, newTicketBody, [])
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
@@ -73,7 +73,7 @@ async function ticketReturn(bot, msg) {
   newTicketBody.state_id = 2
   newTicketBody.article = article
 
-  const updatedTicket = await update_ticket(ticketID, newTicketBody, [])
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
