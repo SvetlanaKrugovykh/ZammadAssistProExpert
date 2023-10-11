@@ -1,6 +1,7 @@
 const { ticketApprovalScene, getTicketData } = require('../modules/notifications')
 const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
+const { findUserById } = require('../db/tgUsersService')
 
 async function checkAndReplaceTicketsStatuses(bot) {
   try {
@@ -20,10 +21,18 @@ async function checkAndReplaceTicketsStatuses(bot) {
       if (!ticketSubj || !customer_id) return null
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} виконана.\n` +
         `Вам необхідно завтвердити виконання заявки або надіслати на доопрацювання.\n` +
-        `Наразі відсутній відповідь, заявка буде автоматично завершена ` +
+        `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
       await changeStatusFromCloseToPendingClose(ticketID, ticket)
-      await ticketApprovalScene(ticketID, bot, customer_id, ticketSubject)
+      const user_data = await findUserById(customer_id)
+      let chatId = 0
+      if (process.env.ZAMMAD_USER_TEST_MODE === 'true')
+        chatId = Number(process.env.TEST_USER_TELEGRAM_CHAT_ID)
+      else {
+        if (!user_data) return null
+        chatId = user_data?.login
+      }
+      await ticketApprovalScene(ticketID, bot, chatId, ticketSubject)
     }
   } catch (err) {
     console.log(err)

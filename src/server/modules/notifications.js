@@ -48,8 +48,12 @@ async function ticketApprove(bot, msg) {
     "type": "note",
     "internal": false
   }
-  body = { ...body, state_id: 4, article }
-  const updatedTicket = await update_ticket(ticketID, body, [])
+  const { title, group_id, priority_id, state_id, customer_id } = body
+  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+  newTicketBody.state_id = 4
+  newTicketBody.article = article
+
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [])
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
@@ -64,8 +68,12 @@ async function ticketReturn(bot, msg) {
     "type": "note",
     "internal": false
   }
-  body = { ...body, state_id: 2, article }
-  const updatedTicket = await update_ticket(ticketID, body, [])
+  const { title, group_id, priority_id, state_id, customer_id } = body
+  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+  newTicketBody.state_id = 2
+  newTicketBody.article = article
+
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [])
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
