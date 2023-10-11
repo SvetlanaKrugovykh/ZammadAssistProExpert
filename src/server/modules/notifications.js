@@ -74,8 +74,8 @@ async function ticketReturn(bot, msg) {
   newTicketBody.article = article
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-  if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
-  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
+  if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
+  await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
 }
 
 module.exports = { ticketApprovalScene, ticketApprove, ticketReturn, getTicketData }

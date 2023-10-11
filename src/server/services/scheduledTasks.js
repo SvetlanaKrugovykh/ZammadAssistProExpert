@@ -43,6 +43,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
     let INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time  < NOW() - INTERVAL '${INTERVAL_DAYS} days'`
+
     const data = await execPgQuery(query)
     if (!data || data.length === 0) return null
 
@@ -55,6 +56,14 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
         `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу .\n` +
         `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів`
       await changeStatusFromPendingCloseToClose(ticketID, ticket)
+      const user_data = await findUserById(customer_id)
+      let chatId = 0
+      if (process.env.ZAMMAD_USER_TEST_MODE === 'true')
+        chatId = Number(process.env.TEST_USER_TELEGRAM_CHAT_ID)
+      else {
+        if (!user_data) return null
+        chatId = user_data?.login
+      }
       await bot.sendMessage(customer_id, ticketSubject)
     }
   } catch (err) {
