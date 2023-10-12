@@ -14,7 +14,7 @@ async function userApproveOrDecline(bot, msg, approve) {
     user_tgIDs.push(match[1])
   }
 
-  for (const user_tgID of ticketIDs) {
+  for (const user_tgID of user_tgIDs) {
     const newUserInfo = await udateUser(user_tgID, approve)
     if (newUserInfo === null) {
       await bot.sendMessage(msg.chat.id, `НЕ знайдено користувача з id: ${user_tgID}`)
