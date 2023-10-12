@@ -20,6 +20,10 @@ async function signUpForm(bot, msg, webAppUrl) {
 async function singUpDataSave(bot, chatId, data) {
   console.log(chatId, data);
   const signUpRezult = await createOrUpdateUserIntoDb(chatId, data)
+  if (signUpRezult === 'wrong email') {
+    await bot.sendMessage(chatId, 'Невірний формат <b>email</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+    return null
+  }
   console.log(signUpRezult)
   const message = {
     from: SENDER,
@@ -68,7 +72,7 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
   try {
     const txtCommand = await inputLineScene(bot, msg)
     if (menuItem === '0_10') {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(txtCommand)) {
+      if (!/^[^\s@]+@(lotok\.in\.ua|ito\.in\.ua)$/.test(txtCommand)) {
         await bot.sendMessage(msg.chat.id, 'Невірний формат <b>email</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
         return selectedByUser
       }

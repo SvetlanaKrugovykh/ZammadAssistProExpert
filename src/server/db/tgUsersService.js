@@ -24,6 +24,11 @@ async function findUserByEmail(email) {
 
 async function createOrUpdateUserIntoDb(chatId, user_info) {
   try {
+    const email_ = user_info.email
+    if (!/^[^\s@]+@(lotok\.in\.ua|ito\.in\.ua)$/.test(email_)) {
+      console.log(`Error in createOrUpdateUserIntoDb: email ${email_} is not valid`)
+      return 'wrong email'
+    }
     let existingUser = await findUserById(chatId)
     if (!existingUser) existingUser = await findUserByEmail(user_info.email.replace(/\s+/g, ''))
     if (existingUser) {
