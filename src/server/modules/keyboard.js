@@ -5,7 +5,7 @@ const buttonsConfig = {
     buttons: [
       [{ text: 'Надіслати повідомлення', callback_data: '0_2' }],
       [{ text: 'Зареєструватися (!для старих Windows | Unix)', callback_data: '0_5' }],
-      //   [{ text: 'Зареєструватися', callback_data: '0_3' }],
+      [{ text: 'Зареєструватися', callback_data: '0_3' }],
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
