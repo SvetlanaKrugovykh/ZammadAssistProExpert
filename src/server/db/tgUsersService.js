@@ -38,7 +38,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         chatId
       ]
       const data = await execPgQuery(query, values, true)
-      return data[0]
+      return data
     } else {
       const query = 'INSERT INTO users (created_at, updated_at, created_by_id, organization_id, updated_by_id, login, phone, firstname, lastname, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
       const values = [

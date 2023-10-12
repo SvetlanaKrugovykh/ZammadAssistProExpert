@@ -39,23 +39,32 @@ async function getTicketData(ticketID, field = '') {
 }
 
 async function ticketApprove(bot, msg) {
-  const match = msg.text.match(/№_(\d+)/)
-  const ticketID = match[1]
-  let body = await getTicketData(ticketID)
-  const article = {
-    "subject": "Кінцеве затверження замовником заявки",
-    "body": "Заявку затверджено замовником. Заявка закрита.",
-    "type": "note",
-    "internal": false
-  }
-  const { title, group_id, priority_id, state_id, customer_id } = body
-  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
-  newTicketBody.state_id = 4
-  newTicketBody.article = article
+  const msgText = msg.text
+  const regex = /№_(\d+)/g
+  const ticketIDs = []
+  let match
 
-  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-  if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
-  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
+  while ((match = regex.exec(msgText)) !== null) {
+    ticketIDs.push(match[1])
+  }
+
+  for (const ticketID of ticketIDs) {
+    let body = await getTicketData(ticketID)
+    const article = {
+      "subject": "Кінцеве затверження замовником заявки",
+      "body": "Заявку затверджено замовником. Заявка закрита.",
+      "type": "note",
+      "internal": false
+    }
+    const { title, group_id, priority_id, state_id, customer_id } = body
+    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+    newTicketBody.state_id = 4
+    newTicketBody.article = article
+
+    const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
+    if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
+    await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
+  }
 }
 
 async function ticketReturn(bot, msg) {

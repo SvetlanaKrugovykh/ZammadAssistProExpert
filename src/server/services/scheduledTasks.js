@@ -76,9 +76,11 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
     const currentDate = new Date()
     currentDate.setSeconds(currentDate.getSeconds() + 3600)
     const pending_time = currentDate.toISOString()
+    const closeTimeString = ticket_body?.updated_at.toISOString()
+    const closeInfo = `Заявку було закрито у ${closeTimeString}. Код виконавця ${ticket_body?.owner_id.toString()}.`
     const article = {
-      "subject": "Автоматичний перевод заявки в статус 'Очікує закриття'",
-      "body": "Заявку автоматично переведено в статус 'Очікує закриття' - заявка в очікуванні підтвердження замовником.",
+      "subject": `Автоматичний перевод заявки в статус 'Очікує закриття'`,
+      "body": `Заявку автоматично переведено в статус 'Очікує закриття' - заявка в очікуванні підтвердження замовником..\n${closeInfo}`,
       "type": "note",
       "internal": false
     }

@@ -9,6 +9,15 @@ const buttonsConfig = {
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
+  userApproveByAdmin: {
+    title: 'Оберіть, будь ласка, дію',
+    options: [{ resize_keyboard: true }],
+    buttons: [
+      [{ text: '💹Активувати нового користувача', callback_data: '8_1' }],
+      [{ text: '❌Заблокувати користувача', callback_data: '8_2' }],
+      [{ text: '↩️', callback_data: '3_3' }]
+    ]
+  },
   userCreateButtons: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],

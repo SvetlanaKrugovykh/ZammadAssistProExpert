@@ -1,5 +1,5 @@
 const { buttonsConfig } = require('../modules/keyboard')
-const { clientsAdminGetInfo, clientsAdminResponseToRequest } = require('./clientsAdmin')
+const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
@@ -99,6 +99,12 @@ async function handler(bot, msg, webAppUrl) {
     case '7_2':
       await ticketReturn(bot, msg)
       break
+    case '8_1':
+      await userApproveOrDecline(bot, msg, true)
+      break
+    case '8_2':
+      await userApproveOrDecline(bot, msg, false)
+      break
     default:
       console.log(`default: ${msg.text}`)
       switchDynamicSceenes(bot, msg)
@@ -140,7 +146,7 @@ async function goBack(bot, msg) {
 
 async function usersStarterMenu(bot, msg) {
   const registeredUser = await findUserById(msg.chat.id)
-  if (registeredUser === null) {
+  if (registeredUser === null || registeredUser?.verified !== true) {
     try {
       await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
     } catch (err) {

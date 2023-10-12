@@ -1,6 +1,39 @@
 require('dotenv').config()
+const { execPgQuery } = require('../db/common')
 const inputLineScene = require('./inputLine')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
+const { findUserById } = require('../db/tgUsersService')
+
+async function userApproveOrDecline(bot, msg, approve) {
+  const match = msg.text.match(/№_(\d+)/)
+  const user_tgID = match[1]
+  const newUserInfo = await udateUser(user_tgID, approve)
+  if (newUserInfo === null) {
+    await bot.sendMessage(msg.chat.id, `НЕ знайдено користувача з id: ${user_tgID}`)
+    return null
+  }
+  if (approve && newUserInfo.verified) {
+    console.log(`Update user to Approved: ${newUserInfo.email}`)
+    await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
+  } else {
+    console.log(`Update user NOT Approved: ${newUserInfo.email}`)
+    await bot.sendMessage(msg.chat.id, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
+  }
+}
+
+async function udateUser(chatId, approve) {
+  const verify = approve ? 'TRUE' : 'FALSE'
+  const query = `UPDATE users SET verified = ${verify} WHERE login = '${chatId}'`
+
+  try {
+    await execPgQuery(query, [], true)
+    const registeredUser = await findUserById(chatId)
+    return registeredUser
+  } catch (err) {
+    console.log(err)
+    return null
+  }
+}
 
 async function actionsOnId(bot, msg, inputLine) {
   if (inputLine !== undefined) {
@@ -63,4 +96,5 @@ async function clientsAdminResponseToRequest(bot, msg) {
 module.exports = {
   clientsAdmin,
   clientsAdminResponseToRequest,
+  userApproveOrDecline
 }

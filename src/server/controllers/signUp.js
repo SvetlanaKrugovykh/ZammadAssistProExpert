@@ -9,7 +9,6 @@ async function signUpForm(bot, msg, webAppUrl) {
   await bot.sendMessage(chatId, 'Нижче з`явиться кнопка, заповніть форму', {
     reply_markup: {
       keyboard: [
-        // [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/form' } }]
         [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/reg-form-tg-bot' } }],
         [{ text: '🏠', callback_data: '0_4' }]
       ],
@@ -31,10 +30,22 @@ async function singUpDataSave(bot, chatId, data) {
   }
   try {
     await bot.sendMessage(GROUP_ID, `Заповнена нова реєстраційна форма. Контент: ${JSON.stringify(data)},chatId=${chatId}  \n`, { parse_mode: "HTML" })
-    console.log('Registration message sent', message);
+    const buttons = buttonsConfig["userApproveByAdmin"].buttons
+    for (const button of buttons) {
+      if (button[0].callback_data === '3_3') break
+      button[0].text = button[0].text + ' №_' + chatId.toString()
+    }
+    await bot.sendMessage(chatId, buttonsConfig["ticketApproval"].title, {
+      reply_markup: {
+        keyboard: buttonsConfig["userApproveByAdmin"].buttons,
+        resize_keyboard: true,
+        one_time_keyboard: false
+      }
+    })
+    console.log('Registration message sent', message)
   }
   catch (err) {
-    console.log(err);
+    console.log(err)
   }
 }
 
