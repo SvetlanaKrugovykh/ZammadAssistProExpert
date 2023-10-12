@@ -5,19 +5,28 @@ const { clientAdminStarterButtons } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 
 async function userApproveOrDecline(bot, msg, approve) {
-  const match = msg.text.match(/№_(\d+)/)
-  const user_tgID = match[1]
-  const newUserInfo = await udateUser(user_tgID, approve)
-  if (newUserInfo === null) {
-    await bot.sendMessage(msg.chat.id, `НЕ знайдено користувача з id: ${user_tgID}`)
-    return null
+  const msgText = msg.text
+  const regex = /№_(\d+)/g
+  const user_tgIDs = []
+  let match
+
+  while ((match = regex.exec(msgText)) !== null) {
+    user_tgIDs.push(match[1])
   }
-  if (approve && newUserInfo.verified) {
-    console.log(`Update user to Approved: ${newUserInfo.email}`)
-    await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
-  } else {
-    console.log(`Update user NOT Approved: ${newUserInfo.email}`)
-    await bot.sendMessage(msg.chat.id, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
+
+  for (const user_tgID of ticketIDs) {
+    const newUserInfo = await udateUser(user_tgID, approve)
+    if (newUserInfo === null) {
+      await bot.sendMessage(msg.chat.id, `НЕ знайдено користувача з id: ${user_tgID}`)
+      return null
+    }
+    if (approve && newUserInfo.verified) {
+      console.log(`Update user to Approved: ${newUserInfo.email}`)
+      await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
+    } else {
+      console.log(`Update user NOT Approved: ${newUserInfo.email}`)
+      await bot.sendMessage(msg.chat.id, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
+    }
   }
 }
 
