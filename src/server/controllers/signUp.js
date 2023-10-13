@@ -1,4 +1,5 @@
 const { buttonsConfig } = require('../modules/keyboard')
+require('dotenv').config()
 const inputLineScene = require('./inputLine')
 const { createOrUpdateUserIntoDb } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
@@ -39,7 +40,7 @@ async function singUpDataSave(bot, chatId, data) {
       if (button[0].callback_data === '3_3') break
       button[0].text = button[0].text + ' №_' + chatId.toString()
     }
-    await bot.sendMessage(chatId, buttonsConfig["ticketApproval"].title, {
+    await bot.sendMessage(GROUP_ID, buttonsConfig["userApproveByAdmin"].title, {
       reply_markup: {
         keyboard: buttonsConfig["userApproveByAdmin"].buttons,
         resize_keyboard: true,

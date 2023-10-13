@@ -3,6 +3,7 @@ const { execPgQuery } = require('../db/common')
 const inputLineScene = require('./inputLine')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
+const GROUP_ID = Number(process.env.GROUP_ID)
 
 async function userApproveOrDecline(bot, msg, approve) {
   const msgText = msg.text
@@ -17,15 +18,15 @@ async function userApproveOrDecline(bot, msg, approve) {
   for (const user_tgID of user_tgIDs) {
     const newUserInfo = await udateUser(user_tgID, approve)
     if (newUserInfo === null) {
-      await bot.sendMessage(msg.chat.id, `НЕ знайдено користувача з id: ${user_tgID}`)
+      await bot.sendMessage(GROUP_ID, `НЕ знайдено користувача з id: ${user_tgID}`)
       return null
     }
     if (approve && newUserInfo.verified) {
       console.log(`Update user to Approved: ${newUserInfo.email}`)
-      await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
+      await bot.sendMessage(GROUP_ID, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
     } else {
       console.log(`Update user NOT Approved: ${newUserInfo.email}`)
-      await bot.sendMessage(msg.chat.id, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
+      await bot.sendMessage(GROUP_ID, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
     }
   }
 }
