@@ -1,4 +1,5 @@
 const { Pool } = require('pg')
+require('dotenv').config()
 
 const pool = new Pool({
   user: process.env.ZAMMAD_DB_USER,
@@ -10,10 +11,23 @@ const pool = new Pool({
 
 
 async function execPgQuery(query, values, commit = false, all = false) {
+  const DEBUG_LEVEL = Number(process.env.DEBUG_LEVEL) || 0
   let client
   try {
+    if (DEBUG_LEVEL > 0) {
+      console.log(`execQuery ${query},${values.toString()}`
+        + ` client:${pool.database} ${pool.host}:${pool.port}`
+        + ` ${pool.user} `)
+    }
     client = await pool.connect()
+    if (DEBUG_LEVEL > 0) {
+      console.log(`execQuery ${query},${values.toString()}`
+        + ` client:${client.processID} ${client.database} ${client.host}:${client.port}`
+        + ` ${client.user}`
+      )
+    }
     const data = await client.query(query, values)
+    if (DEBUG_LEVEL > 0) console.log(`execQuery ${query},${values.toString()} returned ${data.rowCount} rows`)
     if (commit) await client.query('COMMIT')
     if (data.rows.length === 0) return null
     if (all) return data.rows
