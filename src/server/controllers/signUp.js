@@ -130,11 +130,10 @@ async function usersRegistration(bot, msg, selectedByUser) {
 
     console.log(data)
     await singUpDataSave(bot, msg.chat.id, data)
-    await bot.sendMessage(msg.chat.id, 'Дякую, Реєстрація пройшла успішно!')
+    await bot.sendMessage(msg.chat.id, 'Запит на реєстрацію користувача відправлено службі технічної підтримки. Очікуйте підтвердження!')
     await bot.sendMessage(msg.chat.id, 'Ваш emal: ' + data?.email)
     await bot.sendMessage(msg.chat.id, 'Ваші прізвище та ім`я: ' + data?.PIB)
     await bot.sendMessage(msg.chat.id, 'Ваш номер телефону: ' + data?.phoneNumber)
-    await bot.sendMessage(msg.chat.id, 'Всю необхідну інформацію Ви можете отримувати в цьому чаті. Якщо у Вас виникли питання, звертайтесь через меню /"Надіслати повідомлення/". Зараз для переходу в головне меню натисніть /start')
   } catch (err) {
     console.log(err)
   }
