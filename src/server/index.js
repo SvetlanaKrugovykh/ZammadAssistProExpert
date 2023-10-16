@@ -4,6 +4,8 @@ const cron = require('node-cron')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
+const https = require('https')
+const { cert } = require('./data/consts')
 const { users } = require('./users/users.model')
 const { handler, usersStarterMenu } = require('./controllers/switcher')
 const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
@@ -18,7 +20,11 @@ const app = Fastify({
 })
 
 const downloadApp = Fastify({
-  trustProxy: true
+  trustProxy: true,
+  https: {
+    key: cert.key,
+    cert: cert.cert
+  }
 })
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
