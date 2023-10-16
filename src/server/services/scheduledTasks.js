@@ -10,7 +10,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > NOW() - INTERVAL '${INTERVAL_MINUTES} minutes' LIMIT 50`
-
+    console.log('checkAndReplaceTicketsStatuses start', new Date())
     const data = await execPgQuery(query, [], false, true)
     if (!data) return null
 

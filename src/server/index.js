@@ -7,7 +7,7 @@ const { buttonsConfig } = require('./modules/keyboard')
 const https = require('https')
 const { cert } = require('./data/consts')
 const { users } = require('./users/users.model')
-const { handler, usersStarterMenu } = require('./controllers/switcher')
+const { handler, usersStarterMenu, blockMenu } = require('./controllers/switcher')
 const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
 const { checkAndReplaceTicketsStatuses, autoCloseTicketsWithoutCustomerFeedback } = require('./services/scheduledTasks')
 const singUpDataSave = require('./controllers/signUp').singUpDataSave
@@ -64,8 +64,7 @@ bot.on('message', async (msg) => {
     console.log(ctx.chat)
     if (ctx.chat.id) {
       if (ctx.chat.id.toString().startsWith('-')) {
-        await bot.sendMessage(ctx.chat.id, 'Робота з ботом зі групи не передбачена')
-        return
+        await blockMenu(bot, msg)
       }
     }
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
