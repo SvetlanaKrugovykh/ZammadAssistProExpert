@@ -1,6 +1,6 @@
 require('dotenv').config()
+const inputLineScene = require('../controllers/inputLine')
 const { execPgQuery } = require('../db/common')
-const inputLineScene = require('./inputLine')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
@@ -28,6 +28,9 @@ async function userApproveOrDecline(bot, msg, approve) {
     } else {
       console.log(`Update user NOT Approved: ${newUserInfo.email}`)
       await bot.sendMessage(GROUP_ID, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
+      console.log(`Введіть причину відмови для користувача: ${newUserInfo.email}`)
+      const userInput = await inputLineScene(bot, msg)
+      sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
     }
   }
 }
@@ -35,6 +38,14 @@ async function userApproveOrDecline(bot, msg, approve) {
 async function sendInfoAboutApproveRegistration(bot, user_tgID) {
   try {
     await bot.sendMessage(user_tgID, 'Вітаю! Вашу заявка на реєстрацію в системі <b>Інтерактивний чат-бот</b> була затверджено. Ви можете почати користуватися системою. Для переходу в головне меню натисніть /start', { parse_mode: 'HTML' })
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason) {
+  try {
+    await bot.sendMessage(user_tgID, `Вашу заявку на реєстрацію в системі <b>Інтерактивний чат-бот</b> було відхилено з причини ${reason}. Для отримання додаткової інформації зверніться до адміністратора системи.`, { parse_mode: 'HTML' })
   } catch (err) {
     console.log(err)
   }

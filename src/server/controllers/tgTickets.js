@@ -1,6 +1,6 @@
 
 const { buttonsConfig } = require('../modules/keyboard')
-const inputLineScene = require('./inputLine')
+const inputLineScene = require('../controllers/inputLine')
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
@@ -45,6 +45,26 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   }
 }
 
+
+async function askForPicture(bot, msg, selectedByUser) {
+  try {
+    await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
+    const pictureMsg = await new Promise((resolve, reject) => {
+      bot.once('photo', resolve)
+      bot.once('text', () => reject(new Error('Invalid input')))
+    })
+    const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
+    const pictureFilePath = await bot.downloadFile(pictureFileId, process.env.DOWNLOAD_APP_PATH)
+    const pictureFileName = `${pictureFileId}.jpg`
+    const pictureFullPath = path.join(process.env.DOWNLOAD_APP_PATH, pictureFileName)
+    fs.renameSync(pictureFilePath, pictureFullPath)
+    const selectedByUser_ = await addTicketAttachment(bot, pictureMsg, { ...selectedByUser, picture: pictureFileName })
+    return selectedByUser_
+  } catch (err) {
+    console.log(err)
+    return {}
+  }
+}
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
@@ -245,4 +265,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket }
+module.exports = { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket, askForPicture }

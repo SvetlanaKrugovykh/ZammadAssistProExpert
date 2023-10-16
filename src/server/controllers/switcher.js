@@ -1,7 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets } = require('./tgTickets')
+const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { findUserById } = require('../db/tgUsersService')
@@ -92,6 +92,9 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '5_4':
       await ticketRegistration(bot, msg, selectedByUser[chatId])
+      break
+    case '5_5':
+      selectedByUser[chatId] = await askForPicture(bot, msg, selectedByUser[chatId])
       break
     case '7_1':
       await ticketApprove(bot, msg)
