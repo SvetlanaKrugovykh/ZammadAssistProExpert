@@ -62,6 +62,12 @@ bot.on('message', async (msg) => {
   if (text === '/start') {
     console.log(new Date())
     console.log(ctx.chat)
+    if (ctx.chat.id) {
+      if (ctx.chat.id.toString().startsWith('-')) {
+        await bot.sendMessage(ctx.chat.id, 'Робота з ботом зі групи не передбачена')
+        return
+      }
+    }
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
     if (adminUser) {
       await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
