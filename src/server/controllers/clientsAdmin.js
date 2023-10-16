@@ -24,22 +24,12 @@ async function userApproveOrDecline(bot, msg, approve) {
     if (approve && newUserInfo.verified) {
       console.log(`Update user to Approved: ${newUserInfo.email}`)
       await bot.sendMessage(GROUP_ID, `Дякую! Ви затвердили заявку для користувача: ${newUserInfo.email}.`)
-      await sendInfoAboutApproveRegistration(bot, user_tgID)
     } else {
       console.log(`Update user NOT Approved: ${newUserInfo.email}`)
       await bot.sendMessage(GROUP_ID, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
     }
   }
 }
-
-async function sendInfoAboutApproveRegistration(bot, user_tgID) {
-  try {
-    await bot.sendMessage(user_tgID, 'Вітаю! Вашу заявка на реєстрацію в системі <b>Інтерактивний чат-бот</b> була затверджено. Ви можете почати користуватися системою. Для переходу в головне меню натисніть /start', { parse_mode: 'HTML' })
-  } catch (err) {
-    console.log(err)
-  }
-}
-
 
 async function udateUser(chatId, approve) {
   const verify = approve ? 'TRUE' : 'FALSE'
