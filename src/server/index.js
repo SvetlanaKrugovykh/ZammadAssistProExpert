@@ -59,6 +59,7 @@ bot.on('message', async (msg) => {
     if (ctx.chat.id) {
       if (ctx.chat.id.toString().startsWith('-')) {
         await blockMenu(bot, msg)
+        return
       }
     }
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
