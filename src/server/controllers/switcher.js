@@ -113,6 +113,11 @@ async function handler(bot, msg, webAppUrl) {
 }
 //#endregion
 
+async function blockMenu(bot, msg) {
+  await bot.sendMessage(msg.chat.id, 'Вибачте, але Ви не можете використовувати цей бот')
+  await bot.sendMessage(msg.chat.id, 'Для повторного використання натисніть /start')
+}
+
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
   try {
@@ -182,4 +187,4 @@ async function registeredUserMenu(bot, msg, standardStartButtons) {
 }
 //#endregion
 
-module.exports = { handler, guestMenu, registeredUserMenu, usersStarterMenu }
+module.exports = { handler, guestMenu, registeredUserMenu, usersStarterMenu, blockMenu }
