@@ -32,7 +32,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
         if (!user_data) return null
         chatId = user_data?.login
       }
-      await ticketApprovalScene(ticketID, bot, chatId, ticketSubject)
+      await ticketApprovalScene(ticketID, bot, ticketSubject)
     }
   } catch (err) {
     console.log(err)
@@ -100,7 +100,7 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
 
 async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
   try {
-    const INTERVAL_DAYS = process.env.CLOSED_TICKET_SCAN_INTERVAL_DAYS || 3
+    const INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     const article = {
       "subject": "Автоматичний перевод заявки в статус 'Закрита'",
       "body": `Заявку автоматично переведено в статус 'Закрита' - Підтвердження або скасування замовником не відбулось протягом ${INTERVAL_DAYS} днів.`,

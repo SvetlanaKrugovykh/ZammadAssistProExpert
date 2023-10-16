@@ -3,8 +3,10 @@ const axios = require('axios')
 const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
 
-async function ticketApprovalScene(ticketID, bot, chatId, ticketSubject) {
+async function ticketApprovalScene(ticketID, bot, ticketSubject) {
   try {
+    const chatId = await getChatIdByTicketID(ticketID)
+    console.log(`ticketApprovalScene chatId: ${chatId}`)
     buttonsConfig["ticketApproval"].title = ticketSubject
     const buttons = buttonsConfig["ticketApproval"].buttons
     for (const button of buttons) {
@@ -18,6 +20,20 @@ async function ticketApprovalScene(ticketID, bot, chatId, ticketSubject) {
         one_time_keyboard: false
       }
     })
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+async function getChatIdByTicketID(ticketID) {
+  try {
+    const ticket = await getTicketData(ticketID)
+    if (!ticket) return null
+    const customer_id = ticket.customer_id
+    const user_data = await findUserById(customer_id)
+    if (!user_data) return null
+    const chatId = user_data?.login
+    return chatId
   } catch (err) {
     console.log(err)
   }

@@ -45,7 +45,6 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   }
 }
 
-
 async function askForPicture(bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
@@ -55,10 +54,11 @@ async function askForPicture(bot, msg, selectedByUser) {
     })
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
     const pictureFilePath = await bot.downloadFile(pictureFileId, process.env.DOWNLOAD_APP_PATH)
-    const pictureFileName = `${pictureFileId}.jpg`
+    const pictureFileName = path.basename(pictureFilePath) + '.jpg'
     const pictureFullPath = path.join(process.env.DOWNLOAD_APP_PATH, pictureFileName)
     fs.renameSync(pictureFilePath, pictureFullPath)
-    const selectedByUser_ = await addTicketAttachment(bot, pictureMsg, { ...selectedByUser, picture: pictureFileName })
+    const fileNames = selectedByUser.ticketAttacmentFileNames || []
+    const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
     return selectedByUser_
   } catch (err) {
     console.log(err)
@@ -87,7 +87,8 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     const fileExtension = path.extname(msg.document.file_name)
     const fileName = `attachment_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
     const filePath = path.join(process.env.DOWNLOAD_APP_PATH, fileName)
-    const file = fs.createWriteStream(filePath)
+    const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
+    const file = fs.createWriteStream(filePathWithSingleSlash)
     const fileStream = await bot.getFileStream(fileId)
     fileStream.pipe(file)
     await new Promise((resolve, reject) => {
