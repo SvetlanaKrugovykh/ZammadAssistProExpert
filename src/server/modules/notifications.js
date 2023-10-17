@@ -2,6 +2,7 @@ const { buttonsConfig } = require('./keyboard')
 const axios = require('axios')
 const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
+const { findUserById } = require('../db/tgUsersService')
 
 async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
   const source = {}
@@ -30,6 +31,23 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
         one_time_keyboard: false
       }
     })
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+async function showTicketInfo(bot, msg) {
+  try {
+    const ticketID = msg.text.match(/\d+/)?.[0]
+    if (!ticketID) return null
+    const ticket = await getTicketData(ticketID)
+    if (!ticket) return null
+    const { id, title, number, created_at, updated_at } = ticket
+    const owner = await findUserById(ticket.owner_id)
+    const owner_PIB = owner ? `${owner.first_name} ${owner.last_name}` : ticket.owner_id.toString()
+    const created_at_formatted = new Date(created_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
+    const updated_at_formatted = new Date(updated_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
+    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${created_at_formatted}\nДата останнього оновлення: ${updated_at_formatted}`)
   } catch (err) {
     console.log(err)
   }
@@ -110,7 +128,7 @@ async function ticketReturn(bot, msg) {
   }
   const article = {
     "subject": "Заявку повернуто на доопрацювання",
-    "body": "Повернення заявки на доопрацювання. Заявка перевідена в статус 'Відкрита'",
+    "body": "Повернення заявки на доопрацювання. Заявка переведена в статус 'Відкрита'",
     "type": "note",
     "internal": false
   }
@@ -124,4 +142,4 @@ async function ticketReturn(bot, msg) {
   await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
 }
 
-module.exports = { ticketApprovalScene, ticketApprove, ticketReturn, getTicketData }
+module.exports = { ticketApprovalScene, ticketApprove, ticketReturn, getTicketData, showTicketInfo }

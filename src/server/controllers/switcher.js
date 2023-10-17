@@ -6,7 +6,7 @@ const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
-const { ticketApprovalScene } = require('../modules/notifications')
+const { ticketApprovalScene, showTicketInfo } = require('../modules/notifications')
 
 const selectedByUser = {}
 
@@ -127,6 +127,10 @@ async function switchDynamicSceenes(bot, msg) {
   try {
     if (msg.text.includes('🟦')) {
       await ticketApprovalScene('', bot, '', msg)
+      return
+    }
+    if (msg.text.includes('🟨') || msg.text.includes('🟩')) {
+      await showTicketInfo(bot, msg)
       return
     }
     if (msg.text.includes('💹Затвердити виконання заявки')) {

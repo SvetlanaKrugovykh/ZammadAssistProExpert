@@ -56,7 +56,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
         if (!user_data) return null
         chatId = user_data?.login
       }
-      await bot.sendMessage(customer_id, ticketSubject)
+      await bot.sendMessage(chatId, ticketSubject)
     }
   } catch (err) {
     console.log(err)

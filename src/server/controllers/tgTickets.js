@@ -130,7 +130,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       }
     }
 
-    await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка зареєстрована. Номер заявки: ${ticket.number}`)
+    await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
   } catch (err) {
     console.log(err)
   }
@@ -247,7 +247,7 @@ async function checkUserTickets(bot, msg, menuItem) {
         title: 'Оберіть будь ласка заявку',
         options: [{ resize_keyboard: true }],
         buttons: parsedData.map(ticket => [
-          { text: `${statusIcon} №${ticket.number}: ${ticket.title} `, callback_data: `43_${ticket.id}` }
+          { text: `${statusIcon} №${ticket.id}: ${ticket.title}|${ticket.number}`, callback_data: `43_${ticket.id}` }
         ])
       }
       ticketsButtons.buttons.push([{ text: '↩️', callback_data: '0_1' }])
