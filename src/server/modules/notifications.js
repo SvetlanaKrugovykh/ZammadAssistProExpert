@@ -3,17 +3,27 @@ const axios = require('axios')
 const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
 
-async function ticketApprovalScene(ticketID, bot, ticketSubject) {
+async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
+  const source = {}
   try {
-    const chatId = await getChatIdByTicketID(ticketID)
-    console.log(`ticketApprovalScene chatId: ${chatId}`)
-    buttonsConfig["ticketApproval"].title = ticketSubject
+    if (ticketSubject === '') {
+      source.chatId = msg.chat.id
+      source.ticketID = msg.text.match(/\d+/)?.[0]
+      source.ticketSubject = msg.text
+    } else {
+      source.chatId = await getChatIdByTicketID(ticketID)
+      source.ticketID = ticketID
+      source.ticketSubject = ticketSubject
+    }
+    console.log(`ticketApprovalScene chatId: ${source.chatId}`)
+    buttonsConfig["ticketApproval"].title = source.ticketSubject
     const buttons = buttonsConfig["ticketApproval"].buttons
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
-      button[0].text = button[0].text + ' №_' + ticketID.toString()
+      if (!button[0].text.includes(`№_${source.ticketID.toString()}`))
+        button[0].text = button[0].text + ' №_' + source.ticketID.toString()
     }
-    await bot.sendMessage(chatId, buttonsConfig["ticketApproval"].title, {
+    await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
       reply_markup: {
         keyboard: buttonsConfig["ticketApproval"].buttons,
         resize_keyboard: true,
@@ -28,7 +38,10 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject) {
 async function getChatIdByTicketID(ticketID) {
   try {
     const ticket = await getTicketData(ticketID)
-    if (!ticket) return null
+    if (!ticket) {
+      console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
+      return null
+    }
     const customer_id = ticket.customer_id
     const user_data = await findUserById(customer_id)
     if (!user_data) return null
@@ -66,6 +79,10 @@ async function ticketApprove(bot, msg) {
 
   for (const ticketID of ticketIDs) {
     let body = await getTicketData(ticketID)
+    if (!body) {
+      console.log(`ticketApprove: ticketID ${ticketID} not found`)
+      continue
+    }
     const article = {
       "subject": "Кінцеве затверження замовником заявки",
       "body": "Заявку затверджено замовником. Заявка закрита.",
@@ -87,6 +104,10 @@ async function ticketReturn(bot, msg) {
   const match = msg.text.match(/№_(\d+)/)
   const ticketID = match[1]
   let body = await getTicketData(ticketID)
+  if (!body) {
+    console.log(`ticketReturn: ticketID ${ticketID} not found`)
+    return null
+  }
   const article = {
     "subject": "Заявку повернуто на доопрацювання",
     "body": "Повернення заявки на доопрацювання. Заявка перевідена в статус 'Відкрита'",

@@ -6,6 +6,7 @@ const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
+const { ticketApprovalScene } = require('../modules/notifications')
 
 const selectedByUser = {}
 
@@ -124,14 +125,22 @@ async function blockMenu(bot, msg) {
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
   try {
-    if (/[🏠🟣🔵🧷📌✔️📘➕📗💹❌]/.test(msg.text)) {
+    if (msg.text.includes('🟦')) {
+      await ticketApprovalScene('', bot, '', msg)
+      return
+    }
+    if (msg.text.includes('💹Затвердити виконання заявки')) {
+      await ticketApprove(bot, msg)
+      return
+    }
+    if (msg.text.includes('❌Відхилити виконання заявки')) {
+      await ticketReturn(bot, msg)
+      return
+    }
+    if (/[🏠🟣🔵🧷📌✔️➕📒📗📘💹❌]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }
-    // if (msg.text.includes('🕒')) {
-    //   //await schedullerScene(bot, msg)
-    //   return
-    // }
   } catch (error) { console.log(error) }
 }
 

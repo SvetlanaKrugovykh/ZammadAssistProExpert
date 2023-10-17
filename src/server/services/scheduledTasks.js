@@ -24,14 +24,6 @@ async function checkAndReplaceTicketsStatuses(bot) {
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
       await changeStatusFromCloseToPendingClose(ticketID, ticket)
-      const user_data = await findUserById(customer_id)
-      let chatId = 0
-      if (process.env.ZAMMAD_USER_TEST_MODE === 'true')
-        chatId = Number(process.env.TEST_USER_TELEGRAM_CHAT_ID)
-      else {
-        if (!user_data) return null
-        chatId = user_data?.login
-      }
       await ticketApprovalScene(ticketID, bot, ticketSubject)
     }
   } catch (err) {
