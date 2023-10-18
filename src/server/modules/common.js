@@ -64,11 +64,12 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
       if (!button[0].text.includes(`№_${source.ticketID.toString()}`))
-        if (!source.checkUserID || source?.userIDeqCustomerId)
+        if (!source.checkUserID || source?.userIDeqCustomerId) {
           source.dataFilled = true
-      button[0].text = button[0].text + ' №_' + source.ticketID.toString()
+          button[0].text = button[0].text + ' №_' + source.ticketID.toString()
+        }
     }
-    if (source.dataFilled) {
+    if (source.dataFilled && (!source.chatId.includes('@'))) {
       await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
         reply_markup: {
           keyboard: buttonsConfig["ticketApproval"].buttons,
