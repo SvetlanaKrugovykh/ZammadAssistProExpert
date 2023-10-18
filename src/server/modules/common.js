@@ -38,7 +38,7 @@ async function getChatIdByTicketID(ticketID) {
   }
 }
 
-async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
+async function ticketApprovalScene(ticketID, bot, ticketSubject, ticket = null, msg = null) {
   const source = {}
   if (process.env.DEBUG_LEVEL === '7') console.log('ticketApprovalScene ticketID', ticketID)
   try {
@@ -46,10 +46,16 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
       source.chatId = msg.chat.id
       source.ticketID = msg.text.match(/\d+/)?.[0]
       source.ticketSubject = msg.text
+      source.checkUserID = false
     } else {
       source.chatId = await getChatIdByTicketID(ticketID)
+      const user = await findUserById(ticket.customer_id)
+      if (user?.id === ticket.customer_id)
+        source.userIDeqCustomerId = true
+      else source.userIDeqCustomerId = false
       source.ticketID = ticketID
       source.ticketSubject = ticketSubject
+      source.checkUserID = true
     }
     console.log(`ticketApprovalScene chatId: ${source.chatId}`)
     buttonsConfig["ticketApproval"].title = source.ticketSubject
@@ -57,7 +63,8 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
       if (!button[0].text.includes(`№_${source.ticketID.toString()}`))
-        button[0].text = button[0].text + ' №_' + source.ticketID.toString()
+        if (!source.checkUserID || source?.userIDeqCustomerId)
+          button[0].text = button[0].text + ' №_' + source.ticketID.toString()
     }
     await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
       reply_markup: {

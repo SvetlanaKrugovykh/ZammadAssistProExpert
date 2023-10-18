@@ -33,7 +33,7 @@ async function execPgQuery(query, values, commit = false, all = false) {
     if (all) return data.rows
     return data.rows[0]
   } catch (error) {
-    console.error(`Error in execQuery ${query},${values.toString()}:`, error)
+    console.error(`Error in execQuery ${query},${values}:`, error)
     if (commit) await client.query('ROLLBACK')
     return null
   } finally {
