@@ -11,7 +11,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
     const now = new Date()
-    INTERVAL_MINUTES = now.getHours() * 60 + now.getMinutes()
+    //INTERVAL_MINUTES = now.getHours() * 60 + now.getMinutes() 
 
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > NOW() - INTERVAL '${INTERVAL_MINUTES} minutes' LIMIT 50`
 
