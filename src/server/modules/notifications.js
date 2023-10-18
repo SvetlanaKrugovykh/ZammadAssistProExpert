@@ -3,6 +3,7 @@ const axios = require('axios')
 const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
+const { saveChangesToTicket } = require('../services/scheduledTasks')
 
 async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
   const source = {}
@@ -114,6 +115,8 @@ async function ticketApprove(bot, msg) {
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
+    const ticket_body = await getTicketData(ticketID)
+    saveChangesToTicket(ticketID, ticket_body, 'затверджено')
     await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
   }
 }
@@ -139,6 +142,8 @@ async function ticketReturn(bot, msg) {
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
   if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
+  const ticket_body = await getTicketData(ticketID)
+  saveChangesToTicket(ticketID, ticket_body, 'повернуто')
   await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
 }
 

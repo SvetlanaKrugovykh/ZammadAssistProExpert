@@ -20,7 +20,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       const ticketSubj = await getTicketData(ticketID, 'title')
       if (!ticketSubj || !customer_id) return null
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} виконана.\n` +
-        `Вам необхідно завтвердити виконання заявки або надіслати на доопрацювання.\n` +
+        `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
       await changeStatusFromCloseToPendingClose(ticketID, ticket)
@@ -113,4 +113,27 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
   }
 }
 
-module.exports = { checkAndReplaceTicketsStatuses, autoCloseTicketsWithoutCustomerFeedback }
+
+async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
+  try {
+    const currentDateFormatted = new Date().toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
+    const closeInfo = `Заявку було ${closeAction} замовником у ${currentDateFormatted}. Код виконавця ${ticket_body?.owner_id.toString()}.`
+    const article = {
+      "subject": `Заявку ${closeAction} замовником.'`,
+      "body": `Заявку ${closeAction} замовником.\n${closeInfo}`,
+      "type": "note",
+      "internal": false
+    }
+    const { title, group_id, priority_id, state_id, customer_id } = ticket_body
+    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+
+    newTicketBody.article = article
+
+    const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
+    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+module.exports = { checkAndReplaceTicketsStatuses, autoCloseTicketsWithoutCustomerFeedback, saveChangesToTicket }
