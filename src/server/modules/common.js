@@ -70,15 +70,13 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
         }
     }
     if (source.dataFilled && (typeof source.chatId === 'string' && !source.chatId.includes('@'))) {
-      {
-        await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
-          reply_markup: {
-            keyboard: buttonsConfig["ticketApproval"].buttons,
-            resize_keyboard: true,
-            one_time_keyboard: false
-          }
-        })
-      }
+      await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
+        reply_markup: {
+          keyboard: buttonsConfig["ticketApproval"].buttons,
+          resize_keyboard: true,
+          one_time_keyboard: false
+        }
+      })
     }
   } catch (err) {
     console.log(err)
