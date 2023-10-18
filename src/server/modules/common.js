@@ -40,6 +40,7 @@ async function getChatIdByTicketID(ticketID) {
 
 async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, ticket = null) {
   const source = {}
+  source.dataFilled = false
   if (process.env.DEBUG_LEVEL === '7') console.log('ticketApprovalScene ticketID', ticketID)
   try {
     if (ticketSubject === '') {
@@ -64,15 +65,18 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
       if (button[0].callback_data === '3_3') break
       if (!button[0].text.includes(`№_${source.ticketID.toString()}`))
         if (!source.checkUserID || source?.userIDeqCustomerId)
-          button[0].text = button[0].text + ' №_' + source.ticketID.toString()
+          source.dataFilled = true
+      button[0].text = button[0].text + ' №_' + source.ticketID.toString()
     }
-    await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
-      reply_markup: {
-        keyboard: buttonsConfig["ticketApproval"].buttons,
-        resize_keyboard: true,
-        one_time_keyboard: false
-      }
-    })
+    if (source.dataFilled) {
+      await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
+        reply_markup: {
+          keyboard: buttonsConfig["ticketApproval"].buttons,
+          resize_keyboard: true,
+          one_time_keyboard: false
+        }
+      })
+    }
   } catch (err) {
     console.log(err)
   }
