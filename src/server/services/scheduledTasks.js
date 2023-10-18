@@ -10,21 +10,30 @@ async function checkAndReplaceTicketsStatuses(bot) {
     const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
+    INTERVAL_MINUTES = now.getHours() * 60 + now.getMinutes()
 
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > NOW() - INTERVAL '${INTERVAL_MINUTES} minutes' LIMIT 50`
-    console.log('checkAndReplaceTicketsStatuses start', new Date())
+
+    if (process.env.DEBUG_LEVEL === '7') {
+      console.log('checkAndReplaceTicketsStatuses query', query)
+      console.log('checkAndReplaceTicketsStatuses INTERVAL_MINUTES', INTERVAL_MINUTES)
+      console.log('checkAndReplaceTicketsStatuses start', new Date())
+    }
     const data = await execPgQuery(query, [], false, true)
+    if (process.env.DEBUG_LEVEL === '7') console.log('tickets', data)
     if (!data) return null
 
     for (const ticket of data) {
       const ticketID = ticket.id
       const customer_id = ticket.customer_id
       const ticketSubj = await getTicketData(ticketID, 'title')
+      if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
       if (!ticketSubj || !customer_id) return null
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} виконана.\n` +
         `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
+      if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubject', ticketSubject)
       await changeStatusFromCloseToPendingClose(ticketID, ticket)
       await ticketApprovalScene(ticketID, bot, ticketSubject)
     }
