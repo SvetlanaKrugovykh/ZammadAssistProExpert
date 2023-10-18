@@ -39,23 +39,6 @@ async function getTicketArticles(ticketID) {
   }
 }
 
-async function getChatIdByTicketID(ticketID) {
-  try {
-    const ticket = await getTicketData(ticketID)
-    if (!ticket) {
-      console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
-      return null
-    }
-    const customer_id = ticket.customer_id
-    const user_data = await findUserById(customer_id)
-    if (!user_data) return null
-    const chatId = user_data?.login
-    return chatId
-  } catch (err) {
-    console.log(err)
-  }
-}
-
 async function ticketApprove(bot, msg) {
   const msgText = msg.text
   const regex = /№_(\d+)/g
