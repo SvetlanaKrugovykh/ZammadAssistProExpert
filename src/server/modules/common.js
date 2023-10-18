@@ -69,7 +69,9 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
           button[0].text = button[0].text + ' №_' + source.ticketID.toString()
         }
     }
-    if (source.dataFilled && (typeof source.chatId === 'string' && !source.chatId.includes('@'))) {
+    if (typeof source.chatId === 'string' && !source.chatId.includes('@'))
+      return
+    if (source.dataFilled) {
       await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
         reply_markup: {
           keyboard: buttonsConfig["ticketApproval"].buttons,
