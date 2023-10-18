@@ -48,7 +48,8 @@ async function showTicketInfo(bot, msg) {
     const owner = await findUserById(ticket.owner_id)
     const article = await getTicketArticles(ticketID)
     const article_body = article ? article?.body : ''
-    const owner_PIB = owner ? `${owner.first_name} ${owner.last_name}` : ticket.owner_id.toString()
+    let owner_PIB = owner ? `${owner.first_name} ${owner.last_name}` : ticket.owner_id.toString()
+    if (ticket.state_id === 1) owner_PIB = 'Відсутній'
     const created_at_formatted = new Date(created_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
     const updated_at_formatted = new Date(updated_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
     await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${created_at_formatted}\nДата останнього оновлення: ${updated_at_formatted}\n Зміст: \n${article_body.toString()}`)
