@@ -1,7 +1,9 @@
-const { ticketApprovalScene, getTicketData } = require('../modules/notifications')
 const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
+const { ticketApprovalScene, getTicketData } = require('../modules/common')
+require('dotenv').config()
+
 
 async function checkAndReplaceTicketsStatuses(bot) {
   try {

@@ -6,7 +6,8 @@ const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
-const { ticketApprovalScene, showTicketInfo } = require('../modules/notifications')
+const { ticketApprovalScene } = require('../modules/common')
+const { showTicketInfo } = require('../modules/notifications')
 
 const selectedByUser = {}
 
@@ -110,6 +111,7 @@ async function handler(bot, msg, webAppUrl) {
       await userApproveOrDecline(bot, msg, false)
       break
     default:
+      if (msg.text === undefined) return
       console.log(`default: ${msg.text}`)
       switchDynamicSceenes(bot, msg)
       break

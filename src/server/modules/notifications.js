@@ -5,38 +5,8 @@ const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
+const { getTicketData } = require('../modules/common')
 
-async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
-  const source = {}
-  try {
-    if (ticketSubject === '') {
-      source.chatId = msg.chat.id
-      source.ticketID = msg.text.match(/\d+/)?.[0]
-      source.ticketSubject = msg.text
-    } else {
-      source.chatId = await getChatIdByTicketID(ticketID)
-      source.ticketID = ticketID
-      source.ticketSubject = ticketSubject
-    }
-    console.log(`ticketApprovalScene chatId: ${source.chatId}`)
-    buttonsConfig["ticketApproval"].title = source.ticketSubject
-    const buttons = buttonsConfig["ticketApproval"].buttons
-    for (const button of buttons) {
-      if (button[0].callback_data === '3_3') break
-      if (!button[0].text.includes(`№_${source.ticketID.toString()}`))
-        button[0].text = button[0].text + ' №_' + source.ticketID.toString()
-    }
-    await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
-      reply_markup: {
-        keyboard: buttonsConfig["ticketApproval"].buttons,
-        resize_keyboard: true,
-        one_time_keyboard: false
-      }
-    })
-  } catch (err) {
-    console.log(err)
-  }
-}
 
 async function showTicketInfo(bot, msg) {
   try {
@@ -83,21 +53,6 @@ async function getChatIdByTicketID(ticketID) {
     return chatId
   } catch (err) {
     console.log(err)
-  }
-}
-
-async function getTicketData(ticketID, field = '') {
-  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
-  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
-  const url = `${process.env.ZAMMAD_API_URL}/tickets/${ticketID}`
-  try {
-    const response = await axios.get(url, { headers, httpsAgent })
-    const ticket = response.data
-    if (field === '') return ticket
-    else return ticket[field]
-  } catch (err) {
-    console.log(err)
-    return null
   }
 }
 
@@ -164,4 +119,4 @@ async function ticketReturn(bot, msg) {
   await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
 }
 
-module.exports = { ticketApprovalScene, ticketApprove, ticketReturn, getTicketData, showTicketInfo }
+module.exports = { ticketApprove, ticketReturn, showTicketInfo }
