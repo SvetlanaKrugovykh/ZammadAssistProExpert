@@ -1,6 +1,6 @@
 const axios = require('axios')
 const https = require('https')
-const { buttonsConfig } = require('./keyboard')
+const { findUserById } = require('../db/tgUsersService')
 
 async function getTicketData(ticketID, field = '') {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
