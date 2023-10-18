@@ -4,6 +4,7 @@ const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
+const { execPgQuery } = require('../db/common')
 
 async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null) {
   const source = {}
@@ -45,12 +46,25 @@ async function showTicketInfo(bot, msg) {
     if (!ticket) return null
     const { id, title, number, created_at, updated_at } = ticket
     const owner = await findUserById(ticket.owner_id)
+    const article = await getTicketArticles(ticketID)
+    const article_body = article ? article?.body : ''
     const owner_PIB = owner ? `${owner.first_name} ${owner.last_name}` : ticket.owner_id.toString()
     const created_at_formatted = new Date(created_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
     const updated_at_formatted = new Date(updated_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
-    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${created_at_formatted}\nДата останнього оновлення: ${updated_at_formatted}`)
+    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${created_at_formatted}\nДата останнього оновлення: ${updated_at_formatted}\n Зміст: \n${article_body.toString()}`)
   } catch (err) {
     console.log(err)
+  }
+}
+
+async function getTicketArticles(ticketID) {
+  try {
+    const query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
+    const values = [ticketID]
+    const data = await execPgQuery(query, values, false, true)
+    return data[0]
+  } catch (error) {
+    console.error('Error of record new user data into the bot-database:', error)
   }
 }
 
@@ -112,6 +126,7 @@ async function ticketApprove(bot, msg) {
     const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
     newTicketBody.state_id = 4
     newTicketBody.article = article
+    newTicketBody.pending_time = null
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
@@ -139,6 +154,7 @@ async function ticketReturn(bot, msg) {
   const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
   newTicketBody.state_id = 2
   newTicketBody.article = article
+  newTicketBody.pending_time = null
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
   if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
