@@ -157,7 +157,7 @@ async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
     newTicketBody.article = article
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
+    if (updatedTicket) console.log(`Update ticket ${closeAction}: ${ticketID}`)
   } catch (err) {
     console.log(err)
   }
