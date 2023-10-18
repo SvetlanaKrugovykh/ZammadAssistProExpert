@@ -65,7 +65,6 @@ async function ticketApprove(bot, msg) {
     const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
     newTicketBody.state_id = 4
     newTicketBody.article = article
-    newTicketBody.pending_time = null
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)

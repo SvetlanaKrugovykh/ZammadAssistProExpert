@@ -25,8 +25,11 @@ async function getChatIdByTicketID(ticketID) {
       console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
       return null
     }
+    if (process.env.DEBUG_LEVEL === '7') console.log('getChatIdByTicketID ticket', ticket)
     const customer_id = ticket.customer_id
+    if (process.env.DEBUG_LEVEL === '7') console.log('getChatIdByTicketID customer_id', customer_id)
     const user_data = await findUserById(customer_id)
+    if (process.env.DEBUG_LEVEL === '7') console.log('getChatIdByTicketID user_data', user_data)
     if (!user_data) return null
     const chatId = user_data?.login
     return chatId
