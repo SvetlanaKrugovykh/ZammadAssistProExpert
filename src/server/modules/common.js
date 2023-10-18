@@ -79,9 +79,10 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
           }
         })
       }
-    } catch (err) {
-      console.log(err)
     }
+  } catch (err) {
+    console.log(err)
   }
+}
 
 module.exports = { getTicketData, ticketApprovalScene }
