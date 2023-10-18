@@ -40,38 +40,30 @@ async function getTicketArticles(ticketID) {
 }
 
 async function ticketApprove(bot, msg) {
-  const msgText = msg.text
-  const regex = /№_(\d+)/g
-  const ticketIDs = []
-  let match
-
-  while ((match = regex.exec(msgText)) !== null) {
-    ticketIDs.push(match[1])
+  const match = msg.text.match(/№_(\d+)/)
+  const ticketID = match[1]
+  let body = await getTicketData(ticketID)
+  if (!body) {
+    console.log(`ticketReturn: ticketID ${ticketID} not found`)
+    return null
   }
 
-  for (const ticketID of ticketIDs) {
-    let body = await getTicketData(ticketID)
-    if (!body) {
-      console.log(`ticketApprove: ticketID ${ticketID} not found`)
-      continue
-    }
-    const article = {
-      "subject": "Кінцеве затверження замовником заявки",
-      "body": "Заявку затверджено замовником. Заявка закрита.",
-      "type": "note",
-      "internal": false
-    }
-    const { title, group_id, priority_id, state_id, customer_id } = body
-    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
-    newTicketBody.state_id = 4
-    newTicketBody.article = article
-
-    const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
-    const ticket_body = await getTicketData(ticketID)
-    saveChangesToTicket(ticketID, ticket_body, 'затверджено')
-    await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
+  const article = {
+    "subject": "Кінцеве затверження замовником заявки",
+    "body": "Заявку затверджено замовником. Заявка закрита.",
+    "type": "note",
+    "internal": false
   }
+  const { title, group_id, priority_id, state_id, customer_id } = body
+  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+  newTicketBody.state_id = 4
+  newTicketBody.article = article
+
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
+  if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
+  const ticket_body = await getTicketData(ticketID)
+  saveChangesToTicket(ticketID, ticket_body, 'затверджено')
+  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
 
 async function ticketReturn(bot, msg) {
