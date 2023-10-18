@@ -38,7 +38,7 @@ async function getChatIdByTicketID(ticketID) {
   }
 }
 
-async function ticketApprovalScene(ticketID, bot, ticketSubject, ticket = null, msg = null) {
+async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, ticket = null) {
   const source = {}
   if (process.env.DEBUG_LEVEL === '7') console.log('ticketApprovalScene ticketID', ticketID)
   try {

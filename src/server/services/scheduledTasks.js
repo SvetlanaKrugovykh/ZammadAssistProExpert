@@ -49,7 +49,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       const customerTickets = customerData[customer_id].tickets
       let i = 0
       for (const ticket of customerTickets) {
-        await ticketApprovalScene(ticket.id, bot, customerData[customer_id].subjects[i], ticket)
+        await ticketApprovalScene(ticket.id, bot, customerData[customer_id].subjects[i], null, ticket)
         i++
       }
     }
