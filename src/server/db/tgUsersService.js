@@ -3,9 +3,10 @@ require('dotenv').config()
 
 async function findUserById(tg_id) {
   try {
-    if (!/^\d{7,12}$/.test(tg_id)) return null
-    const id = tg_id.toString()
-    const data = await execPgQuery(`SELECT * FROM users WHERE id = ${id} OR login = '${id}'`)
+    if (!/^\d{1,12}$/.test(tg_id)) return null
+    let data = null
+    data = await execPgQuery('SELECT * FROM users WHERE login = $1', [tg_id.toString()])
+    if (!data) data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
