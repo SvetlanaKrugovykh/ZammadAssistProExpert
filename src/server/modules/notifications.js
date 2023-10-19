@@ -64,7 +64,7 @@ async function ticketApprove(bot, msg) {
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'затверджено')
   ticketRemoveFromMenu(ticketID)
-  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
+  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.\n${newTicketBody.title}`)
 }
 
 async function ticketReturn(bot, msg) {
@@ -92,7 +92,7 @@ async function ticketReturn(bot, msg) {
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'повернуто')
   ticketRemoveFromMenu(ticketID)
-  await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
+  await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}..\n${newTicketBody.title}`)
 }
 
 module.exports = { ticketApprove, ticketReturn, showTicketInfo }

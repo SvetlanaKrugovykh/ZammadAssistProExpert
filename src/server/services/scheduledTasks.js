@@ -94,7 +94,6 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
 async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
   try {
     const currentDate = new Date()
-    currentDate.setSeconds(currentDate.getSeconds() + 3600)
     const pending_time = currentDate.toISOString()
     const closeTimeString = new Date().toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
     const closeInfo = `Заявку було закрито у ${closeTimeString}. Код виконавця ${ticket_body?.owner_id.toString()}.`

@@ -199,7 +199,7 @@ async function update_ticket(ticketId, body, fileNames, override = false) {
   try {
     const response = await axios.put(url, data, { headers, httpsAgent })
     const ticket = response.data
-    console.log(`update ticket: ${ticket.id}`)
+    console.log(`update ticket: ${ticket.id} pending_time: ${ticket.pending_time}`)
     return ticket
   } catch (err) {
     console.log(err)
