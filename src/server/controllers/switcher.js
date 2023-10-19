@@ -135,15 +135,15 @@ async function switchDynamicSceenes(bot, msg) {
       await showTicketInfo(bot, msg)
       return
     }
-    if (msg.text.includes('💹Затвердити виконання заявки')) {
+    if (msg.text.includes('💹')) {
       await ticketApprove(bot, msg)
       return
     }
-    if (msg.text.includes('❌Відхилити виконання заявки')) {
+    if (msg.text.includes('⭕')) {
       await ticketReturn(bot, msg)
       return
     }
-    if (/[🏠🟣🔵🧷📌✔️➕📒📗📘💹❌]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✔️➕📒📗📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }

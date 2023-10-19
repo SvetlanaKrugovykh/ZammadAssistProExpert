@@ -1,7 +1,7 @@
 const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
-const { ticketApprovalScene, getTicketData } = require('../modules/common')
+const { ticketApprovalScene, getTicketData, cleanTicketsFromMenu } = require('../modules/common')
 require('dotenv').config()
 
 
@@ -48,6 +48,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     for (const customer_id in customerData) {
       const customerTickets = customerData[customer_id].tickets
       let i = 0
+      await cleanTicketsFromMenu()
       for (const ticket of customerTickets) {
         await ticketApprovalScene(ticket.id, bot, customerData[customer_id].subjects[i], null, ticket)
         i++

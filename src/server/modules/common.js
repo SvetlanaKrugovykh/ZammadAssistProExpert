@@ -58,6 +58,8 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
       source.ticketSubject = ticketSubject
       source.checkUserID = true
     }
+    if (typeof source.chatId === 'string' && source.chatId.includes('@'))
+      return
     console.log(`ticketApprovalScene chatId: ${source.chatId}`)
     buttonsConfig["ticketApproval"].title = source.ticketSubject
     const buttons = buttonsConfig["ticketApproval"].buttons
@@ -69,8 +71,6 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
           button[0].text = button[0].text + ' №_' + source.ticketID.toString()
         }
     }
-    if (typeof source.chatId === 'string' && source.chatId.includes('@'))
-      return
     if (source.dataFilled) {
       await bot.sendMessage(source.chatId, buttonsConfig["ticketApproval"].title, {
         reply_markup: {
@@ -97,4 +97,20 @@ async function ticketRemoveFromMenu(ticketID) {
   }
 }
 
-module.exports = { getTicketData, ticketApprovalScene, ticketRemoveFromMenu }
+async function cleanTicketsFromMenu() {
+  try {
+    const buttons = buttonsConfig["ticketApproval"].buttons;
+    for (const button of buttons) {
+      if (button[0].callback_data === '3_3') break;
+      const indexOfTicketID = button[0].text.indexOf(" №_");
+      if (indexOfTicketID !== -1) {
+        button[0].text = button[0].text.substring(0, indexOfTicketID)
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+
+module.exports = { getTicketData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu }
