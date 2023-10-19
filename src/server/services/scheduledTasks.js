@@ -10,8 +10,6 @@ async function checkAndReplaceTicketsStatuses(bot) {
     const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
-    const now = new Date()
-    //INTERVAL_MINUTES = now.getHours() * 60 + now.getMinutes() 
 
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > NOW() - INTERVAL '${INTERVAL_MINUTES} minutes' LIMIT 50`
 
@@ -111,7 +109,7 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
     newTicketBody.article = article
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
+    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
   } catch (err) {
     console.log(err)
   }
@@ -134,7 +132,7 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
     newTicketBody.article = article
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID}`)
+    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
   } catch (err) {
     console.log(err)
   }
@@ -151,13 +149,20 @@ async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
       "type": "note",
       "internal": false
     }
-    const { title, group_id, priority_id, state_id, customer_id } = ticket_body
-    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+    const { title, group_id, priority_id, pending_time, state_id, customer_id } = ticket_body
+    const newTicketBody = { title, group_id, priority_id, pending_time, state_id, customer_id, article }
 
     newTicketBody.article = article
+    if (newTicketBody.state_id === 2) {
+      newTicketBody.pending_time = null
+    } else {
+      const currentDate = new Date()
+      const p_time = currentDate.toISOString()
+      newTicketBody.pending_time = p_time
+    }
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket ${closeAction}: ${ticketID}`)
+    if (updatedTicket) console.log(`Update (save) ticket ${closeAction}: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
   } catch (err) {
     console.log(err)
   }

@@ -54,10 +54,13 @@ async function ticketApprove(bot, msg) {
     "type": "note",
     "internal": false
   }
-  const { title, group_id, priority_id, state_id, customer_id } = body
-  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+  const { title, group_id, priority_id, state_id, pending_time, customer_id } = body
+  const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
   newTicketBody.state_id = 4
   newTicketBody.article = article
+  const currentDate = new Date()
+  const p_time = currentDate.toISOString()
+  newTicketBody.pending_time = p_time
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
@@ -81,8 +84,8 @@ async function ticketReturn(bot, msg) {
     "type": "note",
     "internal": false
   }
-  const { title, group_id, priority_id, state_id, customer_id } = body
-  const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+  const { title, group_id, priority_id, state_id, pending_time, customer_id } = body
+  const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
   newTicketBody.state_id = 2
   newTicketBody.article = article
   newTicketBody.pending_time = null
