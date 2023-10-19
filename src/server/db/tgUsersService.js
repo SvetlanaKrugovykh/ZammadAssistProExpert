@@ -14,6 +14,19 @@ async function findUserById(tg_id) {
   }
 }
 
+async function findOwnerById(owner_id) {
+  try {
+    if (!/^\d{1,12}$/.test(owner_id)) return null
+    let data = null
+    data = await execPgQuery('SELECT * FROM users WHERE id = $1', [owner_id])
+    return data
+  } catch (error) {
+    console.error('Error in findUserById:', error)
+    return null
+  }
+}
+
+
 async function findUserByEmail(email) {
   try {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
@@ -80,4 +93,4 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
   }
 }
 
-module.exports = { findUserById, createOrUpdateUserIntoDb }
+module.exports = { findUserById, findOwnerById, createOrUpdateUserIntoDb }
