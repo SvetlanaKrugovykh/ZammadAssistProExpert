@@ -5,7 +5,7 @@ const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
-const { getTicketData } = require('../modules/common')
+const { getTicketData, ticketRemoveFromMenu } = require('../modules/common')
 
 
 async function showTicketInfo(bot, msg) {
@@ -63,6 +63,7 @@ async function ticketApprove(bot, msg) {
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'затверджено')
+  ticketRemoveFromMenu(ticketID)
   await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.`)
 }
 
@@ -90,6 +91,7 @@ async function ticketReturn(bot, msg) {
   if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'повернуто')
+  ticketRemoveFromMenu(ticketID)
   await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}.`)
 }
 

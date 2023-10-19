@@ -85,4 +85,16 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
   }
 }
 
-module.exports = { getTicketData, ticketApprovalScene }
+async function ticketRemoveFromMenu(ticketID) {
+  try {
+    const buttons = buttonsConfig["ticketApproval"].buttons;
+    for (const button of buttons) {
+      if (button[0].callback_data === '3_3') break;
+      button[0].text = button[0].text.replace(` №_${ticketID.toString()}`, '')
+    }
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+module.exports = { getTicketData, ticketApprovalScene, ticketRemoveFromMenu }
