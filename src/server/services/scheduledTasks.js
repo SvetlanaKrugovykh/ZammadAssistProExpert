@@ -2,6 +2,7 @@ const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, cleanTicketsFromMenu } = require('../modules/common')
+const { fDateTime } = require('../services/various')
 require('dotenv').config()
 
 
@@ -11,7 +12,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
-    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > NOW() - INTERVAL '${INTERVAL_MINUTES} minutes' LIMIT 50`
+    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > (NOW() - INTERVAL '${INTERVAL_MINUTES} minutes')::timestamp LIMIT 50`
 
     if (process.env.DEBUG_LEVEL === '7') {
       console.log('checkAndReplaceTicketsStatuses query', query)
@@ -28,7 +29,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       const ticketSubj = await getTicketData(ticketID, 'title')
       if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
       if (!ticketSubj) continue
-      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} виконана.\n` +
+      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at)} виконана.\n` +
         `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`;
@@ -40,7 +41,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
           subjects: [],
         }
       }
-      customerData[customer_id].subjects.push(ticketSubj)
+      customerData[customer_id].subjects.push(ticketSubject)
       customerData[customer_id].tickets.push(ticket)
     }
     for (const customer_id in customerData) {
@@ -60,7 +61,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
     let INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
-    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time  < NOW() - INTERVAL '${INTERVAL_DAYS} days'`
+    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time  < (NOW() - INTERVAL '${INTERVAL_DAYS} days')::timestamp`
 
     const data = await execPgQuery(query)
     if (!data || data.length === 0) return null
@@ -145,8 +146,7 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
 
 async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
   try {
-    const currentDateFormatted = new Date().toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
-    const closeInfo = `Заявку було ${closeAction} замовником у ${currentDateFormatted}. Код виконавця ${ticket_body?.owner_id.toString()}.`
+    const closeInfo = `Заявку було ${closeAction} замовником у ${fCurrentTime('uk-UA')}. Код виконавця ${ticket_body?.owner_id.toString()}.`
     const article = {
       "subject": `Заявку ${closeAction} замовником.'`,
       "body": `Заявку ${closeAction} замовником.\n${closeInfo}`,

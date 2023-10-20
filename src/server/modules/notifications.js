@@ -1,12 +1,9 @@
-const { buttonsConfig } = require('./keyboard')
-const axios = require('axios')
-const https = require('https')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findOwnerById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
-const { getTicketData, ticketRemoveFromMenu, menuButton } = require('../modules/common')
-
+const { getTicketData, ticketRemoveFromMenu, usersStarterMenu } = require('../modules/common')
+const { fDateTime } = require('../services/various')
 
 async function showTicketInfo(bot, msg) {
   try {
@@ -20,9 +17,7 @@ async function showTicketInfo(bot, msg) {
     const article_body = article ? article?.body : ''
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
     if (ticket.state_id === 1) owner_PIB = 'Відсутній'
-    const created_at_formatted = new Date(created_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
-    const updated_at_formatted = new Date(updated_at).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
-    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${created_at_formatted}\nДата останнього оновлення: ${updated_at_formatted}\n Зміст: \n${article_body.toString()}`)
+    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n Зміст: \n${article_body.toString()}`)
   } catch (err) {
     console.log(err)
   }
@@ -72,6 +67,7 @@ async function ticketApprove(bot, msg) {
       remove_keyboard: true
     }
   })
+  await usersStarterMenu(bot, msg)
 }
 
 async function ticketReturn(bot, msg) {
@@ -104,6 +100,7 @@ async function ticketReturn(bot, msg) {
       remove_keyboard: true
     }
   })
+  await usersStarterMenu(bot, msg)
 }
 
 module.exports = { ticketApprove, ticketReturn, showTicketInfo }

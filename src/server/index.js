@@ -6,11 +6,13 @@ require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
 const { cert } = require('./data/consts')
 const { users } = require('./users/users.model')
-const { handler, usersStarterMenu, blockMenu } = require('./controllers/switcher')
+const { handler } = require('./controllers/switcher')
 const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
 const { checkAndReplaceTicketsStatuses, autoCloseTicketsWithoutCustomerFeedback } = require('./services/scheduledTasks')
 const singUpDataSave = require('./controllers/signUp').singUpDataSave
 const formController = require('./controllers/formController')
+const { usersStarterMenu } = require('./modules/common')
+const { isThisGroupId } = require('./modules/bot')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 
@@ -55,16 +57,11 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id
   const text = msg.text
   const ctx = msg
+  if (await isThisGroupId(bot, chatId)) return
 
   if (text === '/start') {
     console.log(new Date())
     console.log(ctx.chat)
-    if (ctx.chat.id) {
-      if (ctx.chat.id.toString().startsWith('-')) {
-        await blockMenu(bot, msg)
-        return
-      }
-    }
     const adminUser = users.find(user => user.id === ctx.chat.id)  //TODO
     if (adminUser) {
       await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])

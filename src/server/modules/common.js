@@ -2,6 +2,48 @@ const axios = require('axios')
 const https = require('https')
 const { buttonsConfig } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
+const { isBotBlocked } = require('../modules/bot')
+
+//#region mainScrnes
+
+async function usersStarterMenu(bot, msg) {
+  const registeredUser = await findUserById(msg.chat.id)
+  if (registeredUser === null || registeredUser?.verified !== true) {
+    try {
+      await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
+    } catch (err) {
+      console.log(err)
+    }
+  } else {
+    try {
+      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
+
+async function guestMenu(bot, msg, guestStartButtons) {
+  await bot.sendMessage(msg.chat.id, `Чат-бот <b>${process.env.BRAND_NAME}</b> вітає Вас, <b>${msg.chat.first_name} ${msg.chat.last_name}</b>!`, { parse_mode: "HTML" })
+  await bot.sendMessage(msg.chat.id, buttonsConfig["guestStartButtons"].title, {
+    reply_markup: {
+      keyboard: buttonsConfig["guestStartButtons"].buttons,
+      resize_keyboard: true
+    }
+  })
+}
+
+async function registeredUserMenu(bot, msg, standardStartButtons) {
+  await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
+  await bot.sendMessage(msg.chat.id, buttonsConfig["standardStartButtons"].title, {
+    reply_markup: {
+      keyboard: buttonsConfig["standardStartButtons"].buttons,
+      resize_keyboard: true
+    }
+  })
+}
+//#endregion
+
 
 async function getTicketData(ticketID, field = '') {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
@@ -60,6 +102,8 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
     }
     if (typeof source.chatId === 'string' && source.chatId.includes('@'))
       return
+    const isBlocked = await isBotBlocked(bot, source.chatId)
+    if (isBlocked) return
     console.log(`ticketApprovalScene chatId: ${source.chatId}`)
     if (manual) await cleanTicketsFromMenu()
     buttonsConfig["ticketApproval"].title = source.ticketSubject
@@ -114,4 +158,9 @@ async function cleanTicketsFromMenu() {
 }
 
 
-module.exports = { getTicketData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu }
+
+
+module.exports = {
+  getTicketData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu,
+  usersStarterMenu, registeredUserMenu
+}

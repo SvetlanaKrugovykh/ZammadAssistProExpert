@@ -4,10 +4,10 @@ const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
-const { findUserById } = require('../db/tgUsersService')
 const { users } = require('../users/users.model')
-const { ticketApprovalScene } = require('../modules/common')
+const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
 const { showTicketInfo } = require('../modules/notifications')
+const { isThisGroupId } = require('../modules/bot')
 
 const selectedByUser = {}
 
@@ -112,6 +112,7 @@ async function handler(bot, msg, webAppUrl) {
       break
     default:
       if (msg.text === undefined) return
+      if (await isThisGroupId(bot, msg.chat.id)) return
       console.log(`default: ${msg.text}`)
       switchDynamicSceenes(bot, msg)
       break
@@ -167,42 +168,5 @@ async function goBack(bot, msg) {
 
 //#endregion
 
-async function usersStarterMenu(bot, msg) {
-  const registeredUser = await findUserById(msg.chat.id)
-  if (registeredUser === null || registeredUser?.verified !== true) {
-    try {
-      await guestMenu(bot, msg, buttonsConfig["guestStartButtons"])
-    } catch (err) {
-      console.log(err)
-    }
-  } else {
-    try {
-      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
-    } catch (err) {
-      console.log(err)
-    }
-  }
-}
-//#region mainScrnes
-async function guestMenu(bot, msg, guestStartButtons) {
-  await bot.sendMessage(msg.chat.id, `Чат-бот <b>${process.env.BRAND_NAME}</b> вітає Вас, <b>${msg.chat.first_name} ${msg.chat.last_name}</b>!`, { parse_mode: "HTML" })
-  await bot.sendMessage(msg.chat.id, buttonsConfig["guestStartButtons"].title, {
-    reply_markup: {
-      keyboard: buttonsConfig["guestStartButtons"].buttons,
-      resize_keyboard: true
-    }
-  })
-}
 
-async function registeredUserMenu(bot, msg, standardStartButtons) {
-  await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
-  await bot.sendMessage(msg.chat.id, buttonsConfig["standardStartButtons"].title, {
-    reply_markup: {
-      keyboard: buttonsConfig["standardStartButtons"].buttons,
-      resize_keyboard: true
-    }
-  })
-}
-//#endregion
-
-module.exports = { handler, guestMenu, registeredUserMenu, usersStarterMenu, blockMenu }
+module.exports = { handler, blockMenu }
