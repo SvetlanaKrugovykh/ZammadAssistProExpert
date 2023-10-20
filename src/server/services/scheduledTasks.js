@@ -125,14 +125,16 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
       "internal": false
     }
 
-    const { title, group_id, priority_id, state_id, customer_id } = ticket_body
-    const newTicketBody = { title, group_id, priority_id, state_id, customer_id, article }
+    const { title, group_id, priority_id, state_id, pending_time, customer_id } = ticket_body
+    const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
 
     newTicketBody.state_id = 4
     newTicketBody.article = article
+    const p_time = currentDate.toISOString()
+    newTicketBody.pending_time = p_time
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`Update ticket to PendingClose: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
+    if (updatedTicket) console.log(`AvtoUpdate ticket form PendingClose to close: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
   } catch (err) {
     console.log(err)
   }
