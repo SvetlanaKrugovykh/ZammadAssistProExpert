@@ -5,7 +5,7 @@ const { update_ticket } = require('../controllers/tgTickets')
 const { findOwnerById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
-const { getTicketData, ticketRemoveFromMenu } = require('../modules/common')
+const { getTicketData, ticketRemoveFromMenu, menuButton } = require('../modules/common')
 
 
 async function showTicketInfo(bot, msg) {
@@ -67,7 +67,11 @@ async function ticketApprove(bot, msg) {
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'затверджено')
   ticketRemoveFromMenu(ticketID)
-  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.\n${newTicketBody.title}`)
+  await bot.sendMessage(msg.chat.id, `Дякую! Ви затвердили заявку №_${ticketID}.\n${newTicketBody.title}`, {
+    reply_markup: {
+      remove_keyboard: true
+    }
+  })
 }
 
 async function ticketReturn(bot, msg) {
@@ -95,7 +99,11 @@ async function ticketReturn(bot, msg) {
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'повернуто')
   ticketRemoveFromMenu(ticketID)
-  await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}..\n${newTicketBody.title}`)
+  await bot.sendMessage(msg.chat.id, `Прийнято! Заявку повернуто в роботу №_${ticketID}..\n${newTicketBody.title}`, {
+    reply_markup: {
+      remove_keyboard: true
+    }
+  })
 }
 
 module.exports = { ticketApprove, ticketReturn, showTicketInfo }

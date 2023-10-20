@@ -38,7 +38,7 @@ async function getChatIdByTicketID(ticketID) {
   }
 }
 
-async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, ticket = null) {
+async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, ticket = null, manual = false) {
   const source = {}
   source.dataFilled = false
   if (process.env.DEBUG_LEVEL === '7') console.log('ticketApprovalScene ticketID', ticketID)
@@ -61,6 +61,7 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
     if (typeof source.chatId === 'string' && source.chatId.includes('@'))
       return
     console.log(`ticketApprovalScene chatId: ${source.chatId}`)
+    if (manual) await cleanTicketsFromMenu()
     buttonsConfig["ticketApproval"].title = source.ticketSubject
     const buttons = buttonsConfig["ticketApproval"].buttons
     for (const button of buttons) {

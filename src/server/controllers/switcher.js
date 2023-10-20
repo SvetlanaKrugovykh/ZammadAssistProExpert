@@ -128,7 +128,7 @@ async function blockMenu(bot, msg) {
 async function switchDynamicSceenes(bot, msg) {
   try {
     if (msg.text.includes('🟦')) {
-      await ticketApprovalScene('', bot, '', msg)
+      await ticketApprovalScene('', bot, '', msg, null, true)
       return
     }
     if (msg.text.includes('🟨') || msg.text.includes('🟩')) {

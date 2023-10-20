@@ -1,6 +1,6 @@
 const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
-const { findUserById } = require('../db/tgUsersService')
+const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, cleanTicketsFromMenu } = require('../modules/common')
 require('dotenv').config()
 
@@ -93,8 +93,10 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
   try {
     const currentDate = new Date()
     const pending_time = currentDate.toISOString()
+    const owner = await findOwnerById(ticket_body.owner_id)
+    let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
     const closeTimeString = new Date().toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
-    const closeInfo = `Заявку було закрито у ${closeTimeString}. Код виконавця ${ticket_body?.owner_id.toString()}.`
+    const closeInfo = `Заявку було закрито у ${closeTimeString}. Виконавець: ${owner_PIB}.`
     const article = {
       "subject": `Автоматичний перевод заявки в статус 'Очікує закриття'`,
       "body": `Заявку автоматично переведено в статус 'Очікує закриття' - заявка в очікуванні підтвердження замовником..\n${closeInfo}`,
