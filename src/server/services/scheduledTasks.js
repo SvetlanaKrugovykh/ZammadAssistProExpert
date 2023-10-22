@@ -64,9 +64,12 @@ async function checkAndReplaceTicketsStatuses(bot) {
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
     let INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
-    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time  < (NOW() - INTERVAL '${INTERVAL_DAYS} days')::timestamp`
+    const now = new Date()
+    now.setDate(now.getDate() - INTERVAL_DAYS)
 
-    const data = await execPgQuery(query)
+    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time < $1`
+
+    const data = await execPgQuery(query, [now], false, true)
     if (!data || data.length === 0) return null
 
     for (const ticket of data) {
