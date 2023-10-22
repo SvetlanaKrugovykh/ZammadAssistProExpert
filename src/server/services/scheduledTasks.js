@@ -12,14 +12,17 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
-    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > (NOW() - INTERVAL '${INTERVAL_MINUTES} minutes')::timestamp LIMIT 50`
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - 11)
+
+    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1 LIMIT 50`
 
     if (process.env.DEBUG_LEVEL === '7') {
       console.log('checkAndReplaceTicketsStatuses query', query)
       console.log('checkAndReplaceTicketsStatuses INTERVAL_MINUTES', INTERVAL_MINUTES)
       console.log('checkAndReplaceTicketsStatuses start', new Date())
     }
-    const data = await execPgQuery(query, [], false, true)
+    const data = await execPgQuery(query, [now], false, true)
     if (process.env.DEBUG_LEVEL === '7') console.log('tickets', data)
     if (!data) return null
     const customerData = {}
