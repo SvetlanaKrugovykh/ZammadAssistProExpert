@@ -13,7 +13,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
     const now = new Date()
-    now.setMinutes(now.getMinutes() - 11)
+    now.setMinutes(now.getMinutes() - INTERVAL_MINUTES)
 
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1 LIMIT 50`
 
