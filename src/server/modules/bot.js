@@ -1,7 +1,7 @@
 
 async function isBotBlocked(bot, chatId) {
   try {
-    await bot.sendMessage(chatId, ' ')
+    await bot.sendMessage(chatId, '_')
     return false
   } catch (err) {
     console.log(`${chatId} is blocked for bot`)
