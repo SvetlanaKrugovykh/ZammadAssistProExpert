@@ -153,7 +153,7 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
 
 async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
   try {
-    const closeInfo = `Заявку було ${closeAction} замовником у ${fCurrentTime('uk-UA')}. Код виконавця ${ticket_body?.owner_id.toString()}.`
+    const closeInfo = `Заявку було ${closeAction} замовником у ${fDateTime('uk-UA')}. Код виконавця ${ticket_body?.owner_id.toString()}.`
     const article = {
       "subject": `Заявку ${closeAction} замовником.'`,
       "body": `Заявку ${closeAction} замовником.\n${closeInfo}`,
