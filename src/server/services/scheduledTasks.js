@@ -8,7 +8,7 @@ require('dotenv').config()
 
 async function checkAndReplaceTicketsStatuses(bot) {
   try {
-    const DELTA_RUBY_TIME_ZONE_MINUTES = Nubmer(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) || 0
+    const DELTA_RUBY_TIME_ZONE_MINUTES = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) || 0
     const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
