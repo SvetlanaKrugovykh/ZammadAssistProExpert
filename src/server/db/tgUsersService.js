@@ -6,7 +6,9 @@ async function findUserById(tg_id) {
     if (!/^\d{1,12}$/.test(tg_id)) return null
     let data = null
     data = await execPgQuery('SELECT * FROM users WHERE login = $1', [tg_id.toString()])
-    if (!data) data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id])
+    if (!data && tg_id >= -2147483648 && tg_id <= 2147483647) {
+      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id]);
+    }
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -53,9 +55,8 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     if (!existingUser) existingUser = await findUserByEmail(user_info.email.replace(/\s+/g, ''))
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
     if (existingUser) {
-      const query = 'UPDATE users SET updated_at = $1, login = $2, phone = $3, firstname = $4, lastname = $5, email = $6, source = $7 WHERE login = $8 OR email = $9 RETURNING *'
+      const query = 'UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE login = $7 OR email = $8 RETURNING *'
       const values = [
-        new Date(),
         chatId,
         user_info.phoneNumber,
         firstName,
@@ -69,10 +70,8 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
       if (DEBUG_LEVEL > 0) console.log(`createOrUpdateUserIntoDb: ${JSON.stringify(data)}`)
       return data
     } else {
-      const query = 'INSERT INTO users (created_at, updated_at, created_by_id, organization_id, updated_by_id, login, phone, firstname, lastname, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
+      const query = 'INSERT INTO users (created_by_id, organization_id, updated_by_id, login, phone, firstname, lastname, email, source, verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)'
       const values = [
-        new Date(),
-        new Date(),
         1,
         1,
         1,

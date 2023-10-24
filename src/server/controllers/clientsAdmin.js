@@ -4,6 +4,7 @@ const { execPgQuery } = require('../db/common')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
+const { buttonsConfig } = require('../modules/keyboard')
 
 async function userApproveOrDecline(bot, msg, approve) {
   const msgText = msg.text

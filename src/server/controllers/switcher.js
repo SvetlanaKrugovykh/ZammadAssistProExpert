@@ -112,7 +112,8 @@ async function handler(bot, msg, webAppUrl) {
       break
     default:
       if (msg.text === undefined) return
-      if (await isThisGroupId(bot, msg.chat.id)) return
+      if (await isThisGroupId(bot, msg.chat.id))
+        if (!/[✅⛔]/.test(msg.text)) return
       console.log(`default: ${msg.text}`)
       switchDynamicSceenes(bot, msg)
       break
