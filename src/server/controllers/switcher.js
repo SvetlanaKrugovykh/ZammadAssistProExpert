@@ -83,6 +83,13 @@ async function handler(bot, msg, webAppUrl) {
     case '3_3':
       await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
       break
+    case '13_3':
+      await bot.sendMessage(msg.chat.id, `Ok!\n`, {
+        reply_markup: {
+          remove_keyboard: true
+        }
+      })
+      break
     case '5_1':
       selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
       break

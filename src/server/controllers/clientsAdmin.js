@@ -46,7 +46,7 @@ async function userRemoveFromMenu(user_tgID) {
   try {
     const buttons = buttonsConfig["userApproveByAdmin"].buttons;
     for (const button of buttons) {
-      if (button[0].callback_data === '3_3') break;
+      if (button[0].callback_data === '13_3') break;
       button[0].text = button[0].text.replace(` №_${user_tgID.toString()}`, '')
     }
   } catch (err) {

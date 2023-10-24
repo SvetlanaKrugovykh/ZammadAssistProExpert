@@ -37,7 +37,7 @@ async function singUpDataSave(bot, chatId, data) {
     await bot.sendMessage(GROUP_ID, `Заповнена нова реєстраційна форма. Контент: ${JSON.stringify(data)},chatId=${chatId}  \n`, { parse_mode: "HTML" })
     const buttons = buttonsConfig["userApproveByAdmin"].buttons
     for (const button of buttons) {
-      if (button[0].callback_data === '3_3') break
+      if (button[0].callback_data === '13_3') break
       if (!button[0].text.includes(`№_${chatId.toString()}`))
         button[0].text = button[0].text + ' №_' + chatId.toString()
     }
