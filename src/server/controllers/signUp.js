@@ -38,7 +38,8 @@ async function singUpDataSave(bot, chatId, data) {
     const buttons = buttonsConfig["userApproveByAdmin"].buttons
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
-      button[0].text = button[0].text + ' №_' + chatId.toString()
+      if (!button[0].text.includes(`№_${chatId.toString()}`))
+        button[0].text = button[0].text + ' №_' + chatId.toString()
     }
     await bot.sendMessage(GROUP_ID, buttonsConfig["userApproveByAdmin"].title, {
       reply_markup: {

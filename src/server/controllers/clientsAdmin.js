@@ -32,6 +32,24 @@ async function userApproveOrDecline(bot, msg, approve) {
       const userInput = await inputLineScene(bot, msg)
       sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
     }
+    userRemoveFromMenu(user_tgID)
+    await bot.sendMessage(msg.chat.id, `Дякую! Заявку оброблено №_${user_tgID}.\n`, {
+      reply_markup: {
+        remove_keyboard: true
+      }
+    })
+  }
+}
+
+async function userRemoveFromMenu(user_tgID) {
+  try {
+    const buttons = buttonsConfig["userApproveByAdmin"].buttons;
+    for (const button of buttons) {
+      if (button[0].callback_data === '3_3') break;
+      button[0].text = button[0].text.replace(` №_${user_tgID.toString()}`, '')
+    }
+  } catch (err) {
+    console.log(err)
   }
 }
 

@@ -144,6 +144,14 @@ async function switchDynamicSceenes(bot, msg) {
       await ticketReturn(bot, msg)
       return
     }
+    if (msg.text.includes('✅')) {
+      await userApproveOrDecline(bot, msg, true)
+      return
+    }
+    if (msg.text.includes('⛔')) {
+      await userApproveOrDecline(bot, msg, false)
+      return
+    }
     if (/[🏠🟣🔵🧷📌✔️➕📒📗📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return

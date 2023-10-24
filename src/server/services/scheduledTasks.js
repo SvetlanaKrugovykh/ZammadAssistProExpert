@@ -102,8 +102,8 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
     const currentDate = new Date()
     const pending_time = currentDate.toISOString()
     const owner = await findOwnerById(ticket_body.owner_id)
-    let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
-    const closeTimeString = new Date().toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' })
+    let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket_body.owner_id.toString()
+    const closeTimeString = fDateTime('uk-UA')
     const closeInfo = `Заявку було закрито у ${closeTimeString}. Виконавець: ${owner_PIB}.`
     const article = {
       "subject": `Автоматичний перевод заявки в статус 'Очікує закриття'`,
