@@ -57,7 +57,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id
   const text = msg.text
   const ctx = msg
-  if (await isThisGroupId(bot, chatId)) return
+  if (await isThisGroupId(bot, chatId, msg)) return
 
   if (text === '/start') {
     console.log(new Date())

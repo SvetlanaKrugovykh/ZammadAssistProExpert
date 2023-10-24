@@ -102,7 +102,7 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
     }
     if (typeof source.chatId === 'string' && source.chatId.includes('@'))
       return
-    const isBlocked = await isBotBlocked(bot, source.chatId)
+    const isBlocked = await isBotBlocked(bot, source.chatId, msg)
     if (isBlocked) return
     console.log(`ticketApprovalScene chatId: ${source.chatId}`)
     if (manual) await cleanTicketsFromMenu()

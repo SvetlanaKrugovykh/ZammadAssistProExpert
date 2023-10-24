@@ -1,6 +1,7 @@
 
-async function isBotBlocked(bot, chatId) {
+async function isBotBlocked(bot, chatId, msg) {
   try {
+    if (/[✅⛔⤴️]/.test(msg.text)) return false
     await bot.sendMessage(chatId, '_')
     return false
   } catch (err) {
@@ -9,8 +10,9 @@ async function isBotBlocked(bot, chatId) {
   }
 }
 
-async function isThisGroupId(bot, chatId) {
+async function isThisGroupId(bot, chatId, msg) {
   try {
+    if (/[✅⛔⤴️]/.test(msg.text)) return false
     const chat = await bot.getChat(chatId)
     return chat.type === 'group' || chat.type === 'supergroup';
   } catch (err) {
