@@ -68,7 +68,8 @@ async function getArticleData(ticketID, text) {
     const response = await axios.get(url, { headers, httpsAgent })
     const articles = response.data
     const lastArticleIndex = articles.length - 1
-    return articles[lastArticleIndex].body.includes(text)
+    if (articles.length) return articles[lastArticleIndex].body.includes(text)
+    else return false
   } catch (err) {
     console.log(err)
     return null
