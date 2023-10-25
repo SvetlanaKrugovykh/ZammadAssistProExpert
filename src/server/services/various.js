@@ -17,7 +17,7 @@ function fDateTime(local, time = new Date(), isDelta = false) {
 function pendingTimeInDaysSec() {
   const INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
   const DELTA_RUBY_TIME_ZONE_MINUTES = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) || 0
-  const DELTA = ((INTERVAL_DAYS * 24 * 60) - DELTA_RUBY_TIME_ZONE_MINUTES - INTERVAL_MINUTES) * 60000
+  const DELTA = ((INTERVAL_DAYS * 24 * 60) - DELTA_RUBY_TIME_ZONE_MINUTES) * 60000
   const pending_time = new Date(Date.now() + DELTA)
   pending_time.setHours(23, 59, 59, 999)
   return pending_time
