@@ -6,7 +6,7 @@ async function isBotBlocked(bot, chatId, msg) {
     return false
   } catch (err) {
     console.log(`${chatId} is blocked for bot`)
-    return true
+    return false //true
   }
 }
 
