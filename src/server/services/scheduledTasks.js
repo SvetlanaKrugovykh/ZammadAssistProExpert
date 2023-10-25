@@ -2,7 +2,7 @@ const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
-const { fDateTime, pendingTimeInDaysSec } = require('../services/various')
+const { fDateTime, pendingTimeInDaysSec, yesterdayTimeInDaysSec } = require('../services/various')
 require('dotenv').config()
 
 
@@ -68,8 +68,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
-    const now = new Date(Date.now())
-    now.setHours(23, 59, 59, 999)
+    const now = yesterdayTimeInDaysSec()
     const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time = $1`
 
     const data = await execPgQuery(query, [now], false, true)

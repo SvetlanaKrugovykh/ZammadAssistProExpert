@@ -23,6 +23,12 @@ function pendingTimeInDaysSec() {
   return pending_time
 }
 
+function yesterdayTimeInDaysSec() {
+  const yesterday = new Date(Date.now() - 86400000)
+  const pending_time = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999)
+  return pending_time
+}
+
 function pendingTimeInIntervalMin() {
   let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
   const DELTA = INTERVAL_MINUTES * 60000
@@ -30,4 +36,4 @@ function pendingTimeInIntervalMin() {
   return pending_time
 }
 
-module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin }
+module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin, yesterdayTimeInDaysSec }
