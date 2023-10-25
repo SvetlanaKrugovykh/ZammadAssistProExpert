@@ -1,7 +1,7 @@
 const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
-const { ticketApprovalScene, getTicketData, cleanTicketsFromMenu } = require('../modules/common')
+const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
 const { fDateTime } = require('../services/various')
 require('dotenv').config()
 
@@ -33,10 +33,12 @@ async function checkAndReplaceTicketsStatuses(bot) {
       const ticketSubj = await getTicketData(ticketID, 'title')
       if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
       if (!ticketSubj) continue
+      const lastarticle = await getArticleData(ticketID, `Заявку автоматично переведено в статус 'Очікує закриття'`)
+      if (lastarticle) continue
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at)} виконана.\n` +
         `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
-        `через ${TICKET_AUTO_CLOSE_DAYS} дні`;
+        `через ${TICKET_AUTO_CLOSE_DAYS} дні`
       if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubject', ticketSubject)
       await changeStatusFromCloseToPendingClose(ticketID, ticket)
       if (!customerData[customer_id]) {

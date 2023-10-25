@@ -60,6 +60,21 @@ async function getTicketData(ticketID, field = '') {
   }
 }
 
+async function getArticleData(ticketID, text) {
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+  const url = `${process.env.ZAMMAD_API_URL}/ticket_articles/by_ticket/${ticketID}`
+  try {
+    const response = await axios.get(url, { headers, httpsAgent })
+    const articles = response.data
+    const lastArticleIndex = articles.length - 1
+    return articles[lastArticleIndex].body.includes(text)
+  } catch (err) {
+    console.log(err)
+    return null
+  }
+}
+
 async function getChatIdByTicketID(ticketID) {
   try {
     const ticket = await getTicketData(ticketID)
@@ -161,6 +176,6 @@ async function cleanTicketsFromMenu() {
 
 
 module.exports = {
-  getTicketData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu,
+  getTicketData, getArticleData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu,
   usersStarterMenu, registeredUserMenu
 }
