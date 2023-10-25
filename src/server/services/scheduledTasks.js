@@ -69,6 +69,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
     const now = yesterdayTimeInDaysSec()
+    console.log('autoCloseTicketsWithoutCustomerFeedback now is: ', now)
     const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time = $1`
 
     const data = await execPgQuery(query, [now], false, true)
