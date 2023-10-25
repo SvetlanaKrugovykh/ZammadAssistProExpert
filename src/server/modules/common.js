@@ -3,7 +3,7 @@ const https = require('https')
 const { buttonsConfig } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 const { isBotBlocked } = require('../modules/bot')
-
+require('dotenv').config()
 //#region mainScrnes
 
 async function usersStarterMenu(bot, msg) {
@@ -67,13 +67,22 @@ async function getArticleData(ticketID, text) {
   try {
     const response = await axios.get(url, { headers, httpsAgent })
     const articles = response.data
-    const lastArticleIndex = articles.length - 1
-    if (articles.length) return articles[lastArticleIndex].body.includes(text)
-    else return false
+    for (const article of articles) {
+      if (article.body.includes(text) && compareTimeInMin(article.updated_at)) return true
+    }
+    return false
   } catch (err) {
     console.log(err)
     return null
   }
+}
+
+function compareTimeInMin(updated_at) {
+  let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
+  const DELTA = INTERVAL_MINUTES * 60000
+  const time_min = new Date(Date.now() - DELTA)
+  const time_max = new Date(Date.now() + DELTA)
+  return (time_min <= updated_at && updated_at <= time_max)
 }
 
 async function getChatIdByTicketID(ticketID) {

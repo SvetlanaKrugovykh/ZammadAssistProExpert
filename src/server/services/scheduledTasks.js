@@ -33,7 +33,10 @@ async function checkAndReplaceTicketsStatuses(bot) {
       if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
       if (!ticketSubj) continue
       const lastarticle = await getArticleData(ticketID, `Заявку автоматично переведено в статус 'Очікує закриття'`)
-      if (lastarticle) continue
+      if (lastarticle) {
+        console.log(`last article into the same period - Заявка №${ticketID}`)
+        continue
+      }
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at)} виконана.\n` +
         `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
