@@ -2,7 +2,7 @@ const { execPgQuery } = require('../db/common')
 const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
-const { fDateTime } = require('../services/various')
+const { fDateTime, pendingTimeInDaysSec } = require('../services/various')
 require('dotenv').config()
 
 
@@ -65,11 +65,9 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
-    let INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
-    const now = new Date()
-    now.setDate(now.getDate() - INTERVAL_DAYS)
-
-    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time < $1`
+    const now = new Date(Date.now())
+    now.setHours(23, 59, 59, 999)
+    const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time = $1`
 
     const data = await execPgQuery(query, [now], false, true)
     if (!data || data.length === 0) return null
@@ -100,8 +98,8 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
 
 async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
   try {
-    const currentDate = new Date()
-    const pending_time = currentDate.toISOString()
+    const pending_time = pendingTimeInDaysSec()
+    console.log('changeStatusFromCloseToPendingClose pending_time', pending_time)
     const owner = await findOwnerById(ticket_body.owner_id)
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket_body.owner_id.toString()
     const closeTimeString = fDateTime('uk-UA')
@@ -128,7 +126,6 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
 
 async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
   try {
-    const INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     const article = {
       "subject": "Автоматичний перевод заявки в статус 'Закрита'",
       "body": `Заявку автоматично переведено в статус 'Закрита' - Підтвердження або скасування замовником не відбулось протягом ${INTERVAL_DAYS} днів.`,
@@ -141,8 +138,7 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
 
     newTicketBody.state_id = 4
     newTicketBody.article = article
-    const p_time = currentDate.toISOString()
-    newTicketBody.pending_time = p_time
+    newTicketBody.pending_time = null
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
     if (updatedTicket) console.log(`AvtoUpdate ticket form PendingClose to close: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
@@ -168,8 +164,7 @@ async function saveChangesToTicket(ticketID, ticket_body, closeAction) {
     if (newTicketBody.state_id === 2) {
       newTicketBody.pending_time = null
     } else {
-      const currentDate = new Date()
-      const p_time = currentDate.toISOString()
+      const p_time = pendingTimeInDaysSec()
       newTicketBody.pending_time = p_time
     }
 

@@ -3,7 +3,7 @@ const { findOwnerById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
 const { getTicketData, ticketRemoveFromMenu, usersStarterMenu } = require('../modules/common')
-const { fDateTime } = require('../services/various')
+const { fDateTime, pendingTimeInIntervalMin } = require('../services/various')
 
 async function showTicketInfo(bot, msg) {
   try {
@@ -53,8 +53,7 @@ async function ticketApprove(bot, msg) {
   const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
   newTicketBody.state_id = 4
   newTicketBody.article = article
-  const currentDate = new Date()
-  const p_time = currentDate.toISOString()
+  const p_time = pendingTimeInIntervalMin()
   newTicketBody.pending_time = p_time
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
