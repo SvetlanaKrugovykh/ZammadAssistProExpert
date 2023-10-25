@@ -10,7 +10,7 @@ async function signUpForm(bot, msg, webAppUrl) {
   await bot.sendMessage(chatId, 'Нижче з`явиться кнопка, заповніть форму', {
     reply_markup: {
       keyboard: [
-        [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/reg-form-tg-bot' } }],
+        [{ text: 'Заповнити форму', web_app: { url: webAppUrl + '/reg-form-ltk-tg-bot' } }],
         [{ text: '🏠', callback_data: '0_4' }]
       ],
       resize_keyboard: true
