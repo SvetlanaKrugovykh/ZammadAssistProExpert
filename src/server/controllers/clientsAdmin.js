@@ -31,7 +31,7 @@ async function userApproveOrDecline(bot, msg, approve) {
       await bot.sendMessage(GROUP_ID, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
       console.log(`Введіть причину відмови для користувача: ${newUserInfo.email}`)
       const userInput = await inputLineScene(bot, msg)
-      sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
+      await sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
     }
     userRemoveFromMenu(user_tgID)
     await bot.sendMessage(msg.chat.id, `Дякую! Заявку оброблено №_${user_tgID}.\n`, {

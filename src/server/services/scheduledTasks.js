@@ -144,7 +144,7 @@ async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
     newTicketBody.pending_time = null
 
     const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
-    if (updatedTicket) console.log(`AvtoUpdate ticket form PendingClose to close: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
+    if (updatedTicket) console.log(`AvtoUpdate ticket Auto Close form PendingClose to close: ${ticketID} pending_time: ${newTicketBody.pending_time}`)
   } catch (err) {
     console.log(err)
   }
