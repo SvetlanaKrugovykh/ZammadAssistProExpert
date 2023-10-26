@@ -56,7 +56,7 @@ async function userRemoveFromMenu(user_tgID) {
 
 async function sendInfoAboutApproveRegistration(bot, user_tgID) {
   try {
-    await bot.sendMessage(user_tgID, 'Вітаю! Вашу заявку на реєстрацію в системі <b>Інтерактивний чат-бот</b> була затверджено. Ви можете почати користуватися системою. Для переходу в головне меню натисніть /start', { parse_mode: 'HTML' })
+    await bot.sendMessage(user_tgID, 'Вітаю! Вашу заявку на реєстрацію в системі <b>Інтерактивний чат-бот</b> було затверджено. Ви можете почати користуватися системою. Для переходу в головне меню натисніть /start', { parse_mode: 'HTML' })
   } catch (err) {
     console.log(err)
   }
