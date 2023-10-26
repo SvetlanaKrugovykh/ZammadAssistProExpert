@@ -23,11 +23,16 @@ function pendingTimeInDaysSec() {
   return pending_time
 }
 
-function yesterdayTimeInDaysSec() {
-  const yesterday = new Date(Date.now() - 86400000)
-  const pending_time = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999)
-  return pending_time
+
+function _dayEndTimeInDaysSec(deltaMSec = 0) {
+  const DELTA_RUBY_TIME_ZONE = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) * 60000 || 0
+  const _dayEnd = new Date(Date.now() - deltaMSec)
+  const pending_time = new Date(_dayEnd.getFullYear(), _dayEnd.getMonth(), _dayEnd.getDate(), 23, 59, 59, 999)
+  const adjusted_time = new Date(pending_time - DELTA_RUBY_TIME_ZONE - 999)
+  adjusted_time.setSeconds(0)
+  return adjusted_time
 }
+
 
 function pendingTimeInIntervalMin() {
   let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
@@ -36,4 +41,4 @@ function pendingTimeInIntervalMin() {
   return pending_time
 }
 
-module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin, yesterdayTimeInDaysSec }
+module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin, _dayEndTimeInDaysSec }
