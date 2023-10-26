@@ -33,7 +33,7 @@ async function userApproveOrDecline(bot, msg, approve) {
       const userInput = await inputLineScene(bot, msg)
       await sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
     }
-    userRemoveFromMenu(user_tgID)
+    await userRemoveFromMenu(user_tgID)
     await bot.sendMessage(msg.chat.id, `Дякую! Заявку оброблено №_${user_tgID}.\n`, {
       reply_markup: {
         remove_keyboard: true
