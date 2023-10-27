@@ -38,7 +38,7 @@ cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 7-23 * * *`, () => {
   checkAndReplaceTicketsStatuses(bot)
 })
 
-cron.schedule('36 13 * * *', () => {
+cron.schedule('10 6 * * *', () => {
   const currentTime = new Date().toLocaleString()
   console.log(`Running cron autoCloseTicketsWithoutCustomerFeedback job...... Current time: ${currentTime}`)
   autoCloseTicketsWithoutCustomerFeedback(bot)
