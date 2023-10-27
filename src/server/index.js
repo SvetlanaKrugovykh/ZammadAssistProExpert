@@ -77,7 +77,7 @@ bot.on('message', async (msg) => {
       const data = JSON.parse(msg?.web_app_data?.data)
       console.log(data)
       await bot.sendMessage(chatId, 'Дякуємо за зворотній зв`язок!')
-      await bot.sendMessage(chatId, 'Ваш emal: ' + data?.email)
+      await bot.sendMessage(chatId, 'Ваш email: ' + data?.email)
       await bot.sendMessage(chatId, 'Ваші прізвище та ім`я: ' + data?.PIB)
       await bot.sendMessage(chatId, 'Ваш номер телефону: ' + data?.phoneNumber)
       // await bot.sendMessage(chatId, 'Всю необхідну інформацію Ви можете отримувати в цьому чаті. Якщо у Вас виникли питання, звертайтесь через меню /"Надіслати повідомлення/". Зараз для переходу в головне меню натисніть /start')
