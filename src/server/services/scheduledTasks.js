@@ -78,7 +78,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
     for (const ticket of data) {
       const ticketID = ticket.id
       const customer_id = ticket.customer_id
-      if (!ticketSubj || !customer_id) return null
+      if (!ticketID || !customer_id) return null
       const ticketSubj = await getTicketData(ticketID, 'title')
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} автоматично закрита.\n` +
         `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу .\n` +
