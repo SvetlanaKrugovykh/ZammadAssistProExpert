@@ -62,7 +62,7 @@ async function sendInfoAboutApproveRegistration(bot, user_tgID) {
   }
 }
 
-async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason) {
+async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason = 'не вказано') {
   try {
     await bot.sendMessage(user_tgID, `Вашу заявку на реєстрацію в системі <b>Інтерактивний чат-бот</b> було відхилено з причини ${reason}. Для отримання додаткової інформації зверніться до адміністратора системи.`, { parse_mode: 'HTML' })
   } catch (err) {
