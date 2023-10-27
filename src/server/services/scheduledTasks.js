@@ -3,6 +3,7 @@ const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
 const { fDateTime, pendingTimeInDaysSec, _dayEndTimeInDaysSec } = require('../services/various')
+const { bot } = require('../index')
 require('dotenv').config()
 
 
