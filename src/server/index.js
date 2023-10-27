@@ -38,10 +38,10 @@ cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 7-23 * * *`, () => {
   checkAndReplaceTicketsStatuses(bot)
 })
 
-cron.schedule('26 13 * * *', () => {
+cron.schedule('36 13 * * *', () => {
   const currentTime = new Date().toLocaleString()
   console.log(`Running cron autoCloseTicketsWithoutCustomerFeedback job...... Current time: ${currentTime}`)
-  autoCloseTicketsWithoutCustomerFeedback()
+  autoCloseTicketsWithoutCustomerFeedback(bot)
 })
 
 app.register(require('@fastify/cors'), {})

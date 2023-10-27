@@ -3,7 +3,6 @@ const { update_ticket } = require('../controllers/tgTickets')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
 const { fDateTime, pendingTimeInDaysSec, _dayEndTimeInDaysSec } = require('../services/various')
-const { bot } = require('../index')
 require('dotenv').config()
 
 
@@ -67,7 +66,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
   }
 }
 
-async function autoCloseTicketsWithoutCustomerFeedback() {
+async function autoCloseTicketsWithoutCustomerFeedback(bot) {
   try {
     const now = _dayEndTimeInDaysSec()
     const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
@@ -94,6 +93,7 @@ async function autoCloseTicketsWithoutCustomerFeedback() {
         if (!user_data) return null
         chatId = user_data?.login
       }
+      console.log(`autoCloseTicketsWithoutCustomerFeedback to ${chatId} ticketID: ${ticketID} ticketSubject: ${ticketSubject}`)
       await bot.sendMessage(chatId, ticketSubject)
     }
   } catch (err) {
