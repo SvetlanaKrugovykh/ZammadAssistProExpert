@@ -69,6 +69,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
 async function autoCloseTicketsWithoutCustomerFeedback() {
   try {
     const now = _dayEndTimeInDaysSec()
+    const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     console.log('autoCloseTicketsWithoutCustomerFeedback now is: ', now)
     const query = `SELECT * FROM tickets WHERE state_id = 7 AND pending_time = $1`
 

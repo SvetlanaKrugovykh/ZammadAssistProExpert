@@ -38,7 +38,7 @@ cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 7-23 * * *`, () => {
   checkAndReplaceTicketsStatuses(bot)
 })
 
-cron.schedule('10 13 * * *', () => {
+cron.schedule('16 13 * * *', () => {
   const currentTime = new Date().toLocaleString()
   console.log(`Running cron autoCloseTicketsWithoutCustomerFeedback job...... Current time: ${currentTime}`)
   autoCloseTicketsWithoutCustomerFeedback()
@@ -78,7 +78,9 @@ bot.on('message', async (msg) => {
       console.log(data)
       await bot.sendMessage(chatId, 'Дякуємо за зворотній зв`язок!')
       await bot.sendMessage(chatId, 'Ваш emal: ' + data?.email)
-      await bot.sendMessage(chatId, 'Всю необхідну інформацію Ви можете отримувати в цьому чаті. Якщо у Вас виникли питання, звертайтесь через меню /"Надіслати повідомлення/". Зараз для переходу в головне меню натисніть /start')
+      await bot.sendMessage(chatId, 'Ваші прізвище та ім`я: ' + data?.PIB)
+      await bot.sendMessage(chatId, 'Ваш номер телефону: ' + data?.phoneNumber)
+      // await bot.sendMessage(chatId, 'Всю необхідну інформацію Ви можете отримувати в цьому чаті. Якщо у Вас виникли питання, звертайтесь через меню /"Надіслати повідомлення/". Зараз для переходу в головне меню натисніть /start')
       await singUpDataSave(bot, chatId, data)
       return
     } catch (e) {
