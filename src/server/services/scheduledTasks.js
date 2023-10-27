@@ -130,6 +130,7 @@ async function changeStatusFromCloseToPendingClose(ticketID, ticket_body) {
 
 async function changeStatusFromPendingCloseToClose(ticketID, ticket_body) {
   try {
+    const INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     const article = {
       "subject": "Автоматичний перевод заявки в статус 'Закрита'",
       "body": `Заявку автоматично переведено в статус 'Закрита' - Підтвердження або скасування замовником не відбулось протягом ${INTERVAL_DAYS} днів.`,

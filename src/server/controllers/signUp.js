@@ -135,6 +135,7 @@ async function usersRegistration(bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, 'Ваш emal: ' + data?.email)
     await bot.sendMessage(msg.chat.id, 'Ваші прізвище та ім`я: ' + data?.PIB)
     await bot.sendMessage(msg.chat.id, 'Ваш номер телефону: ' + data?.phoneNumber)
+    await bot.sendMessage(msg.chat.id, 'Запит на реєстрацію користувача відправлено службі технічної підтримки. Очікуйте підтвердження!')
   } catch (err) {
     console.log(err)
   }
