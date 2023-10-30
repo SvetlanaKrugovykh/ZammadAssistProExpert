@@ -32,7 +32,7 @@ async function findOwnerById(owner_id) {
 async function findUserByEmail(email) {
   try {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email])
+    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email.toLowerCase()])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -43,7 +43,7 @@ async function findUserByEmail(email) {
 async function createOrUpdateUserIntoDb(chatId, user_info) {
   try {
     const DEBUG_LEVEL = Number(process.env.DEBUG_LEVEL) || 0
-    const email_ = user_info.email
+    const email_ = user_info.email.toLowerCase()
     const [lastName, firstName] = user_info.PIB.split(' ')
 
     if (!/^[^\s@]+@(lotok\.in\.ua|ito\.in\.ua)$/.test(email_)) {
@@ -52,7 +52,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     }
     let existingUser = await findUserById(chatId)
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
-    if (!existingUser) existingUser = await findUserByEmail(user_info.email.replace(/\s+/g, ''))
+    if (!existingUser) existingUser = await findUserByEmail(email_.replace(/\s+/g, ''))
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
     if (existingUser) {
       const query = 'UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE login = $7 OR email = $8 RETURNING *'
@@ -61,10 +61,10 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         user_info.phoneNumber,
         firstName,
         lastName,
-        user_info.email,
+        email_,
         user_info?.address,
         chatId,
-        user_info.email
+        email_
       ]
       const data = await execPgQuery(query, values, true)
       if (DEBUG_LEVEL > 0) console.log(`createOrUpdateUserIntoDb: ${JSON.stringify(data)}`)
@@ -79,7 +79,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         user_info.phoneNumber,
         firstName,
         lastName,
-        user_info.email,
+        email_,
         user_info?.address,
         false
       ]
