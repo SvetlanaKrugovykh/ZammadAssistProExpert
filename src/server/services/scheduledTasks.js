@@ -37,7 +37,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
         console.log(`last article into the same period - Заявка №${ticketID}`)
         continue
       }
-      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at)} виконана.\n` +
+      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at, true, true)} виконана.\n` +
         `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
         `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
         `через ${TICKET_AUTO_CLOSE_DAYS} дні`
