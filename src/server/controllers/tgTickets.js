@@ -248,7 +248,7 @@ async function checkUserTickets(bot, msg, menuItem) {
         title: 'Оберіть будь ласка заявку',
         options: [{ resize_keyboard: true }],
         buttons: parsedData.map(ticket => [
-          { text: `${statusIcon} №${ticket.id}: ${ticket.title} | ${ticket.number} від ${fDateTime('uk-UA', ticket.created_at, true)}`, callback_data: `43_${ticket.id}` }
+          { text: `${statusIcon} №${ticket.id}: ${ticket.title} | ${ticket.number} від ${fDateTime('uk-UA', ticket.created_at, true, true)}`, callback_data: `43_${ticket.id}` }
         ])
       }
       ticketsButtons.buttons.push([{ text: '↩️', callback_data: '0_1' }])
