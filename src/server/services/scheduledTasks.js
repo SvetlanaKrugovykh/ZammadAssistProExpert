@@ -12,8 +12,9 @@ async function checkAndReplaceTicketsStatuses(bot) {
     const TICKET_AUTO_CLOSE_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
+    const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) || 0
 
-    const DELTA = (DELTA_RUBY_TIME_ZONE_MINUTES + INTERVAL_MINUTES) * 60000
+    const DELTA = (DELTA_RUBY_TIME_ZONE_MINUTES + INTERVAL_MINUTES + DELTA_SUMMER_TIME) * 60000
     const nowMinusInterval = new Date(Date.now() - DELTA)
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1 LIMIT 50`
 
