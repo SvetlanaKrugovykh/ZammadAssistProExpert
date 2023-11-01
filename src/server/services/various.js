@@ -27,7 +27,7 @@ function pendingTimeInDaysSec() {
 
 function _dayEndTimeInDaysSec(deltaMSec = 0) {
   const DELTA_RUBY_TIME_ZONE = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) * 60000 || 0
-  const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) * 60000 * 60 || 0
+  const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) * 60000 || 0
   const _dayEnd = new Date(Date.now() - deltaMSec)
   const pending_time = new Date(_dayEnd.getFullYear(), _dayEnd.getMonth(), _dayEnd.getDate(), 23, 59, 59, 999)
   const adjusted_time = new Date(pending_time - DELTA_RUBY_TIME_ZONE - DELTA_SUMMER_TIME - 999)

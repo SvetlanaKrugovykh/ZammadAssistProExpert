@@ -32,13 +32,13 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 
 const CLOSED_TICKET_SCAN_INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES) || 10
 
-cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 7-23 * * *`, () => {
+cron.schedule(`*/${CLOSED_TICKET_SCAN_INTERVAL_MINUTES} 22-23 * * *`, () => {
   const currentTime = new Date().toLocaleString()
   console.log(`Running cron checkAndReplaceTicketsStatuses job...... Current time: ${currentTime}`)
   checkAndReplaceTicketsStatuses(bot)
 })
 
-cron.schedule('10 6 * * *', () => {
+cron.schedule('1 13 * * *', () => {
   const currentTime = new Date().toLocaleString()
   console.log(`Running cron autoCloseTicketsWithoutCustomerFeedback job...... Current time: ${currentTime}`)
   autoCloseTicketsWithoutCustomerFeedback(bot)
