@@ -16,7 +16,11 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
     const DELTA = (DELTA_RUBY_TIME_ZONE_MINUTES + INTERVAL_MINUTES + DELTA_SUMMER_TIME) * 60000
     const nowMinusInterval = new Date(Date.now() - DELTA)
-    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1 LIMIT 50`
+    const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
+    const fromHour = exceptHour + 1
+    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1`
+      + ` AND (EXTRACT(HOUR FROM updated_at) < ${exceptHour} OR EXTRACT(HOUR FROM updated_at) >= ${fromHour})`
+      + `LIMIT 50`
 
     if (process.env.DEBUG_LEVEL === '7') {
       console.log('checkAndReplaceTicketsStatuses query', query)
