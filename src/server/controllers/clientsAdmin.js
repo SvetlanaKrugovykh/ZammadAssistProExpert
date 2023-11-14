@@ -17,7 +17,7 @@ async function userApproveOrDecline(bot, msg, approve) {
   }
 
   for (const user_tgID of user_tgIDs) {
-    const newUserInfo = await udateUser(user_tgID, approve)
+    const newUserInfo = await updateUser(user_tgID, approve)
     if (newUserInfo === null) {
       await bot.sendMessage(GROUP_ID, `НЕ знайдено користувача з id: ${user_tgID}`)
       return null
@@ -70,11 +70,13 @@ async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason = 'не �
   }
 }
 
-async function udateUser(chatId, approve) {
+async function updateUser(chatId, approve) {
   const verify = approve ? 'TRUE' : 'FALSE'
-  const query = `UPDATE users SET verified = ${verify} WHERE login = '${chatId}'`
-
+  const user = await findUserById(chatId)
   try {
+    console.log(`chatId=${chatId}, email= ${user?.email}, verify=${verify}`)
+    const email = user?.email
+    const query = `UPDATE users SET verified = ${verify} WHERE email = '${email}'`
     await execPgQuery(query, [], true)
     const registeredUser = await findUserById(chatId)
     return registeredUser
