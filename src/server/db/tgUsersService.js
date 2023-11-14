@@ -55,7 +55,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     if (!existingUser) existingUser = await findUserByEmail(email_.replace(/\s+/g, ''))
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
     if (existingUser) {
-      const query = 'UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE login = $7 OR email = $8 RETURNING *'
+      const query = 'UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE user_id = $7 RETURNING *'
       const values = [
         chatId,
         user_info.phoneNumber,
@@ -63,8 +63,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         lastName,
         email_,
         user_info?.address,
-        chatId,
-        email_
+        existingUser.id
       ]
       const data = await execPgQuery(query, values, true)
       if (DEBUG_LEVEL > 0) console.log(`createOrUpdateUserIntoDb: ${JSON.stringify(data)}`)
