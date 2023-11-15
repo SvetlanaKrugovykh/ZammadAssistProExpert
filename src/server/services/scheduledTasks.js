@@ -98,7 +98,11 @@ async function autoCloseTicketsWithoutCustomerFeedback(bot) {
         chatId = user_data?.login
       }
       console.log(`autoCloseTicketsWithoutCustomerFeedback to ${chatId} ticketID: ${ticketID} ticketSubject: ${ticketSubject}`)
-      await bot.sendMessage(chatId, ticketSubject)
+      await bot.sendMessage(chatId, ticketSubject, {
+        reply_markup: {
+          remove_keyboard: true
+        }
+      })
     }
   } catch (err) {
     console.log(err)
