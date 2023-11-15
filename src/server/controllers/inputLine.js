@@ -1,22 +1,30 @@
-async function inputLineScene(bot, msg, templateString = '') {
+async function inputLineScene(bot, msg, templateString = '', timeout = 30000) {
   const chatId = msg.chat.id
-  const promise = new Promise(resolve => {
-    if (templateString.length > 0) {
-      //bot.sendMessage(msg.chat.id, templateString)
-    }
+
+  return new Promise((resolve, reject) => {
+    let timer
     const messageHandler = (message) => {
-      if (message.chat.id === chatId) { // Проверяем, что сообщение пришло из того же чата
+      if (message.chat.id === chatId) {
         const inputLine = message.text
         console.log('Received input Line:', inputLine)
-        bot.removeListener('message', messageHandler) // Удаляем обработчик после получения нужного сообщения
+        clearTimeout(timer)
+        bot.removeListener('message', messageHandler)
         resolve(inputLine)
       }
     }
 
     bot.on('message', messageHandler)
+
+    if (templateString.length > 0) {
+      bot.sendMessage(msg.chat.id, templateString)
+    }
+
+    timer = setTimeout(() => {
+      bot.removeListener('message', messageHandler)
+      resolve('не вказано')
+    }, timeout)
   })
-  const userInput = await promise
-  return userInput
 }
+
 
 module.exports = inputLineScene
