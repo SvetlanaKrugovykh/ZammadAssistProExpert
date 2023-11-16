@@ -86,8 +86,9 @@ async function autoCloseTicketsWithoutCustomerFeedback(bot) {
       if (!ticketID || !customer_id) return null
       const ticketSubj = await getTicketData(ticketID, 'title')
       const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} автоматично закрита.\n` +
-        `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу .\n` +
-        `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів`
+        `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу.\n` +
+        `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів.\n` +
+        `Для подальшої роботи з ботом натисніть /start`
       await changeStatusFromPendingCloseToClose(ticketID, ticket)
       const user_data = await findUserById(customer_id)
       let chatId = 0
