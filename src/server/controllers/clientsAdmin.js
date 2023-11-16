@@ -2,7 +2,7 @@ require('dotenv').config()
 const inputLineScene = require('../controllers/inputLine')
 const { execPgQuery } = require('../db/common')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
-const { findUserById } = require('../db/tgUsersService')
+const { findUserById, userVerification } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
 const { buttonsConfig } = require('../modules/keyboard')
 
@@ -72,14 +72,11 @@ async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason = 'не �
 }
 
 async function updateUser(chatId, approve) {
-  const verify = approve ? 'TRUE' : 'FALSE'
+  const verify = approve ? 'true' : 'false'
   const user = await findUserById(chatId)
   try {
     console.log(`chatId=${chatId}, email= ${user?.email}, verify=${verify}`)
-    const email = user?.email
-    const query = `UPDATE users SET verified = ${verify} WHERE email = '${email}'`
-    await execPgQuery(query, [], true)
-    const registeredUser = await findUserById(chatId)
+    const registeredUser = await userVerification(user.id, verify)
     return registeredUser
   } catch (err) {
     console.log(err)
