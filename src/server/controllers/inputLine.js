@@ -1,4 +1,4 @@
-async function inputLineScene(bot, msg, templateString = '', timeout = 30000) {
+async function inputLineScene(bot, msg, templateString = '', timeout = 10000) {
   const chatId = msg.chat.id
 
   return new Promise((resolve, reject) => {

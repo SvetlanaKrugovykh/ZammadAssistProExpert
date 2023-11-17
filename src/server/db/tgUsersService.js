@@ -7,11 +7,10 @@ async function findUserById(tg_id) {
   try {
     if (!/^\d{1,12}$/.test(tg_id)) return null
     let data = null
-    const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
-    const httpsAgent = new https.Agent({ rejectUnauthorized: false })
-    const url = `${process.env.ZAMMAD_API_URL}/users/search?query=login:${tg_id}`
-    const response = await axios.get(url, { headers, httpsAgent })
-    data = response.data[0]
+    data = await execPgQuery('SELECT * FROM users WHERE login = $1', [tg_id.toString()])
+    if (!data && tg_id >= -2147483648 && tg_id <= 2147483647) {
+      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id])
+    }
     if (data.length === 0 && tg_id >= -2147483648 && tg_id <= 2147483647) {
       data = await findOwnerById(tg_id)
     }
@@ -26,12 +25,7 @@ async function findUserById(tg_id) {
 async function findOwnerById(owner_id) {
   try {
     if (!/^\d{1,12}$/.test(owner_id)) return null
-    const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
-    const httpsAgent = new https.Agent({ rejectUnauthorized: false })
-    const url = `${process.env.ZAMMAD_API_URL}/users/${owner_id}`
-    const response = await axios.get(url, { headers, httpsAgent })
-    const data = response.data[0]
-    if (data.length === 0) return null
+    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email.toLowerCase()])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -43,12 +37,7 @@ async function findOwnerById(owner_id) {
 async function findUserByEmail(email) {
   try {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-    const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
-    const httpsAgent = new https.Agent({ rejectUnauthorized: false })
-    const url = `${process.env.ZAMMAD_API_URL}/users/search?query=email:${email.toLowerCase()}`
-    const response = await axios.get(url, { headers, httpsAgent })
-    const data = response.data[0]
-    if (data.length === 0) return null
+    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email.toLowerCase()])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -108,7 +97,18 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         const updUser = updResponse.data
         console.log(`Update user: ${updUser.id}`)
         if (DEBUG_LEVEL > 0) console.log(`createUserIntoZammad: ${JSON.stringify(updUser)}`)
-        return updUser
+
+        const query = `UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE id = ${existingUser.id} RETURNING *`
+        const values = [
+          chatId,
+          user_info.phoneNumber,
+          firstName,
+          lastName,
+          email_,
+          user_info?.address
+        ]
+        const data = await execPgQuery(query, values, true)
+        return data
       } catch (err) {
         console.log(err)
         return null

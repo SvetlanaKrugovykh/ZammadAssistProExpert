@@ -72,11 +72,14 @@ async function sendInfoAboutDeclineRegistration(bot, user_tgID, reason = 'не �
 }
 
 async function updateUser(chatId, approve) {
-  const verify = approve ? 'true' : 'false'
+  const verify = approve ? 'TRUE' : 'FALSE'
   const user = await findUserById(chatId)
   try {
     console.log(`chatId=${chatId}, email= ${user?.email}, verify=${verify}`)
-    const registeredUser = await userVerification(user.id, verify)
+    const email = user?.email
+    const query = `UPDATE users SET verified = ${verify} WHERE email = '${email}'`
+    await execPgQuery(query, [], true)
+    const registeredUser = await findUserById(chatId)
     return registeredUser
   } catch (err) {
     console.log(err)

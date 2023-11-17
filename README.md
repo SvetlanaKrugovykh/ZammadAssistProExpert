@@ -22,3 +22,7 @@ ZammadAssistProExpert is a powerful tool for managing service-desk data, handlin
    ```bash
    git clone https://github.com/.../ZammadAssistProExpert.git
    ```
+
+## Comments
+
+I`m not recommend to use Zammand for anybody
