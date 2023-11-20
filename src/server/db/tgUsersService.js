@@ -25,7 +25,7 @@ async function findUserById(tg_id) {
 async function findOwnerById(owner_id) {
   try {
     if (!/^\d{1,12}$/.test(owner_id)) return null
-    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email.toLowerCase()])
+    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [owner_id])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
