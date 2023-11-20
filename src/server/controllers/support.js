@@ -1,4 +1,4 @@
-const inputLineScene = require('./inputLine')
+const { inputLineScene } = require('./inputLine')
 require('dotenv').config()
 
 

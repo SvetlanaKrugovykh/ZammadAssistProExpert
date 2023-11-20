@@ -1,6 +1,6 @@
 const { buttonsConfig } = require('../modules/keyboard')
 require('dotenv').config()
-const inputLineScene = require('./inputLine')
+const { inputLineScene } = require('./inputLine')
 const { createOrUpdateUserIntoDb } = require('../db/tgUsersService')
 const GROUP_ID = Number(process.env.GROUP_ID)
 const SENDER = process.env.SENDER

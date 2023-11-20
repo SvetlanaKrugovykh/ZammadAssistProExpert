@@ -1,6 +1,6 @@
 
 const { buttonsConfig } = require('../modules/keyboard')
-const inputLineScene = require('../controllers/inputLine')
+const { inputLineScene } = require('../controllers/inputLine')
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')

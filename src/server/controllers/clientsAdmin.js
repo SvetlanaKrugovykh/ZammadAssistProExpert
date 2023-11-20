@@ -1,5 +1,5 @@
 require('dotenv').config()
-const inputLineScene = require('../controllers/inputLine')
+const { inputLineScene, inputLineAdminScene } = require('../controllers/inputLine')
 const { execPgQuery } = require('../db/common')
 const { clientAdminStarterButtons } = require('../modules/keyboard')
 const { findUserById, userVerification } = require('../db/tgUsersService')
@@ -30,7 +30,7 @@ async function userApproveOrDecline(bot, msg, approve) {
       console.log(`Update user NOT Approved: ${newUserInfo.email}`)
       await bot.sendMessage(GROUP_ID, `НЕ веріфіковано користувача: ${newUserInfo.email}`)
       console.log(`Введіть причину відмови для користувача: ${newUserInfo.email}`)
-      const userInput = await inputLineScene(bot, msg) || 'не вказано'
+      const userInput = await inputLineAdminScene(bot, msg) || 'не вказано'
       await sendInfoAboutDeclineRegistration(bot, user_tgID, userInput)
     }
     await userRemoveFromMenu(user_tgID)
