@@ -11,10 +11,10 @@ async function findUserById(tg_id) {
     if (!data && tg_id >= -2147483648 && tg_id <= 2147483647) {
       data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id])
     }
-    if (data.length === 0 && tg_id >= -2147483648 && tg_id <= 2147483647) {
+    if (!data || data.length === 0 && tg_id >= -2147483648 && tg_id <= 2147483647) {
       data = await findOwnerById(tg_id)
     }
-    if (data.length === 0) return null
+    if (!data || data.length === 0) return null
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
