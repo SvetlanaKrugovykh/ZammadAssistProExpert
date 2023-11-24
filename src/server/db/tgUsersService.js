@@ -9,7 +9,8 @@ async function findUserById(tg_id) {
     let data = null
     data = await execPgQuery('SELECT * FROM users WHERE login = $1', [tg_id.toString()])
     if (!data && tg_id >= -2147483648 && tg_id <= 2147483647) {
-      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [tg_id])
+      let cleanedId = tg_id.replace(/\D/g, '')
+      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
     }
     if (!data || data.length === 0 && tg_id >= -2147483648 && tg_id <= 2147483647) {
       data = await findOwnerById(tg_id)
@@ -25,7 +26,8 @@ async function findUserById(tg_id) {
 async function findOwnerById(owner_id) {
   try {
     if (!/^\d{1,12}$/.test(owner_id)) return null
-    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [owner_id])
+    let cleanedId = owner_id.replace(/\D/g, '')
+    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
