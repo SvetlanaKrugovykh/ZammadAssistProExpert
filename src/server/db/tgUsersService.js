@@ -3,16 +3,16 @@ const https = require('https')
 const axios = require('axios')
 require('dotenv').config()
 
-async function findUserById(id_) {
+async function findUserById(ID) {
   try {
-    if (!/^\d{1,12}$/.test(id_)) return null
+    if (!/^\d{1,12}$/.test(ID)) return null
     let data = null
-    let cleanedId = id_.replace(/\D/g, '')
+    let cleanedId = ID.replace(/\D/g, '')
     if (cleanedId < -2147483648) {
       console.log(`Error findUserById: ${cleanedId} is belong ti the groupID`)
       return null
     }
-    if (id_.length < 7) {
+    if (ID.length < 7) {
       data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
       console.log(`findUserById: ${data?.id}`)
     } else {
