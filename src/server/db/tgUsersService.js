@@ -5,6 +5,9 @@ require('dotenv').config()
 
 async function findUserById(ID) {
   try {
+    if (typeof ID !== 'string') {
+      ID = ID.toString(); // Convert ID to a string if it's not already
+    }
     if (!/^\d{1,12}$/.test(ID)) return null
     let data = null
     let cleanedId = ID.replace(/\D/g, '')
