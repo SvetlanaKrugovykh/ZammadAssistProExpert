@@ -33,6 +33,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     for (const ticket of data) {
       const ticketID = ticket.id
       const customer_id = ticket.customer_id
+      console.log(`checkAndReplaceTicketsStatuses ticketID: ${ticketID} customer_id: ${customer_id}`)
       const ticketSubj = await getTicketData(ticketID, 'title')
       if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
       if (!ticketSubj) continue

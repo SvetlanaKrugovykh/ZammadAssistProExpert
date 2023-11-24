@@ -3,17 +3,21 @@ const https = require('https')
 const axios = require('axios')
 require('dotenv').config()
 
-async function findUserById(tg_id) {
+async function findUserById(id_) {
   try {
-    if (!/^\d{1,12}$/.test(tg_id)) return null
+    if (!/^\d{1,12}$/.test(id_)) return null
     let data = null
-    data = await execPgQuery('SELECT * FROM users WHERE login = $1', [tg_id.toString()])
-    if (!data && tg_id >= -2147483648 && tg_id <= 2147483647) {
-      let cleanedId = tg_id.replace(/\D/g, '')
-      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
+    let cleanedId = id_.replace(/\D/g, '')
+    if (cleanedId < -2147483648) {
+      console.log(`Error findUserById: ${cleanedId} is belong ti the groupID`)
+      return null
     }
-    if (!data || data.length === 0 && tg_id >= -2147483648 && tg_id <= 2147483647) {
-      data = await findOwnerById(tg_id)
+    if (id_.length < 7) {
+      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
+      console.log(`findUserById: ${data?.id}`)
+    } else {
+      data = await execPgQuery('SELECT * FROM users WHERE login = $1', [cleanedId])
+      console.log(`findUserByLogin: ${data?.login}`)
     }
     if (!data || data.length === 0) return null
     return data
