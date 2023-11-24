@@ -5,9 +5,7 @@ require('dotenv').config()
 
 async function findUserById(ID) {
   try {
-    if (typeof ID !== 'string') {
-      ID = ID.toString(); // Convert ID to a string if it's not already
-    }
+    if (typeof ID !== 'string') ID = ID.toString()
     if (!/^\d{1,12}$/.test(ID)) return null
     let data = null
     let cleanedId = ID.replace(/\D/g, '')
@@ -32,9 +30,11 @@ async function findUserById(ID) {
 
 async function findOwnerById(owner_id) {
   try {
+    if (typeof owner_id !== 'string') owner_id = owner_id.toString()
     if (!/^\d{1,12}$/.test(owner_id)) return null
+    let data = null
     let cleanedId = owner_id.replace(/\D/g, '')
-    const data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
+    data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
