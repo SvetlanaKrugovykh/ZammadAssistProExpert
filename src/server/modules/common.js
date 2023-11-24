@@ -92,7 +92,7 @@ async function getChatIdByTicketID(ticketID) {
       console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
       return null
     }
-    console.log('getChatIdByTicketID ticket', ticket)
+    console.log('getChatIdByTicketID ticket', ticketID)
     const customer_id = ticket.customer_id
     console.log('getChatIdByTicketID customer_id', customer_id)
     const user_data = await findUserById(customer_id)
