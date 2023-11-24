@@ -92,7 +92,7 @@ async function getChatIdByTicketID(ticketID) {
       console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
       return null
     }
-    if (process.env.DEBUG_LEVEL === '7') console.log('getChatIdByTicketID ticket', ticket)
+    console.log('getChatIdByTicketID ticket', ticket)
     const customer_id = ticket.customer_id
     console.log('getChatIdByTicketID customer_id', customer_id)
     const user_data = await findUserById(customer_id)
@@ -129,7 +129,7 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
       return
     const isBlocked = await isBotBlocked(bot, source.chatId, msg)
     if (isBlocked) return
-    console.log(`ticketApprovalScene chatId: ${source.chatId}`)
+    console.log(`ticketApprovalScene chatId=${source.chatId}`)
     if (manual) await cleanTicketsFromMenu()
     buttonsConfig["ticketApproval"].title = source.ticketSubject
     const buttons = buttonsConfig["ticketApproval"].buttons
