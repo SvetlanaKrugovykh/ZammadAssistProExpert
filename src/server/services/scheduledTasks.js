@@ -82,29 +82,40 @@ async function autoCloseTicketsWithoutCustomerFeedback(bot) {
     if (!data || data.length === 0) return null
 
     for (const ticket of data) {
-      const ticketID = ticket.id
-      const customer_id = ticket.customer_id
-      if (!ticketID || !customer_id) return null
-      const ticketSubj = await getTicketData(ticketID, 'title')
-      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} автоматично закрита.\n` +
-        `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу.\n` +
-        `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів.\n` +
-        `Для подальшої роботи з ботом натисніть /start`
-      await changeStatusFromPendingCloseToClose(ticketID, ticket)
-      const user_data = await findUserById(customer_id)
-      let chatId = 0
-      if (process.env.ZAMMAD_USER_TEST_MODE === 'true')
-        chatId = Number(process.env.TEST_USER_TELEGRAM_CHAT_ID)
-      else {
-        if (!user_data) return null
-        chatId = user_data?.login
-      }
-      console.log(`autoCloseTicketsWithoutCustomerFeedback to ${chatId} ticketID: ${ticketID} ticketSubject: ${ticketSubject}`)
-      await bot.sendMessage(chatId, ticketSubject, {
-        reply_markup: {
-          remove_keyboard: true
+      try {
+        const ticketID = ticket.id
+        const customer_id = ticket.customer_id
+        if (!ticketID || !customer_id) continue
+
+        const ticketSubj = await getTicketData(ticketID, 'title')
+        const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} автоматично закрита.\n` +
+          `Від Вас не надійшло ані підтвердження ані повернення заявки в роботу.\n` +
+          `Тому заявку автоматично закрито протягом ${TICKET_AUTO_CLOSE_DAYS} днів.\n` +
+          `Для подальшої роботи з ботом натисніть /start`
+
+        await changeStatusFromPendingCloseToClose(ticketID, ticket)
+        const user_data = await findUserById(customer_id)
+        let chatId = 0
+
+        if (process.env.ZAMMAD_USER_TEST_MODE === 'true')
+          chatId = Number(process.env.TEST_USER_TELEGRAM_CHAT_ID)
+        else {
+          if (!user_data) {
+            console.log(`User data not found for ticketID: ${ticketID}`)
+            continue
+          }
+          chatId = user_data?.login
         }
-      })
+
+        console.log(`autoCloseTicketsWithoutCustomerFeedback to ${chatId} ticketID: ${ticketID} ticketSubject: ${ticketSubject}`)
+        await bot.sendMessage(chatId, ticketSubject, {
+          reply_markup: {
+            remove_keyboard: true
+          }
+        })
+      } catch (error) {
+        console.log(`Error occurred during processing ticket: ${ticket.id}. Error: ${error}`);
+      }
     }
   } catch (err) {
     console.log(err)
