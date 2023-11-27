@@ -31,39 +31,47 @@ async function checkAndReplaceTicketsStatuses(bot) {
     if (!data) return null
     const customerData = {}
     for (const ticket of data) {
-      const ticketID = ticket.id
-      const customer_id = ticket.customer_id
-      console.log(`checkAndReplaceTicketsStatuses ticketID: ${ticketID} customer_id: ${customer_id}`)
-      const ticketSubj = await getTicketData(ticketID, 'title')
-      if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
-      if (!ticketSubj) continue
-      const lastarticle = await getArticleData(ticketID, `Заявку автоматично переведено в статус 'Очікує закриття'`)
-      if (lastarticle) {
-        console.log(`last article into the same period - Заявка №${ticketID}`)
-        continue
-      }
-      const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at, true, true)} виконана.\n` +
-        `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
-        `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
-        `через ${TICKET_AUTO_CLOSE_DAYS} дні`
-      if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubject', ticketSubject)
-      await changeStatusFromCloseToPendingClose(ticketID, ticket)
-      if (!customerData[customer_id]) {
-        customerData[customer_id] = {
-          tickets: [],
-          subjects: [],
+      try {
+        const ticketID = ticket.id
+        const customer_id = ticket.customer_id
+        console.log(`checkAndReplaceTicketsStatuses ticketID: ${ticketID} customer_id: ${customer_id}`)
+        const ticketSubj = await getTicketData(ticketID, 'title')
+        if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
+        if (!ticketSubj) continue
+        const lastarticle = await getArticleData(ticketID, `Заявку автоматично переведено в статус 'Очікує закриття'`)
+        if (lastarticle) {
+          console.log(`last article into the same period - Заявка №${ticketID}`)
+          continue
         }
+        const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at, true, true)} виконана.\n` +
+          `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
+          `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
+          `через ${TICKET_AUTO_CLOSE_DAYS} дні`
+        if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubject', ticketSubject)
+        await changeStatusFromCloseToPendingClose(ticketID, ticket)
+        if (!customerData[customer_id]) {
+          customerData[customer_id] = {
+            tickets: [],
+            subjects: [],
+          }
+        }
+        customerData[customer_id].subjects.push(ticketSubject)
+        customerData[customer_id].tickets.push(ticket)
+      } catch (error) {
+        console.log(`Error occurred during processing ticket: ${ticket?.id}. Error: ${error}`);
       }
-      customerData[customer_id].subjects.push(ticketSubject)
-      customerData[customer_id].tickets.push(ticket)
     }
     for (const customer_id in customerData) {
-      const customerTickets = customerData[customer_id].tickets
-      let i = 0
-      await cleanTicketsFromMenu()
-      for (const ticket of customerTickets) {
-        await ticketApprovalScene(ticket.id, bot, customerData[customer_id].subjects[i], null, ticket)
-        i++
+      try {
+        const customerTickets = customerData[customer_id].tickets
+        let i = 0
+        await cleanTicketsFromMenu()
+        for (const ticket of customerTickets) {
+          await ticketApprovalScene(ticket.id, bot, customerData[customer_id].subjects[i], null, ticket)
+          i++
+        }
+      } catch (error) {
+        console.log(`Error occurred during processing ticket: ${ticket?.id}. Error: ${error}`);
       }
     }
   } catch (err) {
