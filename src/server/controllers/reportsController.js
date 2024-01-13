@@ -1,5 +1,6 @@
 const { Calendar } = require('node-telegram-keyboard-wrapper')
 const { buttonsConfig } = require('../modules/keyboard')
+const { createReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {
 
@@ -14,9 +15,12 @@ module.exports.reports = async function (bot, msg) {
 
 module.exports.getReport = async function (bot, msg, period) {
   await bot.sendMessage(msg.chat.id, `Ви обрали період: ${period}`)
+
   if (period == 'any_period') {
     //await chooseData(bot, msg)
     console.log('any_period')
+  } else {
+    await createReport(bot, msg, period)
   }
 }
 
