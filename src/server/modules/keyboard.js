@@ -37,6 +37,7 @@ const buttonsConfig = {
       [{ text: '📒 Переглянути відкриті заявки', callback_data: '2_2' }],
       [{ text: '📘 Заявки, що виконані та очікують Вашого затвердження', callback_data: '2_3' }],
       [{ text: '📗 Переглянути заявки, що вже є виконаними', callback_data: '2_4' }],
+      [{ text: '📊 Звітність', callback_data: '2_5' }],
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
@@ -52,6 +53,7 @@ const buttonsConfig = {
       [{ text: '↩️', callback_data: '3_3' }]
     ]
   },
+
   ticketApproval: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],
@@ -70,9 +72,21 @@ const buttonsConfig = {
       [{ text: 'Надіслати відповідь на звернення', callback_data: '3_2' }],
       [{ text: '🏠', callback_data: '0_4' }]
     ]
-  }
+  },
+
+  chooseTypeOfPeriod: {
+    title: 'Оберіть, будь ласка, період формування звіту:',
+    options: [{ resize_keyboard: true }],
+    buttons: [
+      [{ text: 'Сьогодні', callback_data: 'today' }],
+      [{ text: 'Останній тиждень', callback_data: 'last_week' }],
+      [{ text: 'Останній місяць', callback_data: 'last_month' }],
+      [{ text: 'Останній рік', callback_data: 'last_year' }],
+      [{ text: 'Інший період', callback_data: 'any_period' }],
+      [{ text: '↩️', callback_data: '3_3' }]
+    ]
+  },
+
 }
 
 module.exports = { buttonsConfig }
-
-

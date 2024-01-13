@@ -3,6 +3,7 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
+const { reports, chooseData, getReport } = require('./reportsController')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -74,6 +75,10 @@ async function handler(bot, msg, webAppUrl) {
     case '2_4':
       await checkUserTickets(bot, msg, data)
       break
+    case '2_5':
+      //await chooseData(bot, msg) //test
+      await reports(bot, msg)
+      break
     case '3_1':
       await clientsAdminGetInfo(bot, msg)
       break
@@ -117,6 +122,21 @@ async function handler(bot, msg, webAppUrl) {
     case '8_2':
       await userApproveOrDecline(bot, msg, false)
       break
+    case 'today':
+      await getReport(bot, msg, 'today')
+      break
+    case 'last_week':
+      await getReport(bot, msg, 'last_week')
+      break
+    case 'last_month':
+      await getReport(bot, msg, 'last_month')
+      break
+    case 'last_year':
+      await getReport(bot, msg, 'last_year')
+      break
+    case 'any_period':
+      await getReport(bot, msg, 'any_period')
+      break
     default:
       if (msg.text === undefined) return
       if (await isThisGroupId(bot, msg.chat.id, msg)) return
@@ -159,7 +179,7 @@ async function switchDynamicSceenes(bot, msg) {
       await userApproveOrDecline(bot, msg, false)
       return
     }
-    if (/[🏠🟣🔵🧷📌✔️➕📒📗📘💹]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✔️➕📒📗📊📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }

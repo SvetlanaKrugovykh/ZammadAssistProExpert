@@ -3,6 +3,7 @@ const https = require('https')
 const { buttonsConfig } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 const { isBotBlocked } = require('../modules/bot')
+const { isUsersHaveReportsRole } = require('../db/tgReportsService')
 require('dotenv').config()
 //#region mainScrnes
 
@@ -34,7 +35,10 @@ async function guestMenu(bot, msg, guestStartButtons) {
 }
 
 async function registeredUserMenu(bot, msg, standardStartButtons) {
+  const isReports = await isUsersHaveReportsRole(msg.chat.id)
   await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
+  if (!isReports) buttonsConfig["standardStartButtons"].buttons.splice(4, 1)
+
   await bot.sendMessage(msg.chat.id, buttonsConfig["standardStartButtons"].title, {
     reply_markup: {
       keyboard: buttonsConfig["standardStartButtons"].buttons,
