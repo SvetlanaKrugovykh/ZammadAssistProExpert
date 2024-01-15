@@ -1,4 +1,3 @@
-const Calendar = require('telegram-inline-calendar')
 const { buttonsConfig } = require('../modules/keyboard')
 const { createReport, getGroups } = require('../db/tgReportsService')
 
@@ -48,9 +47,9 @@ module.exports.getReport = async function (bot, msg, period) {
 }
 
 module.exports.chooseData = async function (bot, msg) {
-  const calendar = new Calendar(bot, {
-    date_format: 'DD-MM-YYYY',
-    language: 'ru'
-  })
-  calendar.startNavCalendar(msg)
+  // const calendar = new Calendar(bot, {
+  //   date_format: 'DD-MM-YYYY',
+  //   language: 'ru'
+  // })
+  // calendar.startNavCalendar(msg)
 }
