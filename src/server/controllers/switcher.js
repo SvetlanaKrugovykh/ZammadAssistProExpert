@@ -3,7 +3,7 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
-const { reports, chooseData, getReport } = require('./reportsController')
+const { reports, chooseData, chooseGroups, getReport } = require('./reportsController')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -76,8 +76,9 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_5':
-      //await chooseData(bot, msg) //test
-      await reports(bot, msg)
+      await chooseData(bot, msg) //test
+      //await chooseGroups(bot, msg) //test
+      //await reports(bot, msg)
       break
     case '3_1':
       await clientsAdminGetInfo(bot, msg)

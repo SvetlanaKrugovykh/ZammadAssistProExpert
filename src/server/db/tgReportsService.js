@@ -13,6 +13,17 @@ module.exports.isUsersHaveReportsRole = async function (chatId) {
   }
 }
 
+module.exports.getGroups = async function () {
+  try {
+    const data = await execPgQuery('SELECT * FROM groups', [], false, true)
+    if (data === null) return null
+    return data
+  } catch (error) {
+    console.error('Error in function getGroups:', error)
+    return null
+  }
+}
+
 module.exports.createReport = async function (bot, msg, periodName) {
   try {
     let period = {}
