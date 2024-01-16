@@ -23,25 +23,28 @@ module.exports.chooseTypeOfPeriod = async function (bot, msg) {
 module.exports.chooseGroups = async function (bot, msg) {
   const data = await getGroups()
 
-  if (data && data.length > 0) {
-    const groupsButtons = {
-      title: 'Оберіть будь ласка підрозділ(и):',
-      options: [{ resize_keyboard: true }],
-      buttons: data.map(group => [
-        { text: `○ ${group.name} `, callback_data: `43_${group.id}` }
-      ])
-    }
-    groupsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
-    await bot.sendMessage(msg.chat.id, groupsButtons.title, {
-      reply_markup: {
-        inline_keyboard: groupsButtons.buttons,
-        resize_keyboard: true
-      }
-    })
-  } else {
-    await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних послуг. Спробуйте пізніше.')
+  if (!data && data.length === 0) {
+    await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних груп. Спробуйте пізніше.')
+    return
   }
+
+
+  const groupsButtons = {
+    title: 'Оберіть будь ласка групу(и):',
+    options: [{ resize_keyboard: true }],
+    buttons: data.map(group => [
+      { text: `👩‍👩‍👧‍👧 ${group.name} `, callback_data: `43_${group.id}` }
+    ])
+  }
+  groupsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
+  await bot.sendMessage(msg.chat.id, groupsButtons.title, {
+    reply_markup: {
+      inline_keyboard: groupsButtons.buttons,
+      resize_keyboard: true
+    }
+  })
 }
+
 
 module.exports.getReport = async function (bot, msg, period) {
   await bot.sendMessage(msg.chat.id, `Ви обрали період: ${period}`)
