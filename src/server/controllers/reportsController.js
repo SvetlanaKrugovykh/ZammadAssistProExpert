@@ -24,7 +24,7 @@ module.exports.chooseGroups = async function (bot, msg) {
   const data = await getGroups()
 
   if (!data && data.length === 0) {
-    await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних груп. Спробуйте пізніше.')
+    await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних груп.')
     return
   }
 

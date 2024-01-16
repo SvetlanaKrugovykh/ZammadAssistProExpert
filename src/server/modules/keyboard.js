@@ -78,9 +78,9 @@ const buttonsConfig = {
     title: 'Оберіть, будь ласка, період формування звіту:',
     options: [{ resize_keyboard: true }],
     buttons: [
-      [{ text: '👨‍👨‍👦 Обрати групу(и)', callback_data: '9_1' }],
       [{ text: '📆 Обрати період', callback_data: '9_2' }],
-      [{ text: '📉 Отримати звіт', callback_data: '9_3' }],
+      [{ text: '👨‍👨‍👦 Обрати групу(и)', callback_data: '9_1' }],
+      [{ text: '📉 Отримати звіт з виконання заявок', callback_data: '9_3' }],
       [{ text: '↩️', callback_data: '3_3' }]
     ]
   },
@@ -89,11 +89,11 @@ const buttonsConfig = {
     title: 'Оберіть, будь ласка, період формування звіту:',
     options: [{ resize_keyboard: true }],
     buttons: [
-      [{ text: '🌙Сьогодні', callback_data: 'today' }],
-      [{ text: '🌔Останній тиждень', callback_data: 'last_week' }],
       [{ text: '🌗 Останній місяць', callback_data: 'last_month' }],
+      [{ text: '🌛🌜Довільний період', callback_data: 'any_period' }],
       [{ text: '🌕 Останній рік', callback_data: 'last_year' }],
-      [{ text: '🌛🌜Інший період', callback_data: 'any_period' }],
+      [{ text: '🌔Останній тиждень', callback_data: 'last_week' }],
+      [{ text: '🌙Сьогодні', callback_data: 'today' }],
       [{ text: '↖️', callback_data: 'x_x' }]
     ]
   },
