@@ -1,15 +1,23 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { createReport, getGroups } = require('../db/tgReportsService')
+const Calendar = require('telegram-inline-calendar')
 
 module.exports.reports = async function (bot, msg) {
+  await bot.sendMessage(msg.chat.id, buttonsConfig.chooseReportSettings.title, {
+    reply_markup: {
+      keyboard: buttonsConfig.chooseReportSettings.buttons,
+      resize_keyboard: true
+    }
+  })
+}
 
+module.exports.chooseTypeOfPeriod = async function (bot, msg) {
   await bot.sendMessage(msg.chat.id, buttonsConfig.chooseTypeOfPeriod.title, {
     reply_markup: {
       keyboard: buttonsConfig.chooseTypeOfPeriod.buttons,
       resize_keyboard: true
     }
   })
-
 }
 
 module.exports.chooseGroups = async function (bot, msg) {
@@ -46,10 +54,19 @@ module.exports.getReport = async function (bot, msg, period) {
   }
 }
 
-module.exports.chooseData = async function (bot, msg) {
-  // const calendar = new Calendar(bot, {
-  //   date_format: 'DD-MM-YYYY',
-  //   language: 'ru'
-  // })
-  // calendar.startNavCalendar(msg)
+module.exports.chooseData = async function (bot, msg, dataType = '') {
+  const calendar = new Calendar(bot, {
+    date_format: 'DD-MM-YYYY',
+    language: process.env.CALENDAR_LANG || 'uk'
+  })
+  calendar.startNavCalendar(msg)
+  bot.on("callback_query", (query) => {
+    if (query.message.message_id == calendar.chats.get(query.message.chat.id)) {
+      var res
+      res = calendar.clickButtonCalendar(query)
+      if (res !== -1) {
+        bot.sendMessage(query.message.chat.id, `Ви обрали ${dataType} дату: ${res}`)
+      }
+    }
+  })
 }

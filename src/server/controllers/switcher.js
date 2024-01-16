@@ -3,7 +3,7 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
-const { reports, chooseData, chooseGroups, getReport } = require('./reportsController')
+const { reports, chooseData, chooseGroups, chooseTypeOfPeriod, getReport } = require('./reportsController')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -76,9 +76,7 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_5':
-      await chooseData(bot, msg) //test
-      //await chooseGroups(bot, msg) //test
-      //await reports(bot, msg)
+      await reports(bot, msg)
       break
     case '3_1':
       await clientsAdminGetInfo(bot, msg)
@@ -123,6 +121,15 @@ async function handler(bot, msg, webAppUrl) {
     case '8_2':
       await userApproveOrDecline(bot, msg, false)
       break
+    case '9_1':
+      await chooseGroups(bot, msg)
+      break
+    case '9_2':
+      await chooseTypeOfPeriod(bot, msg)
+      break
+    case '9_3':
+      await getReport(bot, msg, 'any_period')
+      break
     case 'today':
       await getReport(bot, msg, 'today')
       break
@@ -136,7 +143,7 @@ async function handler(bot, msg, webAppUrl) {
       await getReport(bot, msg, 'last_year')
       break
     case 'any_period':
-      await getReport(bot, msg, 'any_period')
+      await chooseData(bot, msg, 'початкову')
       break
     default:
       if (msg.text === undefined) return
@@ -180,6 +187,10 @@ async function switchDynamicSceenes(bot, msg) {
       await userApproveOrDecline(bot, msg, false)
       return
     }
+    if (msg.text.includes('↖️')) {
+      await reports(bot, msg)
+      return
+    }
     if (/[🏠🟣🔵🧷📌✔️➕📒📗📊📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return
@@ -203,6 +214,5 @@ async function goBack(bot, msg) {
 }
 
 //#endregion
-
 
 module.exports = { handler, blockMenu }

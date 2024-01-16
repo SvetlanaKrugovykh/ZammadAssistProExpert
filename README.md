@@ -21,6 +21,8 @@ ZammadAssistProExpert is a powerful tool for managing service-desk data, handlin
 
    ```bash
    git clone https://github.com/.../ZammadAssistProExpert.git
+   npm install
+   cp src/server/lib/calendar/language.json node_modules/telegram-inline-calendar/src/
    ```
 
 ## Comments
