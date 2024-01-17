@@ -50,7 +50,7 @@ module.exports.getReport = async function (bot, msg, period) {
   await bot.sendMessage(msg.chat.id, `Ви обрали період: ${period}`)
 
   if (period == 'any_period') {
-    //await chooseData(bot, msg)
+    await createReport(bot, msg, 'last_month')
     console.log('any_period')
   } else {
     await createReport(bot, msg, period)

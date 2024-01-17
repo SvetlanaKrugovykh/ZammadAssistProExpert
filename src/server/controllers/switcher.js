@@ -130,18 +130,6 @@ async function handler(bot, msg, webAppUrl) {
     case '9_3':
       await getReport(bot, msg, 'any_period')
       break
-    case 'today':
-      await getReport(bot, msg, 'today')
-      break
-    case 'last_week':
-      await getReport(bot, msg, 'last_week')
-      break
-    case 'last_month':
-      await getReport(bot, msg, 'last_month')
-      break
-    case 'last_year':
-      await getReport(bot, msg, 'last_year')
-      break
     case 'any_period':
       await chooseData(bot, msg, 'початкову')
       break
