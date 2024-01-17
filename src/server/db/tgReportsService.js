@@ -75,20 +75,21 @@ async function createReportPDF(data, period) {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
 
+    let total = 0
+    for (const dataString of data) {
+      total += Number(dataString.quantity) || 0
+    }
+
     let content = `<style>
     body {
       padding-left: 50px; /* Increase the left padding */
     }
   </style>
   <h1>Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}</h1>
-  <h2>Кількість заявок: ${data.length}</h2>
+  <h2>Кількість заявок: ${total}</h2>
   <h3>Заявки:</h3>
   <ul>
 `
-    let total = 0
-    for (const dataString of data) {
-      total += dataString.quantity
-    }
     for (const dataString of data) {
       let statusName = ''
       switch (dataString.state_id) {
@@ -105,7 +106,7 @@ async function createReportPDF(data, period) {
           statusName = 'Очікує закриття'
           break
       }
-      content += `<li>Група: ${dataString.group_id} - ${statusName}: ${dataString.quantity} (${(dataString.quantity / total * 100).toFixed(2)}%)</li>`
+      content += `<li>Група: ${dataString.group_id} - ${statusName}: ${dataString.quantity} (${(dataString.quantity * 100 / total).toFixed(2)}%)</li>`
     }
 
     content += '</ul>'
