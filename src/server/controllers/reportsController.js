@@ -46,14 +46,21 @@ module.exports.chooseGroups = async function (bot, msg) {
 }
 
 
-module.exports.getReport = async function (bot, msg, period) {
-  await bot.sendMessage(msg.chat.id, `Ви обрали період: ${period}`)
+module.exports.getReport = async function (bot, msg, periodName, otherPeriod = null, groups_filter = []) {
+  let periodDescription = {
+    today: 'сьогодні',
+    last_week: 'за останній тиждень',
+    last_month: 'за останній місяць',
+    last_year: 'за останній рік',
+    any_period: 'за вказаний період'
+  }
 
-  if (period == 'any_period') {
-    await createReport(bot, msg, 'last_month')
-    console.log('any_period')
+  await bot.sendMessage(msg.chat.id, `Ви обрали період: ${periodDescription[periodName]}`)
+
+  if (periodName == 'any_period') {
+    await createReport(bot, msg, periodName, otherPeriod, groups_filter)
   } else {
-    await createReport(bot, msg, period)
+    await createReport(bot, msg, periodName, null, groups_filter)
   }
 }
 

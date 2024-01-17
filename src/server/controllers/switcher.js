@@ -128,7 +128,11 @@ async function handler(bot, msg, webAppUrl) {
       await chooseTypeOfPeriod(bot, msg)
       break
     case '9_3':
-      await getReport(bot, msg, 'any_period')
+      const otherPeriod = {
+        start: new Date(new Date().setDate(new Date().getDate() - 7)),
+        end: new Date()
+      }
+      await getReport(bot, msg, 'any_period', otherPeriod, [])
       break
     case 'any_period':
       await chooseData(bot, msg, 'початкову')

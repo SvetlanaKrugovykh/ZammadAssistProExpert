@@ -26,7 +26,7 @@ module.exports.getGroups = async function () {
   }
 }
 
-module.exports.createReport = async function (bot, msg, periodName) {
+module.exports.createReport = async function (bot, msg, periodName, otherPeriod = null, groups_filter = []) {
   try {
     let period = {}
     switch (periodName) {
@@ -55,14 +55,15 @@ module.exports.createReport = async function (bot, msg, periodName) {
         }
         break
       case 'any_period':
-        return null
+        period = otherPeriod
+        break
       default:
         return null
     }
 
-    const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND group_id <> 7 GROUP BY group_id, state_id;', ['2024-01-01', '2024-01-10'], false, true)
+    const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND group_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
     if (data === null) return null
-    await createReportPDF(data, period)
+    await createReportPDF(data, period, groups_filter)
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
@@ -70,10 +71,12 @@ module.exports.createReport = async function (bot, msg, periodName) {
   }
 }
 
-async function createReportPDF(data, period) {
+async function createReportPDF(data, period, groups_filter = []) {
   try {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
+    const groups = await execPgQuery('SELECT * FROM groups', [], false, true)
+    let groupName = ''
 
     let total = 0
     for (const dataString of data) {
@@ -106,7 +109,11 @@ async function createReportPDF(data, period) {
           statusName = 'Очікує закриття'
           break
       }
-      content += `<li>Група: ${dataString.group_id} - ${statusName}: ${dataString.quantity} (${(dataString.quantity * 100 / total).toFixed(2)}%)</li>`
+      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id)) continue
+      const group = groups.find(g => g.id === dataString.group_id)
+      if (group) groupName = group.name
+      else groupName = dataString.group_id
+      content += `<li>Група: ${groupName}[${dataString.group_id}] - ${statusName}: ${dataString.quantity} (${(dataString.quantity * 100 / total).toFixed(2)}%)</li>`
     }
 
     content += '</ul>'
