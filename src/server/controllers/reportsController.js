@@ -33,7 +33,7 @@ module.exports.chooseGroups = async function (bot, msg) {
     title: 'Оберіть будь ласка групу(и):',
     options: [{ resize_keyboard: true }],
     buttons: data.map(group => [
-      { text: `👩‍👩‍👧‍👧 ${group.name} `, callback_data: `43_${group.id}` }
+      { text: `👩‍👩‍👧‍👧 ${group.name} `, callback_data: `53_${group.id}` }
     ])
   }
   groupsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
@@ -43,24 +43,43 @@ module.exports.chooseGroups = async function (bot, msg) {
       resize_keyboard: true
     }
   })
+
+  // await bot.deleteMessage(chatId, messageId)
+  // const groupsButtons = {
+  //   title: 'Оберіть будь ласка групу(и):',
+  //   options: [{ resize_keyboard: true }],
+  //   buttons: data.map(group => {
+  //     const chosenSymbol = `53_${group.id}` === chosenOption ? '🔖' : '';
+  //     return { text: `${chosenSymbol}👩‍👩‍👧‍👧 ${group.name}`, callback_data: `53_${group.id}` };
+  //   })
+  // }
+
 }
 
 
-module.exports.getReport = async function (bot, msg, periodName, otherPeriod = null, groups_filter = []) {
-  let periodDescription = {
-    today: 'сьогодні',
-    last_week: 'за останній тиждень',
-    last_month: 'за останній місяць',
-    last_year: 'за останній рік',
-    any_period: 'за вказаний період'
+
+module.exports.getReport = async function (bot, msg, otherPeriod, groups_filter = []) {
+
+  const periodDetails = {
+    '🌗': { name: 'last_month', description: 'за останній місяць' },
+    '🌔': { name: 'last_week', description: 'за останній тиждень' },
+    '🌛': { name: 'any_period', description: 'за довільний період' },
+    '🌕': { name: 'last_year', description: 'за останній рік' },
+    '🌙': { name: 'today', description: 'сьогодні' },
   }
+  try {
+    const periodSign = msg.text.split(' ')[0]
+    const periodInfo = periodDetails[periodSign]
 
-  await bot.sendMessage(msg.chat.id, `Ви обрали період: ${periodDescription[periodName]}`)
+    await bot.sendMessage(msg.chat.id, `Ви обрали період: ${periodInfo.description}`)
 
-  if (periodName == 'any_period') {
-    await createReport(bot, msg, periodName, otherPeriod, groups_filter)
-  } else {
-    await createReport(bot, msg, periodName, null, groups_filter)
+    if (periodInfo.name == 'any_period') {
+      await createReport(bot, msg, periodInfo.name, otherPeriod, groups_filter)
+    } else {
+      await createReport(bot, msg, periodInfo.name, '', groups_filter)
+    }
+  } catch (e) {
+    console.log(e)
   }
 }
 

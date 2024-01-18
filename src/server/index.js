@@ -4,6 +4,7 @@ const cron = require('node-cron')
 const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
+const { getGroups } = require('./db/tgReportsService')
 const { cert } = require('./data/consts')
 const { users } = require('./users/users.model')
 const { handler } = require('./controllers/switcher')
@@ -51,6 +52,13 @@ const downloadPath = process.env.DOWNLOAD_APP_PATH || 'C:\\Temp\\attachments'
 downloadApp.register(fastifyStatic, {
   root: downloadPath,
   prefix: `/`
+})
+
+bot.on('callback_query', async (callbackQuery) => {
+  const chatId = callbackQuery.message.chat.id
+  const messageId = callbackQuery.message.message_id
+  const chosenOption = callbackQuery.data
+  console.log(`Обрано: ${chosenOption}`)
 })
 
 bot.on('message', async (msg) => {

@@ -17,7 +17,7 @@ module.exports.isUsersHaveReportsRole = async function (chatId) {
 
 module.exports.getGroups = async function () {
   try {
-    const data = await execPgQuery('SELECT * FROM groups', [], false, true)
+    const data = await execPgQuery('SELECT * FROM groups WHERE active', [], false, true)
     if (data === null) return null
     return data
   } catch (error) {
@@ -75,7 +75,7 @@ async function createReportPDF(data, period, groups_filter = [], chatId) {
   try {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
-    const groups = await execPgQuery('SELECT * FROM groups', [], false, true)
+    const groups = await execPgQuery('SELECT * FROM groups WHERE active', [], false, true)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     let groupName = ''
 
@@ -94,11 +94,12 @@ async function createReportPDF(data, period, groups_filter = [], chatId) {
   <h3>Заявки:</h3>
   <ul>
 `
+    let quantityOfNew = 0
     for (const dataString of data) {
       let statusName = ''
       switch (dataString.state_id) {
         case 1:
-          statusName = 'Нова'
+          statusName = 'Відкрита (В роботі)'
           break
         case 2:
           statusName = 'Відкрита (В роботі)'
@@ -114,7 +115,12 @@ async function createReportPDF(data, period, groups_filter = [], chatId) {
       const group = groups.find(g => g.id === dataString.group_id)
       if (group) groupName = group.name
       else groupName = dataString.group_id
-      content += `<li>Група: ${groupName}[${dataString.group_id}] - ${statusName}: ${dataString.quantity} (${(dataString.quantity * 100 / total).toFixed(2)}%)</li>`
+      if (dataString.state_id === 1) quantityOfNew = Number(dataString.quantity)
+      else {
+        const quantity = (Number(dataString.quantity) || 0) + quantityOfNew
+        content += `<li>Група: ${groupName}[${dataString.group_id}] - ${statusName}: ${quantity} (${(quantity * 100 / total).toFixed(2)}%)</li>`
+        quantityOfNew = 0
+      }
     }
 
     content += '</ul>'

@@ -132,7 +132,7 @@ async function handler(bot, msg, webAppUrl) {
         start: new Date(new Date().setDate(new Date().getDate() - 7)),
         end: new Date()
       }
-      await getReport(bot, msg, 'any_period', otherPeriod, [])
+      await getReport(bot, msg, otherPeriod, [])
       break
     case 'any_period':
       await chooseData(bot, msg, 'початкову')
@@ -154,6 +154,7 @@ async function blockMenu(bot, msg) {
 
 //#region dynamicKeyboads
 async function switchDynamicSceenes(bot, msg) {
+  const timeSymbols = ['🌗', '🌔', '🌛', '🌜', '🌕', '🌙'];
   try {
     if (msg.text.includes('🟦')) {
       await ticketApprovalScene('', bot, '', msg, null, true)
@@ -177,6 +178,10 @@ async function switchDynamicSceenes(bot, msg) {
     }
     if (msg.text.includes('⛔')) {
       await userApproveOrDecline(bot, msg, false)
+      return
+    }
+    if (timeSymbols.some(symbol => msg.text.includes(symbol))) {
+      await getReport(bot, msg, '', [])
       return
     }
     if (msg.text.includes('↖️')) {
