@@ -89,12 +89,18 @@ const buttonsConfig = {
     title: 'Оберіть, будь ласка, період формування звіту:',
     options: [{ resize_keyboard: true }],
     buttons: [
-      [{ text: '🌗 Останній місяць', callback_data: 'last_month' }],
-      [{ text: '🌛🌜Довільний період', callback_data: 'any_period' }],
-      [{ text: '🌕 Останній рік', callback_data: 'last_year' }],
-      [{ text: '🌔Останній тиждень', callback_data: 'last_week' }],
-      [{ text: '🌙Сьогодні', callback_data: 'today' }],
-      [{ text: '↖️', callback_data: 'x_x' }]
+      [
+        { text: '🌗 Останній місяць', callback_data: 'last_month' },
+        { text: '🌔Останній тиждень', callback_data: 'last_week' }
+      ],
+      [
+        { text: '🌛🌜Довільний період', callback_data: 'any_period' },
+        { text: '🌕 Останній рік', callback_data: 'last_year' }
+      ],
+      [
+        { text: '🌙Сьогодні', callback_data: 'today' },
+        { text: '↖️', callback_data: 'x_x' }
+      ]
     ]
   },
 

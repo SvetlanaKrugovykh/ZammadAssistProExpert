@@ -63,7 +63,7 @@ module.exports.createReport = async function (bot, msg, periodName, otherPeriod 
 
     const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND group_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
     if (data === null) return null
-    await createReportPDF(data, period, groups_filter)
+    await createReportPDF(data, period, groups_filter, msg.chat.id)
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
@@ -71,11 +71,12 @@ module.exports.createReport = async function (bot, msg, periodName, otherPeriod 
   }
 }
 
-async function createReportPDF(data, period, groups_filter = []) {
+async function createReportPDF(data, period, groups_filter = [], chatId) {
   try {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
     const groups = await execPgQuery('SELECT * FROM groups', [], false, true)
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     let groupName = ''
 
     let total = 0
@@ -119,7 +120,7 @@ async function createReportPDF(data, period, groups_filter = []) {
     content += '</ul>'
 
     await page.setContent(content)
-    await page.pdf({ path: '123123.pdf', format: 'A4' })
+    await page.pdf({ path: `${REPORTS_CATALOG}${chatId}.pdf`, format: 'A4' })
 
     await browser.close()
     return true
