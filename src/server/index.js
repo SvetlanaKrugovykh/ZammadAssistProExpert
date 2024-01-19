@@ -57,7 +57,7 @@ bot.on('callback_query', async (callbackQuery) => {
   const chatId = callbackQuery.message.chat.id
   const messageId = callbackQuery.message.message_id
   const chosenOption = callbackQuery.data
-  console.log(`Обрано: ${chosenOption}`)
+  console.log(`[${chatId}-${messageId}].Обрано: ${chosenOption}`)
 })
 
 bot.on('message', async (msg) => {
