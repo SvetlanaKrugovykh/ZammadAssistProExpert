@@ -17,7 +17,7 @@ async function usersStarterMenu(bot, msg) {
     }
   } else {
     try {
-      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
+      await registeredUserMenu(bot, msg)
     } catch (err) {
       console.log(err)
     }
@@ -37,11 +37,12 @@ async function guestMenu(bot, msg, guestStartButtons) {
 async function registeredUserMenu(bot, msg, standardStartButtons) {
   const isReports = await isUsersHaveReportsRole(msg.chat.id)
   await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
-  if (!isReports) buttonsConfig["standardStartButtons"].buttons.splice(4, 1)
+  let menuName = "standardStartButtons"
+  if (isReports) menuName = "standardStartButtonsPlus"
 
-  await bot.sendMessage(msg.chat.id, buttonsConfig["standardStartButtons"].title, {
+  await bot.sendMessage(msg.chat.id, buttonsConfig[menuName].title, {
     reply_markup: {
-      keyboard: buttonsConfig["standardStartButtons"].buttons,
+      keyboard: buttonsConfig[menuName].buttons,
       resize_keyboard: true
     }
   })

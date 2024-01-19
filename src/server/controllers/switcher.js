@@ -85,7 +85,7 @@ async function handler(bot, msg, webAppUrl) {
       await clientsAdminResponseToRequest(bot, msg)
       break
     case '3_3':
-      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
+      await registeredUserMenu(bot, msg)
       break
     case '13_3':
       await bot.sendMessage(msg.chat.id, `Ok!\n`, {
@@ -205,7 +205,7 @@ async function goBack(bot, msg) {
         await usersStarterMenu(bot, msg)
       }
     } else if (msg.text.includes('↩️')) {
-      await registeredUserMenu(bot, msg, buttonsConfig["standardStartButtons"])
+      await registeredUserMenu(bot, msg)
     }
   } catch (error) { console.log(error) }
 }
