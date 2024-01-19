@@ -3,6 +3,7 @@ const PDFDocument = require('pdfkit')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
 const puppeteer = require('puppeteer')
+const globalBuffer = require('../globalBuffer')
 
 module.exports.isUsersHaveReportsRole = async function (chatId) {
   try {
@@ -26,8 +27,22 @@ module.exports.getGroups = async function () {
   }
 }
 
-module.exports.createReport = async function (bot, msg, periodName, otherPeriod = null, groups_filter = []) {
+async function getGroupsFilter(chatId) {
+  const groups_filter = []
   try {
+    for (const groupId of globalBuffer[chatId].selectedGroups) {
+      groups_filter.push(groupId.replace('53_', ''))
+    }
+    return groups_filter
+  } catch (error) {
+    console.error('Error in function getGroupsFilter:', error)
+    return null
+  }
+}
+
+module.exports.createReport = async function (bot, msg) {
+  try {
+    const periodName = globalBuffer[msg.chat.id].selectedPeriod.periodName
     let period = {}
     switch (periodName) {
       case 'today':
@@ -55,7 +70,7 @@ module.exports.createReport = async function (bot, msg, periodName, otherPeriod 
         }
         break
       case 'any_period':
-        period = otherPeriod
+        period = globalBuffer[msg.chat.id].selectedPeriod
         break
       default:
         return null
@@ -63,7 +78,9 @@ module.exports.createReport = async function (bot, msg, periodName, otherPeriod 
 
     const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND group_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
     if (data === null) return null
-    await createReportPDF(data, period, groups_filter, msg.chat.id)
+    await createReportPDF(data, period, msg.chat.id)
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
+    await bot.sendDocument(msg.chat.id, fs.createReadStream(`${REPORTS_CATALOG}${chatId}.pdf`), { contentType: 'application/octet-sream' });
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
@@ -71,16 +88,19 @@ module.exports.createReport = async function (bot, msg, periodName, otherPeriod 
   }
 }
 
-async function createReportPDF(data, period, groups_filter = [], chatId) {
+async function createReportPDF(data, period, chatId) {
   try {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
-    const groups = await execPgQuery('SELECT * FROM groups WHERE active', [], false, true)
+    const groups_filter = await getGroupsFilter(chatId)
+
+    const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     let groupName = ''
-
     let total = 0
+
     for (const dataString of data) {
+      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
       total += Number(dataString.quantity) || 0
     }
 
@@ -111,7 +131,7 @@ async function createReportPDF(data, period, groups_filter = [], chatId) {
           statusName = 'Очікує закриття'
           break
       }
-      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id)) continue
+      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
       const group = groups.find(g => g.id === dataString.group_id)
       if (group) groupName = group.name
       else groupName = dataString.group_id

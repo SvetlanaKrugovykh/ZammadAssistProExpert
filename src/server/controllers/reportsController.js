@@ -13,6 +13,10 @@ module.exports.reports = async function (bot, msg) {
 }
 
 module.exports.chooseTypeOfPeriod = async function (bot, msg) {
+  chatId = msg.chat.id
+  if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+  globalBuffer[chatId].selectedPeriod = undefined
+
   await bot.sendMessage(msg.chat.id, buttonsConfig.chooseTypeOfPeriod.title, {
     reply_markup: {
       keyboard: buttonsConfig.chooseTypeOfPeriod.buttons,
@@ -52,7 +56,13 @@ module.exports.chooseGroups = async function (bot, msg) {
 
 
 
-module.exports.getReport = async function (bot, msg, otherPeriod, groups_filter = []) {
+module.exports.getReport = async function (bot, msg) {
+
+  if (!await checkSelectedGroupsAndPeriod(bot, msg)) return
+  await createReport(bot, msg)
+}
+
+module.exports.selectPeriod = async function (bot, msg) {
 
   const periodDetails = {
     '🌗': { name: 'last_month', description: 'за останній місяць' },
@@ -61,23 +71,46 @@ module.exports.getReport = async function (bot, msg, otherPeriod, groups_filter 
     '🌕': { name: 'last_year', description: 'за останній рік' },
     '🌙': { name: 'today', description: 'сьогодні' },
   }
+
   try {
     const periodSign = msg.text.split(' ')[0]
     const periodInfo = periodDetails[periodSign]
 
     await bot.sendMessage(msg.chat.id, `Ви обрали період: ${periodInfo.description}`)
-
-    if (periodInfo.name == 'any_period') {
-      await createReport(bot, msg, periodInfo.name, otherPeriod, groups_filter)
-    } else {
-      await createReport(bot, msg, periodInfo.name, '', groups_filter)
+    try {
+      if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+      let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
+      selectedPeriod.periodName = periodInfo.name
+      globalBuffer[chatId].selectedPeriod = selectedPeriod
+    } catch (e) {
+      console.log(e)
     }
+
   } catch (e) {
     console.log(e)
   }
 }
 
+async function checkSelectedGroupsAndPeriod(bot, msg) {
+  const chatId = msg.chat.id
+  try {
+    if (!globalBuffer[chatId] || !globalBuffer[chatId].selectedGroups || globalBuffer[chatId].selectedGroups.length === 0) {
+      await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
+      return false
+    }
+    if (!globalBuffer[chatId] || globalBuffer[chatId].selectedPeriod === undefined) {
+      await bot.sendMessage(chatId, 'Ви не обрали період')
+      return false
+    }
+    return true
+  } catch (e) {
+    console.log(e)
+    return false
+  }
+}
+
 module.exports.chooseData = async function (bot, msg, dataType = '') {
+  const chatId = msg.chat.id
   const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
     language: process.env.CALENDAR_LANG || 'uk'
@@ -89,6 +122,18 @@ module.exports.chooseData = async function (bot, msg, dataType = '') {
       res = calendar.clickButtonCalendar(query)
       if (res !== -1) {
         bot.sendMessage(query.message.chat.id, `Ви обрали ${dataType} дату: ${res}`)
+        try {
+          if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+          let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
+          selectedPeriod.periodName = 'any_period'
+          if (selectedGroup.dataType === 'початкову') {
+            selectedPeriod.start = selectedGroup
+          } else if (selectedGroup.dataType === 'кінцеву') {
+            selectedPeriod.end = selectedGroup
+          }
+        } catch (e) {
+          console.log(e)
+        }
       }
     }
   })
