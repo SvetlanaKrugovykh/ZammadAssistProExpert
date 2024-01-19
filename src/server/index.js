@@ -15,6 +15,7 @@ const { usersStarterMenu } = require('./modules/common')
 const { isThisGroupId } = require('./modules/bot')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
+const globalBuffer = require('./globalBuffer')
 
 const app = Fastify({
   trustProxy: true
@@ -56,8 +57,17 @@ downloadApp.register(fastifyStatic, {
 bot.on('callback_query', async (callbackQuery) => {
   const chatId = callbackQuery.message.chat.id
   const messageId = callbackQuery.message.message_id
-  const chosenOption = callbackQuery.data
-  console.log(`[${chatId}-${messageId}].Обрано: ${chosenOption}`)
+  const selectedGroup = callbackQuery.data
+  console.log(`[${chatId}-${messageId}].Обрано: ${selectedGroup}`)
+
+  try {
+    if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+    const selectedGroups = globalBuffer[chatId].selectedGroups || []
+    selectedGroups.push(selectedGroup)
+    globalBuffer[chatId].selectedGroups = selectedGroups
+  } catch (e) {
+    console.log(e)
+  }
 })
 
 bot.on('message', async (msg) => {

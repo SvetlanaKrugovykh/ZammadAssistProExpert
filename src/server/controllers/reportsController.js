@@ -1,6 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { createReport, getGroups } = require('../db/tgReportsService')
 const Calendar = require('telegram-inline-calendar')
+const globalBuffer = require('../globalBuffer')
 
 module.exports.reports = async function (bot, msg) {
   await bot.sendMessage(msg.chat.id, buttonsConfig.chooseReportSettings.title, {
@@ -22,12 +23,16 @@ module.exports.chooseTypeOfPeriod = async function (bot, msg) {
 
 module.exports.chooseGroups = async function (bot, msg) {
   const data = await getGroups()
+  const chatId = msg.chat.id
 
   if (!data && data.length === 0) {
     await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних груп.')
     return
   }
 
+  if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+  globalBuffer[chatId].availableGorups = data
+  globalBuffer[chatId].selectedGroups = []
 
   const groupsButtons = {
     title: 'Оберіть будь ласка групу(и):',
@@ -43,17 +48,6 @@ module.exports.chooseGroups = async function (bot, msg) {
       resize_keyboard: true
     }
   })
-
-  // await bot.deleteMessage(chatId, messageId)
-  // const groupsButtons = {
-  //   title: 'Оберіть будь ласка групу(и):',
-  //   options: [{ resize_keyboard: true }],
-  //   buttons: data.map(group => {
-  //     const chosenSymbol = `53_${group.id}` === chosenOption ? '🔖' : '';
-  //     return { text: `${chosenSymbol}👩‍👩‍👧‍👧 ${group.name}`, callback_data: `53_${group.id}` };
-  //   })
-  // }
-
 }
 
 
