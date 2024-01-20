@@ -123,14 +123,21 @@ module.exports.chooseData = async function (bot, msg, dataType = '') {
       if (res !== -1) {
         bot.sendMessage(query.message.chat.id, `Ви обрали ${dataType} дату: ${res}`)
         try {
+          let dateStr = res //'05-01-2024'
+          let parts = dateStr.split('-')
+          let date = new Date(Date.UTC(parts[2], parts[1] - 1, parts[0]))
+
           if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
           let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
           selectedPeriod.periodName = 'any_period'
-          if (selectedGroup.dataType === 'початкову') {
-            selectedPeriod.start = selectedGroup
-          } else if (selectedGroup.dataType === 'кінцеву') {
-            selectedPeriod.end = selectedGroup
+
+          if (dataType === 'початкову') {
+            selectedPeriod.start = date
+          } else if (dataType === 'кінцеву') {
+            selectedPeriod.end = date
           }
+
+          globalBuffer[chatId].selectedPeriod = selectedPeriod
         } catch (e) {
           console.log(e)
         }

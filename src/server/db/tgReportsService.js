@@ -77,10 +77,13 @@ module.exports.createReport = async function (bot, msg) {
     }
 
     const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND group_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
-    if (data === null) return null
+    if (data === null) {
+      await bot.sendMessage(msg.chat.id, 'Намає даних для формування звіту за обраний період')
+      return null
+    }
     await createReportPDF(data, period, msg.chat.id)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    await bot.sendDocument(msg.chat.id, fs.createReadStream(`${REPORTS_CATALOG}${chatId}.pdf`), { contentType: 'application/octet-sream' });
+    await bot.sendDocument(msg.chat.id, fs.readFileSync(`${REPORTS_CATALOG}${msg.chat.id}.pdf`)).catch(function (error) { console.log(error) })
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
