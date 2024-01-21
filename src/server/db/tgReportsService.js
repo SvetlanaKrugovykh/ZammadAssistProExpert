@@ -33,7 +33,7 @@ async function getGroupsFilter(chatId) {
     for (const groupId of globalBuffer[chatId].selectedGroups) {
       groups_filter.push(groupId.replace('53_', ''))
     }
-    return groups_filter
+    return [...new Set(groups_filter)]
   } catch (error) {
     console.error('Error in function getGroupsFilter:', error)
     return null
