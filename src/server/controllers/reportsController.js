@@ -35,7 +35,7 @@ module.exports.chooseGroups = async function (bot, msg) {
   }
 
   if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
-  globalBuffer[chatId].availableGorups = data
+  globalBuffer[chatId].availableGroups = data
   globalBuffer[chatId].selectedGroups = []
 
   const groupsButtons = {
@@ -93,8 +93,12 @@ module.exports.selectPeriod = async function (bot, msg) {
 
 async function checkSelectedGroupsAndPeriod(bot, msg) {
   const chatId = msg.chat.id
-  console.log(globalBuffer[chatId])
   try {
+    console.log(globalBuffer[chatId])
+    console.log(globalBuffer[chatId].selectedGroups)
+    console.log(globalBuffer[chatId].selectedGroups.length === 0)
+    console.log((!globalBuffer[chatId] || !globalBuffer[chatId].selectedGroups || globalBuffer[chatId].selectedGroups.length === 0))
+
     if (!globalBuffer[chatId] || !globalBuffer[chatId].selectedGroups || globalBuffer[chatId].selectedGroups.length === 0) {
       await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
       return false
