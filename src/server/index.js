@@ -65,6 +65,7 @@ bot.on('callback_query', async (callbackQuery) => {
     const selectedGroups = globalBuffer[chatId].selectedGroups || []
     selectedGroups.push(selectedGroup)
     globalBuffer[chatId].selectedGroups = selectedGroups
+    console.log(`1_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
   } catch (e) {
     console.log(e)
   }

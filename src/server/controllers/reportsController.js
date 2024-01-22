@@ -58,8 +58,10 @@ module.exports.chooseGroups = async function (bot, msg) {
 
 module.exports.getReport = async function (bot, msg) {
 
-  if (!await checkSelectedGroupsAndPeriod(bot, msg)) return
-  await createReport(bot, msg)
+  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
+  //if (checkChoices) await createReport(bot, msg) //TODO
+  await createReport(bot, msg) //TODO
+
 }
 
 module.exports.selectPeriod = async function (bot, msg) {
@@ -94,9 +96,7 @@ module.exports.selectPeriod = async function (bot, msg) {
 async function checkSelectedGroupsAndPeriod(bot, msg) {
   const chatId = msg.chat.id
   try {
-    console.log(globalBuffer[chatId])
-    console.log(globalBuffer[chatId]?.selectedGroups?.length)
-
+    console.log(`2_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
     if (!globalBuffer[chatId]?.selectedGroups || globalBuffer[chatId]?.selectedGroups?.length === 0) {
       await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
       return false

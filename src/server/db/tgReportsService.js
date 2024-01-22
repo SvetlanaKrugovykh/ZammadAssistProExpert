@@ -83,7 +83,13 @@ module.exports.createReport = async function (bot, msg) {
     }
     await createReportPDF(data, period, msg.chat.id)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    await bot.sendDocument(msg.chat.id, fs.readFileSync(`${REPORTS_CATALOG}${msg.chat.id}.pdf`)).catch(function (error) { console.log(error) })
+    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.pdf`;
+    if (fs.existsSync(filePath)) {
+      await bot.sendDocument(msg.chat.id, fs.readFileSync(filePath)).catch(function (error) { console.log(error) })
+    } else {
+      console.log(`File not found: ${filePath}`);
+    }
+
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
