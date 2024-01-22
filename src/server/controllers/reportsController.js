@@ -59,8 +59,8 @@ module.exports.chooseGroups = async function (bot, msg) {
 module.exports.getReport = async function (bot, msg) {
 
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  //if (checkChoices) await createReport(bot, msg) //TODO
-  await createReport(bot, msg) //TODO
+  if (checkChoices) await createReport(bot, msg) //TODO
+  //await createReport(bot, msg) //TODO
 
 }
 
