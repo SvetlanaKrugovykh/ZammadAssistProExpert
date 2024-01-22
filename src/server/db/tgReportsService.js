@@ -2,7 +2,7 @@ const fs = require('fs')
 const PDFDocument = require('pdfkit')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
-const puppeteer = require('puppeteer')
+const pdf = require('html-pdf')
 const globalBuffer = require('../globalBuffer')
 
 module.exports.isUsersHaveReportsRole = async function (chatId) {
@@ -93,8 +93,6 @@ module.exports.createReport = async function (bot, msg) {
 
 async function createReportPDF(data, period, chatId) {
   try {
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage()
     const groups_filter = await getGroupsFilter(chatId)
 
     const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
@@ -117,13 +115,12 @@ async function createReportPDF(data, period, chatId) {
   <h3>Заявки:</h3>
   <ul>
 `
+
     let quantityOfNew = 0
     for (const dataString of data) {
       let statusName = ''
       switch (dataString.state_id) {
         case 1:
-          statusName = 'Відкрита (В роботі)'
-          break
         case 2:
           statusName = 'Відкрита (В роботі)'
           break
@@ -148,10 +145,17 @@ async function createReportPDF(data, period, chatId) {
 
     content += '</ul>'
 
-    await page.setContent(content)
-    await page.pdf({ path: `${REPORTS_CATALOG}${chatId}.pdf`, format: 'A4' })
+    const pdfOptions = {
+      format: 'A4',
+      orientation: 'portrait',
+      border: '10mm',
+    }
 
-    await browser.close()
+    pdf.create(content, pdfOptions).toFile(`${REPORTS_CATALOG}${chatId}.pdf`, (err, res) => {
+      if (err) throw err
+      console.log(res)
+    })
+
     return true
   } catch (error) {
     console.error('Error in function createReportPDF:', error)
