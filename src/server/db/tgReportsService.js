@@ -2,7 +2,6 @@ const fs = require('fs')
 const PDFDocument = require('pdfkit')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
-const pdf = require('html-pdf')
 const globalBuffer = require('../globalBuffer')
 
 module.exports.isUsersHaveReportsRole = async function (chatId) {
@@ -37,6 +36,45 @@ async function getGroupsFilter(chatId) {
   } catch (error) {
     console.error('Error in function getGroupsFilter:', error)
     return null
+  }
+}
+
+async function createReportPDF(data, period, chatId) {
+  try {
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/';
+    const total = data.reduce((sum, entry) => sum + (Number(entry.quantity) || 0), 0);
+
+    const pdfDoc = new PDFDocument();
+    pdfDoc.pipe(fs.createWriteStream(`${REPORTS_CATALOG}${chatId}.pdf`));
+
+    pdfDoc.fontSize(18).text(`Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`);
+    pdfDoc.fontSize(16).text(`Кількість заявок: ${total}`);
+    pdfDoc.fontSize(14).text('Заявки:');
+
+    let yPosition = pdfDoc.y + 10;
+    for (const entry of data) {
+      pdfDoc.fontSize(12);
+      pdfDoc.text(`Група: ${entry.group_id} - Статус: ${getStatusName(entry.state_id)}: ${entry.quantity}`, pdfDoc.x, yPosition);
+      yPosition += 10;
+    }
+
+    pdfDoc.end();
+    return true;
+  } catch (error) {
+    console.error('Error in function createReportPDF:', error);
+    return null;
+  }
+}
+
+function getStatusName(stateId) {
+  switch (stateId) {
+    case 1:
+    case 2:
+      return 'Відкрита (В роботі)';
+    case 4:
+      return 'Закрита';
+    default:
+      return 'Очікує закриття';
   }
 }
 
@@ -93,78 +131,6 @@ module.exports.createReport = async function (bot, msg) {
     return data
   } catch (error) {
     console.error('Error in function createReport:', error)
-    return null
-  }
-}
-
-async function createReportPDF(data, period, chatId) {
-  try {
-    const groups_filter = await getGroupsFilter(chatId)
-
-    const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
-    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    let groupName = ''
-    let total = 0
-
-    for (const dataString of data) {
-      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
-      total += Number(dataString.quantity) || 0
-    }
-
-    let content = `<style>
-    body {
-      padding-left: 50px; /* Increase the left padding */
-    }
-  </style>
-  <h1>Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}</h1>
-  <h2>Кількість заявок: ${total}</h2>
-  <h3>Заявки:</h3>
-  <ul>
-`
-
-    let quantityOfNew = 0
-    for (const dataString of data) {
-      let statusName = ''
-      switch (dataString.state_id) {
-        case 1:
-        case 2:
-          statusName = 'Відкрита (В роботі)'
-          break
-        case 4:
-          statusName = 'Закрита'
-          break
-        default:
-          statusName = 'Очікує закриття'
-          break
-      }
-      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
-      const group = groups.find(g => g.id === dataString.group_id)
-      if (group) groupName = group.name
-      else groupName = dataString.group_id
-      if (dataString.state_id === 1) quantityOfNew = Number(dataString.quantity)
-      else {
-        const quantity = (Number(dataString.quantity) || 0) + quantityOfNew
-        content += `<li>Група: ${groupName}[${dataString.group_id}] - ${statusName}: ${quantity} (${(quantity * 100 / total).toFixed(2)}%)</li>`
-        quantityOfNew = 0
-      }
-    }
-
-    content += '</ul>'
-
-    const pdfOptions = {
-      format: 'A4',
-      orientation: 'portrait',
-      border: '10mm',
-    }
-
-    pdf.create(content, pdfOptions).toFile(`${REPORTS_CATALOG}${chatId}.pdf`, (err, res) => {
-      if (err) throw err
-      console.log(res)
-    })
-
-    return true
-  } catch (error) {
-    console.error('Error in function createReportPDF:', error)
     return null
   }
 }
