@@ -93,6 +93,7 @@ module.exports.selectPeriod = async function (bot, msg) {
 
 async function checkSelectedGroupsAndPeriod(bot, msg) {
   const chatId = msg.chat.id
+  console.log(globalBuffer[chatId])
   try {
     if (!globalBuffer[chatId] || !globalBuffer[chatId].selectedGroups || globalBuffer[chatId].selectedGroups.length === 0) {
       await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
