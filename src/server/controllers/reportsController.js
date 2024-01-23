@@ -110,8 +110,40 @@ async function checkSelectedGroupsAndPeriod(bot, msg) {
   }
 }
 
+async function checkAndSetSelectedPeriod(_bot, msg, periodName = '', dataType = '') {
+  const chatId = msg.chat.id
+  if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+  let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
+  selectedPeriod.periodName = periodName
+
+  if (dataType === 'кінцеву' && selectedPeriod?.start === undefined) {
+    try {
+      await new Promise((resolve, reject) => {
+        const checkInterval = setInterval(() => {
+          if (globalBuffer[chatId].selectedPeriod?.start !== undefined) {
+            clearInterval(checkInterval)
+            clearTimeout(failureTimeout)
+            resolve()
+          }
+        }, 1000)
+
+        const failureTimeout = setTimeout(() => {
+          clearInterval(checkInterval)
+          reject(new Error('Timeout waiting for selectedPeriod.start to be filled'))
+        }, 5 * 60 * 1000)
+      })
+    } catch (error) {
+      console.error(error)
+      return
+    }
+  }
+  return selectedPeriod
+}
+
 module.exports.chooseData = async function (bot, msg, dataType = '') {
   const chatId = msg.chat.id
+  let selectedPeriod = await checkAndSetSelectedPeriod(bot, msg, 'any_period', dataType)
+  bot.sendMessage(chatId, `Натисніть на кнопку в календарі "📅" щоб обрати ${dataType} дату.`)
   const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
     language: process.env.CALENDAR_LANG || 'uk'
@@ -128,17 +160,12 @@ module.exports.chooseData = async function (bot, msg, dataType = '') {
           let parts = dateStr.split('-')
           let date = new Date(Date.UTC(parts[2], parts[1] - 1, parts[0]))
 
-          if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
-          let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
-          selectedPeriod.periodName = 'any_period'
-
           if (dataType === 'початкову') {
             selectedPeriod.start = date
+            globalBuffer[chatId].selectedPeriod = selectedPeriod
           } else if (dataType === 'кінцеву') {
-            selectedPeriod.end = date
+            globalBuffer[chatId].selectedPeriod.end = date
           }
-
-          globalBuffer[chatId].selectedPeriod = selectedPeriod
         } catch (e) {
           console.log(e)
         }

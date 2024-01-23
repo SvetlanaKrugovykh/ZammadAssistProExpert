@@ -59,16 +59,16 @@ async function createReportHtml(data, period, chatId) {
     for (const group_id of groups_filter) {
       const group = groups.find(g => g.id === Number(group_id))
       groupName = group ? group.name : group_id
-      groupsNames += `${groupName}[${group_id}], `
+      groupsNames += `<b>${groupName}</b>[${group_id}], `
     }
     if (groupsNames.endsWith(', ')) groupsNames = groupsNames.slice(0, -2)
 
 
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
-      { text: `Кількість заявок: ${total}`, style: 'subheader', fontSize: '16px' },
+      { text: `Кількість заявок: <b>${total.toString()}</b>`, style: 'subheader', fontSize: '16px' },
       { text: `Обрані групи: ${groupsNames}`, style: 'subheader', fontSize: '18px' },
-      { text: 'Заявки:', style: 'regular', fontSize: '14px}' }
+      { text: '<b>Заявки:</b>', style: 'regular', fontSize: '14px}' }
     )
 
     for (const entry of data) {
@@ -82,7 +82,7 @@ async function createReportHtml(data, period, chatId) {
       } else {
         const quantity = (Number(entry.quantity) || 0) + quantityOfNew
         quantityOfNew = 0
-        const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: ${quantity}`
+        const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: <b>${quantity}</b>`
         content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
       }
     }
@@ -112,12 +112,11 @@ function createHtmlContent(content) {
   let htmlContent = '<html><head>'
   htmlContent += '<style>'
   htmlContent += '@font-face { font-family: "Roboto"; src: url("/src/server/db/fonts/Roboto/Roboto-Regular.ttf") format("truetype"); }'
-  htmlContent += 'body { font-family: "Roboto", Arial, sans-serif; margin: 20px; }'
+  htmlContent += 'body { font-family: "Roboto", Arial, sans-serif; margin: 20px; margin-left: 10mm; }'
   htmlContent += 'h1 { font-weight: bold; font-size: 18px; text-align: center; }'
-  htmlContent += 'h2 { font-weight: bold; font-size: 16px; }'
+  htmlContent += 'h2 { font-weight: normal; font-size: 16px; }'
   htmlContent += 'p { font-size: 14px; }'
   htmlContent += 'ul { list-style-type: none; padding-left: 0; }'
-  htmlContent += 'ul li { font-weight: normal; }'
   htmlContent += '</style>'
   htmlContent += '</head><body>'
 
@@ -125,7 +124,7 @@ function createHtmlContent(content) {
     if (item.ul) {
       htmlContent += '<ul>';
       for (const listItem of item.ul) {
-        htmlContent += `<li>${listItem}</li>`
+        htmlContent += `<li>&nbsp&nbsp ${listItem}</li>`
       }
       htmlContent += '</ul>'
     } else {
@@ -190,7 +189,7 @@ module.exports.createReport = async function (bot, msg) {
     }
     await createReportHtml(data, period, msg.chat.id)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    const filePath = `${REPORTS_CATALOG}${chatId}.html`
+    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
     if (fs.existsSync(filePath)) {
       try {
         await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {
