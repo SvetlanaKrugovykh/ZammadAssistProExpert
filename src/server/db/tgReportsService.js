@@ -48,18 +48,27 @@ async function createReportHtml(data, period, chatId) {
     let groupName = ''
     let total = 0
     let quantityOfNew = 0
+    let groupsNames = ''
     const content = []
 
-    for (const dataString of data) {
-      if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
-      total += Number(dataString.quantity) || 0
+    for (const entry of data) {
+      if (groups_filter.length > 0 && !groups_filter.includes(entry.group_id.toString())) continue
+      total += Number(entry.quantity) || 0
     }
+
+    for (const group_id of groups_filter) {
+      const group = groups.find(g => g.id === Number(group_id))
+      groupName = group ? group.name : group_id
+      groupsNames += `${groupName}[${group_id}], `
+    }
+    if (groupsNames.endsWith(', ')) groupsNames = groupsNames.slice(0, -2)
+
 
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
       { text: `Кількість заявок: ${total}`, style: 'subheader', fontSize: '16px' },
-      { text: `Обрані групи: ${groups_filter.join(', ')}`, style: 'subheader', fontSize: '18px' },
-      { text: 'Заявки:', style: 'header' },
+      { text: `Обрані групи: ${groupsNames}`, style: 'subheader', fontSize: '18px' },
+      { text: 'Заявки:', style: 'regular', fontSize: '14px}' }
     )
 
     for (const entry of data) {
@@ -73,7 +82,7 @@ async function createReportHtml(data, period, chatId) {
       } else {
         const quantity = (Number(entry.quantity) || 0) + quantityOfNew
         quantityOfNew = 0
-        const groupText = `Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: ${quantity}`
+        const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: ${quantity}`
         content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
       }
     }
@@ -107,6 +116,8 @@ function createHtmlContent(content) {
   htmlContent += 'h1 { font-weight: bold; font-size: 18px; text-align: center; }'
   htmlContent += 'h2 { font-weight: bold; font-size: 16px; }'
   htmlContent += 'p { font-size: 14px; }'
+  htmlContent += 'ul { list-style-type: none; padding-left: 0; }'
+  htmlContent += 'ul li { font-weight: normal; }'
   htmlContent += '</style>'
   htmlContent += '</head><body>'
 
