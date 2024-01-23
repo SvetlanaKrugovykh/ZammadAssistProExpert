@@ -27,7 +27,7 @@ module.exports.getGroups = async function () {
 }
 
 async function getGroupsFilter(chatId) {
-  const groups_filter = []
+  let groups_filter = []
   try {
     for (const groupId of globalBuffer[chatId].selectedGroups) {
       groups_filter.push(groupId.replace('53_', ''))
@@ -59,6 +59,7 @@ async function createReportHtml(data, period, chatId) {
     for (const group_id of groups_filter) {
       const group = groups.find(g => g.id === Number(group_id))
       groupName = group ? group.name : group_id
+      if (groupName.startsWith('n_')) continue
       groupsNames += `<b>${groupName}</b>[${group_id}], `
     }
     if (groupsNames.endsWith(', ')) groupsNames = groupsNames.slice(0, -2)

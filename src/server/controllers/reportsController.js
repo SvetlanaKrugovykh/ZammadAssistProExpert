@@ -45,7 +45,6 @@ module.exports.chooseGroups = async function (bot, msg) {
       { text: `👩‍👩‍👧‍👧 ${group.name} `, callback_data: `53_${group.id}` }
     ])
   }
-  groupsButtons.buttons.push([{ text: '↖️', callback_data: '0_1' }])
   await bot.sendMessage(msg.chat.id, groupsButtons.title, {
     reply_markup: {
       inline_keyboard: groupsButtons.buttons,

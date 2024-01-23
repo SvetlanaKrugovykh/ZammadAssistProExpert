@@ -13,6 +13,7 @@ const singUpDataSave = require('./controllers/signUp').singUpDataSave
 const formController = require('./controllers/formController')
 const { usersStarterMenu } = require('./modules/common')
 const { isThisGroupId } = require('./modules/bot')
+const { execPgQuery } = require('./db/common')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 const globalBuffer = require('./globalBuffer')
@@ -66,6 +67,10 @@ bot.on('callback_query', async (callbackQuery) => {
     selectedGroups.push(selectedGroup)
     globalBuffer[chatId].selectedGroups = selectedGroups
     console.log(`1_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
+    const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
+    const group = groups.find(g => g.id === Number(selectedGroup.replace('53_', '')))
+    let groupName = group ? group.name : group_id
+    await bot.sendMessage(chatId, `Обрано: ${groupName}`)
   } catch (e) {
     console.log(e)
   }
