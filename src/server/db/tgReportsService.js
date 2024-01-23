@@ -115,7 +115,13 @@ function getStatusName(stateId) {
 }
 
 function createHtmlContent(content) {
-  let htmlContent = '<html><head></head><body style="margin: 30px;">'
+  let htmlContent = '<html><head>'
+  htmlContent += '<style>'
+  htmlContent += '@font-face { font-family: "Roboto Regular"; src: url("/src/server/db/fonts/Roboto/Roboto-Regular.ttf") format("truetype"); }'
+  htmlContent += '@font-face { font-family: "Roboto Bold"; src: url("/src/server/db/fonts/Roboto/Roboto-Bold.ttf") format("truetype"); }'
+  htmlContent += 'body { font-family: "Roboto Regular", Arial, sans-serif; }'
+  htmlContent += '</style>'
+  htmlContent += '</head><body style="margin: 20px;">'
 
   for (const item of content) {
     if (item.ul) {
@@ -125,23 +131,16 @@ function createHtmlContent(content) {
       }
       htmlContent += '</ul>'
     } else {
-      htmlContent += `<p style="font-weight: bold; font-size: ${item.fontSize || '12px'}">${item.text}</p>`
+      const fontWeight = item.fontWeight || 'normal';
+      const fontSize = item.fontSize || '18px';
+      const fontFamily = fontWeight === 'bold' ? 'Roboto Bold' : 'Roboto Regular';
+
+      htmlContent += `<p style="font-weight: ${fontWeight}; font-size: ${fontSize}; font-family: ${fontFamily}">${item.text}</p>`
     }
   }
 
   htmlContent += '</body></html>'
-  return htmlContent
-}
-
-function getInlineStyles(style) {
-  switch (style) {
-    case 'header':
-      return 'font-size: 18px; font-weight: bold; text-align: center;'
-    case 'subheader':
-      return 'font-size: 16px; font-weight: bold; margin: 0 0 5px 0;'
-    default:
-      return 'font-size: 12px;'
-  }
+  return htmlContent;
 }
 
 module.exports.createReport = async function (bot, msg) {
