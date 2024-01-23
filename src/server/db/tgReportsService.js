@@ -1,5 +1,5 @@
 const fs = require('fs')
-const PDFDocument = require('pdfkit')
+const { create } = require('pdf-creator-node')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
 const globalBuffer = require('../globalBuffer')
@@ -39,6 +39,7 @@ async function getGroupsFilter(chatId) {
   }
 }
 
+
 async function createReportPDF(data, period, chatId) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
@@ -46,47 +47,55 @@ async function createReportPDF(data, period, chatId) {
     const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
     let groupName = ''
     let total = 0
+    let quantityOfNew = 0
+    const content = []
+
     for (const dataString of data) {
       if (groups_filter.length > 0 && !groups_filter.includes(dataString.group_id.toString())) continue
       total += Number(dataString.quantity) || 0
     }
 
-    const pdfDoc = new PDFDocument({ encode: 'win1251' })
-    const writeStream = fs.createWriteStream(`${REPORTS_CATALOG}${chatId}.pdf`)
-    pdfDoc.pipe(writeStream)
-
-    pdfDoc.fontSize(18).text(`Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`)
-    pdfDoc.fontSize(16).text(`Кількість заявок: ${total}`)
-    pdfDoc.fontSize(14).text('Заявки:')
-
-    let yPosition = pdfDoc.y + 10
-    let quantityOfNew = 0
+    content.push(
+      { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
+      { text: `Кількість заявок: ${total}`, style: 'subheader', fontSize: '16px' },
+      { text: `Обрані групи: ${groups_filter.join(', ')}`, style: 'subheader', fontSize: '18px' },
+      { text: 'Заявки:', style: 'header' },
+    )
 
     for (const entry of data) {
       if (groups_filter.length > 0 && !groups_filter.includes(entry.group_id.toString())) continue
       const statusName = getStatusName(entry.state_id)
       const group = groups.find(g => g.id === entry.group_id)
       groupName = group ? group.name : entry.group_id
+
       if (entry.state_id === 1) {
         quantityOfNew = Number(entry.quantity)
       } else {
         const quantity = (Number(entry.quantity) || 0) + quantityOfNew
         quantityOfNew = 0
-        pdfDoc.fontSize(12)
-        pdfDoc.text(`Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: ${(quantity * 100 / total).toFixed(2)}%`, pdfDoc.x, yPosition)
-        yPosition += 10
+        const groupText = `Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: ${quantity}`
+        content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
       }
     }
 
-    pdfDoc.end()
+    const document = {
+      html: createHtmlContent(content),
+      path: `${REPORTS_CATALOG}${chatId}.pdf`,
+      footer: {
+        height: '14mm',
+        contents: {
+          default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
+        },
+      },
+      paperSize: {
+        format: 'A4',
+        orientation: 'portrait',
+      },
+      encoding: "utf-8",
+    }
 
-    return new Promise((resolve, reject) => {
-      writeStream.on('finish', () => resolve(true))
-      writeStream.on('error', (error) => {
-        console.error('Error in function createReportPDF:', error)
-        reject(null)
-      })
-    })
+    await create(document)
+    return true
   } catch (error) {
     console.error('Error in function createReportPDF:', error)
     return null
@@ -102,6 +111,36 @@ function getStatusName(stateId) {
       return 'Закрита'
     default:
       return 'Очікує закриття'
+  }
+}
+
+function createHtmlContent(content) {
+  let htmlContent = '<html><head></head><body style="margin: 30px;">'
+
+  for (const item of content) {
+    if (item.ul) {
+      htmlContent += '<ul>'
+      for (const listItem of item.ul) {
+        htmlContent += `<li>${listItem}</li>`
+      }
+      htmlContent += '</ul>'
+    } else {
+      htmlContent += `<p style="font-weight: bold; font-size: ${item.fontSize || '12px'}">${item.text}</p>`
+    }
+  }
+
+  htmlContent += '</body></html>'
+  return htmlContent
+}
+
+function getInlineStyles(style) {
+  switch (style) {
+    case 'header':
+      return 'font-size: 18px; font-weight: bold; text-align: center;'
+    case 'subheader':
+      return 'font-size: 16px; font-weight: bold; margin: 0 0 5px 0;'
+    default:
+      return 'font-size: 12px;'
   }
 }
 
@@ -141,7 +180,7 @@ module.exports.createReport = async function (bot, msg) {
         return null
     }
 
-    const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id', [period.start, period.end], false, true)
+    const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
     if (data === null) {
       await bot.sendMessage(msg.chat.id, 'Намає даних для формування звіту за обраний період')
       return null
