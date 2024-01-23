@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { create } = require('pdf-creator-node')
+const util = require('util')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
 const globalBuffer = require('../globalBuffer')
@@ -40,7 +40,7 @@ async function getGroupsFilter(chatId) {
 }
 
 
-async function createReportPDF(data, period, chatId) {
+async function createReportHtml(data, period, chatId) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const groups_filter = await getGroupsFilter(chatId)
@@ -78,26 +78,11 @@ async function createReportPDF(data, period, chatId) {
       }
     }
 
-    const document = {
-      html: createHtmlContent(content),
-      path: `${REPORTS_CATALOG}${chatId}.pdf`,
-      footer: {
-        height: '14mm',
-        contents: {
-          default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
-        },
-      },
-      paperSize: {
-        format: 'A4',
-        orientation: 'portrait',
-      },
-      encoding: "utf-8",
-    }
-
-    await create(document)
+    const htmlContent = createHtmlContent(content)
+    await writeHtmlToFile(htmlContent, `${REPORTS_CATALOG}${chatId}.html`)
     return true
   } catch (error) {
-    console.error('Error in function createReportPDF:', error)
+    console.error('Error in function createReportHtml:', error)
     return null
   }
 }
@@ -117,30 +102,38 @@ function getStatusName(stateId) {
 function createHtmlContent(content) {
   let htmlContent = '<html><head>'
   htmlContent += '<style>'
-  htmlContent += '@font-face { font-family: "Roboto Regular"; src: url("/src/server/db/fonts/Roboto/Roboto-Regular.ttf") format("truetype"); }'
-  htmlContent += '@font-face { font-family: "Roboto Bold"; src: url("/src/server/db/fonts/Roboto/Roboto-Bold.ttf") format("truetype"); }'
-  htmlContent += 'body { font-family: "Roboto Regular", Arial, sans-serif; }'
+  htmlContent += '@font-face { font-family: "Roboto"; src: url("/src/server/db/fonts/Roboto/Roboto-Regular.ttf") format("truetype"); }'
+  htmlContent += 'body { font-family: "Roboto", Arial, sans-serif; margin: 20px; }'
+  htmlContent += 'h1 { font-weight: bold; font-size: 18px; text-align: center; }'
+  htmlContent += 'h2 { font-weight: bold; font-size: 16px; }'
+  htmlContent += 'p { font-size: 14px; }'
   htmlContent += '</style>'
-  htmlContent += '</head><body style="margin: 20px;">'
+  htmlContent += '</head><body>'
 
   for (const item of content) {
     if (item.ul) {
-      htmlContent += '<ul>'
+      htmlContent += '<ul>';
       for (const listItem of item.ul) {
         htmlContent += `<li>${listItem}</li>`
       }
       htmlContent += '</ul>'
     } else {
-      const fontWeight = item.fontWeight || 'normal';
-      const fontSize = item.fontSize || '18px';
-      const fontFamily = fontWeight === 'bold' ? 'Roboto Bold' : 'Roboto Regular';
-
-      htmlContent += `<p style="font-weight: ${fontWeight}; font-size: ${fontSize}; font-family: ${fontFamily}">${item.text}</p>`
+      const elementTag = item.style === 'header' ? 'h1' : 'h2'
+      htmlContent += `<${elementTag}>${item.text}</${elementTag}>`
     }
   }
 
   htmlContent += '</body></html>'
-  return htmlContent;
+  return htmlContent
+}
+
+async function writeHtmlToFile(htmlContent, filePath) {
+  try {
+    await util.promisify(fs.writeFile)(filePath, htmlContent, 'utf-8')
+    console.log(`HTML successfully written to ${filePath}`)
+  } catch (error) {
+    console.error('Error writing HTML to file:', error)
+  }
 }
 
 module.exports.createReport = async function (bot, msg) {
@@ -184,11 +177,18 @@ module.exports.createReport = async function (bot, msg) {
       await bot.sendMessage(msg.chat.id, 'Намає даних для формування звіту за обраний період')
       return null
     }
-    await createReportPDF(data, period, msg.chat.id)
+    await createReportHtml(data, period, msg.chat.id)
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.pdf`
+    const filePath = `${REPORTS_CATALOG}${chatId}.html`
     if (fs.existsSync(filePath)) {
-      await bot.sendDocument(msg.chat.id, fs.readFileSync(filePath)).catch(function (error) { сonsole.log('sending') })
+      try {
+        await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {
+          caption: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`,
+          contentType: 'application/octet-stream',
+        })
+      } catch (error) {
+        console.error('Error sending document:', error);
+      }
     } else {
       console.log(`File not found: ${filePath}`)
     }
