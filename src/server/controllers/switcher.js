@@ -179,6 +179,7 @@ async function switchDynamicSceenes(bot, msg) {
     }
     if (timeSymbols.some(symbol => msg.text.includes(symbol))) {
       await selectPeriod(bot, msg)
+      await reports(bot, msg)
       return
     }
     if (msg.text.includes('↖️')) {

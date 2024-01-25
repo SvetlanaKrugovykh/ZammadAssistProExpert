@@ -58,7 +58,10 @@ module.exports.chooseGroups = async function (bot, msg) {
 module.exports.getReport = async function (bot, msg) {
 
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  if (checkChoices) await createReport(bot, msg)
+  if (checkChoices) {
+    await createReport(bot, msg)
+    globalBuffer[chatId] = {}
+  }
 }
 
 module.exports.selectPeriod = async function (bot, msg) {

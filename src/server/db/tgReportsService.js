@@ -32,6 +32,7 @@ async function getGroupsFilter(chatId) {
     for (const groupId of globalBuffer[chatId].selectedGroups) {
       groups_filter.push(groupId.replace('53_', ''))
     }
+    groups_filter.sort((a, b) => a - b)
     return [...new Set(groups_filter)]
   } catch (error) {
     console.error('Error in function getGroupsFilter:', error)
@@ -40,7 +41,7 @@ async function getGroupsFilter(chatId) {
 }
 
 
-async function createReportHtml(data, period, chatId) {
+async function createReportHtml(chatId, data, period) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const groups_filter = await getGroupsFilter(chatId)
@@ -50,10 +51,17 @@ async function createReportHtml(data, period, chatId) {
     let quantityOfNew = 0
     let groupsNames = ''
     const content = []
+    const statuses = ['Відкрита (В роботі)', 'Закрита', 'Очікує закриття']
 
     for (const entry of data) {
       if (groups_filter.length > 0 && !groups_filter.includes(entry.group_id.toString())) continue
       total += Number(entry.quantity) || 0
+    }
+
+    if (total === 0) {
+      if (fs.existsSync(`${REPORTS_CATALOG}${chatId}.html`)) fs.unlinkSync(`${REPORTS_CATALOG}${chatId}.html`)
+      await bot.sendMessage(chatId, 'Немає даних для формування звіту за обраний період')
+      return null
     }
 
     for (const group_id of groups_filter) {
@@ -72,19 +80,33 @@ async function createReportHtml(data, period, chatId) {
       { text: '<b>Заявки:</b>', style: 'regular', fontSize: '14px}' }
     )
 
-    for (const entry of data) {
-      if (groups_filter.length > 0 && !groups_filter.includes(entry.group_id.toString())) continue
-      const statusName = getStatusName(entry.state_id)
-      const group = groups.find(g => g.id === entry.group_id)
-      groupName = group ? group.name : entry.group_id
+    let dataExists = false
 
-      if (entry.state_id === 1) {
-        quantityOfNew = Number(entry.quantity)
-      } else {
-        const quantity = (Number(entry.quantity) || 0) + quantityOfNew
-        quantityOfNew = 0
-        const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName}: <b>${quantity}</b>`
-        content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
+
+    for (const group_id of groups_filter) {
+      for (const statusName of statuses) {
+        const group = groups.find(g => g.id === Number(group_id))
+        groupName = group.name || group_id
+        dataExists = false
+        for (const entry of data) {
+          if (entry.group_id.toString() !== group_id) continue
+          const statusName_ = getStatusName(entry.state_id)
+          if (statusName_ !== statusName) continue
+          if (entry.state_id === 1) {
+            quantityOfNew = Number(entry.quantity)
+          } else {
+            const quantity = (Number(entry.quantity) || 0) + quantityOfNew
+            quantityOfNew = 0
+            const percentage = ((quantity / total) * 100).toFixed(2);
+            const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName_}: <b>${quantity}</b> (${percentage}%)`
+            content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
+            dataExists = true
+          }
+        }
+        if (!dataExists) {
+          const groupText = `⏺ Група: ${groupName}[${group_id}] - Статус: ${statusName}: <b>${0}</b> (${0}%)`;
+          content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
+        }
       }
     }
 
@@ -150,6 +172,9 @@ async function writeHtmlToFile(htmlContent, filePath) {
 module.exports.createReport = async function (bot, msg) {
   try {
     const periodName = globalBuffer[msg.chat.id].selectedPeriod.periodName
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
+    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
+
     let period = {}
     switch (periodName) {
       case 'today':
@@ -178,6 +203,12 @@ module.exports.createReport = async function (bot, msg) {
         break
       case 'any_period':
         period = globalBuffer[msg.chat.id].selectedPeriod
+        if (period.start > period.end) {
+          const start = period.end
+          const end = period.start
+          period.start = start
+          period.end = end
+        }
         break
       default:
         return null
@@ -185,12 +216,11 @@ module.exports.createReport = async function (bot, msg) {
 
     const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
     if (data === null) {
-      await bot.sendMessage(msg.chat.id, 'Намає даних для формування звіту за обраний період')
+      await bot.sendMessage(msg.chat.id, 'Немає даних для формування звіту за обраний період')
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
       return null
     }
-    await createReportHtml(data, period, msg.chat.id)
-    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
+    await createReportHtml(msg.chat.id, data, period)
     if (fs.existsSync(filePath)) {
       try {
         await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {
