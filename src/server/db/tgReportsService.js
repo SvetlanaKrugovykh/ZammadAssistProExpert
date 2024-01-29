@@ -220,7 +220,9 @@ module.exports.createReport = async function (bot, msg) {
     }
     const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0, 0)
     const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
-    const data = await execPgQuery(`SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;`, [dayStart, dayEnd], false, true)
+    const data = await execPgQuery(`SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 GROUP BY group_id, state_id ORDER BY group_id, state_id;`, [dayStart, dayEnd], false, true)
+    //AND state_id <> 7
+
     if (data === null) {
       await bot.sendMessage(msg.chat.id, 'Немає даних для формування звіту за обраний період')
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
