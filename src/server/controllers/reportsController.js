@@ -4,7 +4,15 @@ const Calendar = require('telegram-inline-calendar')
 const globalBuffer = require('../globalBuffer')
 
 module.exports.reports = async function (bot, msg) {
-  await bot.sendMessage(msg.chat.id, buttonsConfig.chooseReportSettings.title, {
+  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
+  let title = ''
+  if (checkChoices) {
+    title = 'Натисніть: Отримати звіт з виконання заявок'
+  } else {
+    title = buttonsConfig.chooseReportSettings.title
+  }
+
+  await bot.sendMessage(msg.chat.id, title, {
     reply_markup: {
       keyboard: buttonsConfig.chooseReportSettings.buttons,
       resize_keyboard: true
@@ -145,7 +153,7 @@ async function checkAndSetSelectedPeriod(_bot, msg, periodName = '', dataType = 
 module.exports.chooseData = async function (bot, msg, dataType = '') {
   const chatId = msg.chat.id
   let selectedPeriod = await checkAndSetSelectedPeriod(bot, msg, 'any_period', dataType)
-  bot.sendMessage(chatId, `Натисніть на кнопку в календарі "📅" щоб обрати ${dataType} дату.`)
+  bot.sendMessage(chatId, `Натисніть на кнопку в календарі щоб обрати ${dataType} дату.`)
   const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
     language: process.env.CALENDAR_LANG || 'uk'

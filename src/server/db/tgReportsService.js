@@ -47,7 +47,8 @@ async function createReportHtml(chatId, data, period) {
     const groups_filter = await getGroupsFilter(chatId)
     const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
     let groupName = ''
-    let total = 0
+    const total = {}
+    let overallTotal = 0
     let quantityOfNew = 0
     let groupsNames = ''
     const content = []
@@ -55,12 +56,15 @@ async function createReportHtml(chatId, data, period) {
 
     for (const entry of data) {
       if (groups_filter.length > 0 && !groups_filter.includes(entry.group_id.toString())) continue
-      total += Number(entry.quantity) || 0
+      const groupId = entry.group_id
+      const quantity = Number(entry.quantity) || 0
+      total[groupId] = (total[groupId] || 0) + quantity
+      overallTotal += quantity || 0
     }
 
-    if (total === 0) {
+    if (overallTotal === 0) {
       if (fs.existsSync(`${REPORTS_CATALOG}${chatId}.html`)) fs.unlinkSync(`${REPORTS_CATALOG}${chatId}.html`)
-      await bot.sendMessage(chatId, 'Немає даних для формування звіту за обраний період')
+      await bot.sendMessage(chatId, 'Немає даних для формування звіту за обраний період для обраних груп')
       return null
     }
 
@@ -75,7 +79,7 @@ async function createReportHtml(chatId, data, period) {
 
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
-      { text: `Кількість заявок: <b>${total.toString()}</b>`, style: 'subheader', fontSize: '16px' },
+      { text: `Кількість заявок: <b>${overallTotal.toString()}</b>`, style: 'subheader', fontSize: '16px' },
       { text: `Обрані групи: ${groupsNames}`, style: 'subheader', fontSize: '18px' },
       { text: '<b>Заявки:</b>', style: 'regular', fontSize: '14px}' }
     )
@@ -84,6 +88,7 @@ async function createReportHtml(chatId, data, period) {
 
 
     for (const group_id of groups_filter) {
+      if (total[group_id] === 0) continue
       for (const statusName of statuses) {
         const group = groups.find(g => g.id === Number(group_id))
         groupName = group.name || group_id
@@ -97,7 +102,7 @@ async function createReportHtml(chatId, data, period) {
           } else {
             const quantity = (Number(entry.quantity) || 0) + quantityOfNew
             quantityOfNew = 0
-            const percentage = ((quantity / total) * 100).toFixed(2);
+            const percentage = ((quantity / total[group_id]) * 100).toFixed(2);
             const groupText = `⏺ Група: ${groupName}[${entry.group_id}] - Статус: ${statusName_}: <b>${quantity}</b> (${percentage}%)`
             content.push({ text: groupText, style: 'defaultStyle', fontSize: '14px' })
             dataExists = true
@@ -213,8 +218,9 @@ module.exports.createReport = async function (bot, msg) {
       default:
         return null
     }
-
-    const data = await execPgQuery('SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at > $1 AND created_at < $2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;', [period.start, period.end], false, true)
+    const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0, 0)
+    const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
+    const data = await execPgQuery(`SELECT group_id, state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id <> 7 GROUP BY group_id, state_id ORDER BY group_id, state_id;`, [dayStart, dayEnd], false, true)
     if (data === null) {
       await bot.sendMessage(msg.chat.id, 'Немає даних для формування звіту за обраний період')
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
