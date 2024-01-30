@@ -103,12 +103,12 @@ const buttonsConfig = {
     options: [{ resize_keyboard: true }],
     buttons: [
       [
-        { text: '🌗 Останній місяць', callback_data: 'last_month' },
-        { text: '🌔 Останній тиждень', callback_data: 'last_week' }
+        { text: '🌗 Останній місяць (останні 30 днів)', callback_data: 'last_month' },
+        { text: '🌔 Останній тиждень (останні 7 днів)', callback_data: 'last_week' }
       ],
       [
         { text: '🌛🌜 Довільний період', callback_data: 'any_period' },
-        { text: '🌕 Останній рік', callback_data: 'last_year' }
+        { text: '🌕 Останній рік (останні 365 днів)', callback_data: 'last_year' }
       ],
       [
         { text: '🌙 Сьогодні', callback_data: 'today' },

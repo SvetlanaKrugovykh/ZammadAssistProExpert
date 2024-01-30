@@ -221,6 +221,10 @@ module.exports.createReport = async function (bot, msg) {
       default:
         return null
     }
+    const currentDate = new Date()
+    if (period.start > currentDate) period.start = currentDate
+    if (period.end > currentDate) period.end = currentDate
+
     const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0, 0)
     const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
     const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id < 3 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true)
@@ -241,6 +245,8 @@ module.exports.createReport = async function (bot, msg) {
       return null
     }
     await createReportHtml(bot, msg.chat.id, data, period)
+    globalBuffer[msg.chat.id] = {}
+
     if (fs.existsSync(filePath)) {
       try {
         await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {

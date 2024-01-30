@@ -75,10 +75,10 @@ module.exports.getReport = async function (bot, msg) {
 module.exports.selectPeriod = async function (bot, msg) {
 
   const periodDetails = {
-    '🌗': { name: 'last_month', description: 'за останній місяць' },
-    '🌔': { name: 'last_week', description: 'за останній тиждень' },
+    '🌗': { name: 'last_month', description: 'за останній місяць (останні 30 днів)' },
+    '🌔': { name: 'last_week', description: 'за останній тиждень (останні 7 днів)' },
     '🌛': { name: 'any_period', description: 'за довільний період' },
-    '🌕': { name: 'last_year', description: 'за останній рік' },
+    '🌕': { name: 'last_year', description: 'за останній рік (останні 365 днів)' },
     '🌙': { name: 'today', description: 'сьогодні' },
   }
 
@@ -103,12 +103,27 @@ module.exports.selectPeriod = async function (bot, msg) {
 
 async function checkSelectedGroupsAndPeriod(bot, msg) {
   const chatId = msg.chat.id
+  let wrongGroupChoice = false
   try {
     console.log(`2_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
     if (!globalBuffer[chatId]?.selectedGroups || globalBuffer[chatId]?.selectedGroups?.length === 0) {
       await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
       return false
+    } else {
+      for (const group of globalBuffer[chatId]?.selectedGroups) {
+        if (group.startsWith('n_')) {
+          wrongGroupChoice = true
+        } else {
+          wrongGroupChoice = false
+          break
+        }
+      }
     }
+    if (wrongGroupChoice) {
+      await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
+      return false
+    }
+
     if (globalBuffer[chatId]?.selectedPeriod === undefined) {
       await bot.sendMessage(chatId, 'Ви не обрали період')
       return false
