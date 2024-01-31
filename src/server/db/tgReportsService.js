@@ -227,9 +227,9 @@ module.exports.createReport = async function (bot, msg) {
 
     const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0, 0)
     const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
-    const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id < 3 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true)
-    const dataClose = await execPgQuery(`SELECT group_id, 4 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true)
-    const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id > 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true)
+    const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND (state_id < 3 OR state_id=7) GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
+    const dataClose = await execPgQuery(`SELECT group_id, 4 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
+    const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id > 4 AND state_id<>7 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const data = [...dataOpen, ...dataClose, ...dataOther]
     data.sort((a, b) => {
       if (a.group_id < b.group_id) return -1
