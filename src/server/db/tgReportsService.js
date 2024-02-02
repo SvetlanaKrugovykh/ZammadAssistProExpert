@@ -71,7 +71,6 @@ async function createReportHtml(bot, chatId, data, period) {
     for (const group_id of groups_filter) {
       const group = groups.find(g => g.id === Number(group_id))
       groupName = group ? group.name : group_id
-      if (groupName.startsWith('n_')) continue
       if (total[group_id] === undefined || total[group_id] === 0) {
         groupsNames += `<b>${groupName}</b>[${group_id}] заявок: <b>${0}</b>, `
       } else {
@@ -94,7 +93,7 @@ async function createReportHtml(bot, chatId, data, period) {
       if (total[group_id] === 0) continue
       for (const statusName of statuses) {
         const group = groups.find(g => g.id === Number(group_id))
-        groupName = group.name || group_id
+        groupName = group?.name || group_id
         dataExists = false
         for (const entry of data) {
           if (entry.group_id.toString() !== group_id) continue
@@ -229,7 +228,7 @@ module.exports.createReport = async function (bot, msg) {
     const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
     const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND (state_id < 3 OR state_id=7) GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const dataClose = await execPgQuery(`SELECT group_id, 4 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
-    const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id > 4 AND state_id<>7 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
+    const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND (state_id = 3 OR state_id > 4) AND state_id<>7 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const data = [...dataOpen, ...dataClose, ...dataOther]
     data.sort((a, b) => {
       if (a.group_id < b.group_id) return -1

@@ -17,7 +17,8 @@ const { execPgQuery } = require('./db/common')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 const globalBuffer = require('./globalBuffer')
-const { reports, checkReadyForReport } = require('./controllers/reportsController')
+const { checkReadyForReport } = require('./controllers/reportsController')
+const { reports } = require('./controllers/reportsMenu')
 
 const app = Fastify({
   trustProxy: true
@@ -57,31 +58,32 @@ downloadApp.register(fastifyStatic, {
 })
 
 bot.on('callback_query', async (callbackQuery) => {
-  const chatId = callbackQuery.message.chat.id
-  const messageId = callbackQuery.message.message_id
-  const selectedGroup = callbackQuery.data
-  console.log(`[${chatId}-${messageId}].Обрано: ${selectedGroup}`)
-
   try {
+    const chatId = callbackQuery.message.chat.id
+    const messageId = callbackQuery.message.message_id
+
     if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
     const selectedGroups = globalBuffer[chatId].selectedGroups || []
-    selectedGroups.push(selectedGroup)
-    globalBuffer[chatId].selectedGroups = selectedGroups
-    console.log(`1_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
-    const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
-    const group = groups.find(g => g.id === Number(selectedGroup.replace('53_', '')))
-    if (group === undefined && globalBuffer[chatId]?.selectedPeriod?.end === undefined) return
-    if (group === undefined && globalBuffer[chatId]?.selectedPeriod?.end !== undefined) {
-      await checkReadyForReport(bot, callbackQuery.message)
-      await reports(bot, callbackQuery.message)
-      return
+
+    if (callbackQuery.data.startsWith('53_')) {
+      const selectedGroup = callbackQuery.data
+      selectedGroups.push(selectedGroup)
+      globalBuffer[chatId].selectedGroups = selectedGroups
+      console.log(`1_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
+      const groups = await execPgQuery(`SELECT * FROM groups WHERE active`, [], false, true)
+      const group = groups.find(g => g.id === Number(selectedGroup.replace('53_', '')))
+      console.log(`[${chatId}-${messageId}].Обрано: ${selectedGroup}`)
+      let groupName = group ? group.name : group_id
+      await bot.sendMessage(chatId, `Обрано: ${groupName}`)
     }
-    let groupName = group ? group.name : group_id
-    await bot.sendMessage(chatId, `Обрано: ${groupName}`)
-  } catch (e) {
+    await checkReadyForReport(bot, callbackQuery.message)
+    return
+  }
+  catch (e) {
     console.log(e)
   }
 })
+
 
 bot.on('message', async (msg) => {
 

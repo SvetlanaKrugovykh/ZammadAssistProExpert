@@ -2,27 +2,20 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { createReport, getGroups } = require('../db/tgReportsService')
 const Calendar = require('telegram-inline-calendar')
 const globalBuffer = require('../globalBuffer')
-
-module.exports.reports = async function (bot, msg) {
-  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  let title = ''
-  if (checkChoices) {
-    title = '📊'
-  } else {
-    title = buttonsConfig.chooseReportSettings.title
-  }
-
-  await bot.sendMessage(msg.chat.id, title, {
-    reply_markup: {
-      keyboard: buttonsConfig.chooseReportSettings.buttons,
-      resize_keyboard: true
-    }
-  })
-}
+const { reports } = require('./reportsMenu')
 
 module.exports.checkReadyForReport = async function (bot, msg) {
   if (globalBuffer[msg.chat.id]?.selectedGroups && globalBuffer[msg.chat.id]?.selectedPeriod) {
-    await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
+    if (globalBuffer[msg.chat.id]?.selectedPeriod?.periodName === 'any_period') {
+      while (!globalBuffer[msg.chat.id]?.selectedPeriod?.end) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+    }
+    if (!globalBuffer[msg.chat.id]?.counter || globalBuffer[msg.chat.id]?.counter === 0) {
+      await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
+      globalBuffer[msg.chat.id].counter = 1
+      await reports(bot, msg)
+    }
   }
 }
 
@@ -66,17 +59,6 @@ module.exports.chooseGroups = async function (bot, msg) {
   })
 }
 
-
-
-module.exports.getReport = async function (bot, msg) {
-
-  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  if (checkChoices) {
-    await createReport(bot, msg)
-    globalBuffer[msg.chat.id] = {}
-  }
-}
-
 module.exports.selectPeriod = async function (bot, msg) {
 
   const periodDetails = {
@@ -103,40 +85,6 @@ module.exports.selectPeriod = async function (bot, msg) {
 
   } catch (e) {
     console.log(e)
-  }
-}
-
-async function checkSelectedGroupsAndPeriod(bot, msg) {
-  const chatId = msg.chat.id
-  let wrongGroupChoice = false
-  try {
-    console.log(`2_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
-    if (!globalBuffer[chatId]?.selectedGroups || globalBuffer[chatId]?.selectedGroups?.length === 0) {
-      await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
-      return false
-    } else {
-      for (const group of globalBuffer[chatId]?.selectedGroups) {
-        if (group.startsWith('n_')) {
-          wrongGroupChoice = true
-        } else {
-          wrongGroupChoice = false
-          break
-        }
-      }
-    }
-    if (wrongGroupChoice) {
-      await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
-      return false
-    }
-
-    if (globalBuffer[chatId]?.selectedPeriod === undefined) {
-      await bot.sendMessage(chatId, 'Ви не обрали період')
-      return false
-    }
-    return true
-  } catch (e) {
-    console.log(e)
-    return false
   }
 }
 
