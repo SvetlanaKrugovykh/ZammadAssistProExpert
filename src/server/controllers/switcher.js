@@ -3,7 +3,7 @@ const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline
 const supportScene = require('./support')
 const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
-const { reports, chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, getReport } = require('./reportsController')
+const { reports, chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, getReport, checkReadyForReport } = require('./reportsController')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -76,6 +76,7 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_5':
+      await checkReadyForReport(bot, msg)
       await reports(bot, msg)
       break
     case '3_1':
@@ -123,6 +124,7 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '9_1':
       await chooseGroups(bot, msg)
+      await checkReadyForReport(bot, msg)
       break
     case '9_2':
       await chooseTypeOfPeriod(bot, msg)
@@ -179,10 +181,12 @@ async function switchDynamicSceenes(bot, msg) {
     }
     if (timeSymbols.some(symbol => msg.text.includes(symbol))) {
       await selectPeriod(bot, msg)
+      await checkReadyForReport(bot, msg)
       await reports(bot, msg)
       return
     }
     if (msg.text.includes('↖️')) {
+      await checkReadyForReport(bot, msg)
       await reports(bot, msg)
       return
     }

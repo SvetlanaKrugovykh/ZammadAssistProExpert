@@ -17,7 +17,7 @@ const { execPgQuery } = require('./db/common')
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 const globalBuffer = require('./globalBuffer')
-const { reports } = require('./controllers/reportsController')
+const { reports, checkReadyForReport } = require('./controllers/reportsController')
 
 const app = Fastify({
   trustProxy: true
@@ -72,6 +72,7 @@ bot.on('callback_query', async (callbackQuery) => {
     const group = groups.find(g => g.id === Number(selectedGroup.replace('53_', '')))
     if (group === undefined && globalBuffer[chatId]?.selectedPeriod?.end === undefined) return
     if (group === undefined && globalBuffer[chatId]?.selectedPeriod?.end !== undefined) {
+      await checkReadyForReport(bot, callbackQuery.message)
       await reports(bot, callbackQuery.message)
       return
     }

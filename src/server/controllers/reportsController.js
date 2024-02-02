@@ -7,7 +7,7 @@ module.exports.reports = async function (bot, msg) {
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
   let title = ''
   if (checkChoices) {
-    title = 'Натисніть: Отримати звіт з виконання заявок'
+    title = '📊'
   } else {
     title = buttonsConfig.chooseReportSettings.title
   }
@@ -20,10 +20,15 @@ module.exports.reports = async function (bot, msg) {
   })
 }
 
+module.exports.checkReadyForReport = async function (bot, msg) {
+  if (globalBuffer[msg.chat.id]?.selectedGroups && globalBuffer[msg.chat.id]?.selectedPeriod) {
+    await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
+  }
+}
+
 module.exports.chooseTypeOfPeriod = async function (bot, msg) {
-  chatId = msg.chat.id
-  if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
-  globalBuffer[chatId].selectedPeriod = undefined
+  if (globalBuffer[msg.chat.id] === undefined) globalBuffer[msg.chat.id] = {}
+  globalBuffer[msg.chat.id].selectedPeriod = undefined
 
   await bot.sendMessage(msg.chat.id, buttonsConfig.chooseTypeOfPeriod.title, {
     reply_markup: {
@@ -68,7 +73,7 @@ module.exports.getReport = async function (bot, msg) {
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
   if (checkChoices) {
     await createReport(bot, msg)
-    globalBuffer[chatId] = {}
+    globalBuffer[msg.chat.id] = {}
   }
 }
 
@@ -88,10 +93,10 @@ module.exports.selectPeriod = async function (bot, msg) {
 
     await bot.sendMessage(msg.chat.id, `Ви обрали період: ${periodInfo.description}`)
     try {
-      if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
-      let selectedPeriod = globalBuffer[chatId].selectedPeriod || {}
+      if (globalBuffer[msg.chat.id] === undefined) globalBuffer[msg.chat.id] = {}
+      let selectedPeriod = globalBuffer[msg.chat.id].selectedPeriod || {}
       selectedPeriod.periodName = periodInfo.name
-      globalBuffer[chatId].selectedPeriod = selectedPeriod
+      globalBuffer[msg.chat.id].selectedPeriod = selectedPeriod
     } catch (e) {
       console.log(e)
     }
