@@ -10,12 +10,16 @@ module.exports.checkReadyForReport = async function (bot, msg) {
       while (!globalBuffer[msg.chat.id]?.selectedPeriod?.end) {
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
-    }
-    if (!globalBuffer[msg.chat.id]?.counter || globalBuffer[msg.chat.id]?.counter === 0) {
+      if (!globalBuffer[msg.chat.id]?.counter || globalBuffer[msg.chat.id]?.counter === 0) {
+        await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
+        globalBuffer[msg.chat.id].counter = 1
+        await reports(bot, msg)
+      }
+    } else {
       await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
-      globalBuffer[msg.chat.id].counter = 1
       await reports(bot, msg)
     }
+
   }
 }
 

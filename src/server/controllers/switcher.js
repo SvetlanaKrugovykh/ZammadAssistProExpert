@@ -185,7 +185,7 @@ async function switchDynamicSceenes(bot, msg) {
       return
     }
     if (msg.text.includes('↖️')) {
-      await checkReadyForReport(bot, msg)
+      await reports(bot, msg)
       return
     }
     if (/[🏠🟣🔵🧷📌✔️➕📒📗📊📘💹]/.test(msg.text)) {
