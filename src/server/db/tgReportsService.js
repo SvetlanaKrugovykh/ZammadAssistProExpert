@@ -144,9 +144,12 @@ function getStatusName(stateId) {
 
 function createHtmlContent(content) {
   let htmlContent = '<html><head>'
+  htmlContent += '<meta charset="utf-8">'
+  htmlContent += '<meta name="viewport" content="width=device-width, initial-scale=1">'
+  htmlContent += '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">'
   htmlContent += '<style>'
   htmlContent += '@font-face { font-family: "Roboto"; src: url("/src/server/db/fonts/Roboto/Roboto-Regular.ttf") format("truetype"); }'
-  htmlContent += 'body { font-family: "Roboto", Arial, sans-serif; margin: 20px; margin-left: 10mm; }'
+  htmlContent += 'body { font-family: "Roboto", sans-serif; margin: 20px; margin-left: 10mm; }'
   htmlContent += 'h1 { font-weight: bold; font-size: 18px; text-align: center; }'
   htmlContent += 'h2 { font-weight: normal; font-size: 16px; }'
   htmlContent += 'p { font-size: 14px; }'
