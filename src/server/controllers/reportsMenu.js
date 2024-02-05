@@ -8,7 +8,17 @@ module.exports.reports = async function (bot, msg) {
   if (checkChoices) {
     title = '📊'
   } else {
-    title = buttonsConfig.chooseReportSettings.title
+    if (globalBuffer[msg.chat.id]?.groupCounter === 1 || globalBuffer[msg.chat.id]?.periodCounter === 1) {
+      if (globalBuffer[msg.chat.id]?.groupCounter === 1 && globalBuffer[msg.chat.id]?.periodCounter === 1) {
+        title = '🥎 Оберіть: Отримати звіт з виконання заявок'
+      } else if (globalBuffer[msg.chat.id]?.groupCounter === 1) {
+        title = '🥎 Оберіть: Оберіть групу(и)'
+      } else if (globalBuffer[msg.chat.id]?.periodCounter === 1) {
+        title = '🥎 Оберіть: Оберіть період звіту'
+      }
+    } else {
+      title = buttonsConfig.chooseReportSettings.title
+    }
   }
 
   await bot.sendMessage(msg.chat.id, title, {

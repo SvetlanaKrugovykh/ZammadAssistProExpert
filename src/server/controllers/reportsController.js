@@ -5,7 +5,22 @@ const globalBuffer = require('../globalBuffer')
 const { reports } = require('./reportsMenu')
 
 module.exports.checkReadyForReport = async function (bot, msg) {
-  if (globalBuffer[msg.chat.id]?.selectedGroups && globalBuffer[msg.chat.id]?.selectedPeriod) {
+  if (globalBuffer[msg.chat.id]?.selectedGroups && !globalBuffer[msg.chat.id]?.selectedPeriod
+    && (!globalBuffer[msg.chat.id]?.groupCounter || globalBuffer[msg.chat.id]?.groupCounter === 0)) {
+    globalBuffer[msg.chat.id].groupCounter = 1
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Оберіть період звіту')
+    return
+  }
+  if (!globalBuffer[msg.chat.id]?.selectedGroups && globalBuffer[msg.chat.id]?.selectedPeriod
+    && (!globalBuffer[msg.chat.id]?.periodCounter || globalBuffer[msg.chat.id]?.periodCounter === 0)) {
+    if (globalBuffer[msg.chat.id]?.selectedPeriod?.periodName !== 'any_period') {
+      await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Оберіть групу(и)')
+      globalBuffer[msg.chat.id].periodCounter = 1
+      await reports(bot, msg)
+    }
+  }
+  if (globalBuffer[msg.chat.id]?.selectedPeriod) {
     if (globalBuffer[msg.chat.id]?.selectedPeriod?.periodName === 'any_period') {
       while (!globalBuffer[msg.chat.id]?.selectedPeriod?.end) {
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -26,6 +41,7 @@ module.exports.checkReadyForReport = async function (bot, msg) {
 module.exports.chooseTypeOfPeriod = async function (bot, msg) {
   if (globalBuffer[msg.chat.id] === undefined) globalBuffer[msg.chat.id] = {}
   globalBuffer[msg.chat.id].selectedPeriod = undefined
+  globalBuffer[msg.chat.id].periodCounter = 0
 
   await bot.sendMessage(msg.chat.id, buttonsConfig.chooseTypeOfPeriod.title, {
     reply_markup: {
@@ -47,6 +63,7 @@ module.exports.chooseGroups = async function (bot, msg) {
   if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
   globalBuffer[chatId].availableGroups = data
   globalBuffer[chatId].selectedGroups = []
+  globalBuffer[msg.chat.id].groupCounter = 0
 
   const groupsButtons = {
     title: 'Оберіть будь ласка групу(и):',
@@ -125,6 +142,7 @@ async function checkAndSetSelectedPeriod(_bot, msg, periodName = '', dataType = 
 module.exports.chooseData = async function (bot, msg, dataType = '') {
   const chatId = msg.chat.id
   let selectedPeriod = await checkAndSetSelectedPeriod(bot, msg, 'any_period', dataType)
+  globalBuffer[msg.chat.id].periodCounter = 1
   bot.sendMessage(chatId, `Натисніть на кнопку в календарі щоб обрати ${dataType} дату.`)
   const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
