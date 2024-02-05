@@ -15,6 +15,20 @@ function fDateTime(local, time = new Date(), isDelta = false, deltaSummerTime = 
   return currentTime
 }
 
+function _dayStart(_dateTime) {
+  const DELTA_RUBY_TIME_ZONE = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) * 60000 || 0
+  const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) * 60000 || 0
+  const adjusted_time = new Date(_dateTime - DELTA_RUBY_TIME_ZONE - DELTA_SUMMER_TIME)
+  return adjusted_time
+}
+
+function _dayEnd(_dateTime) {
+  const DELTA_RUBY_TIME_ZONE = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) * 60000 || 0
+  const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) * 60000 || 0
+  const adjusted_time = new Date(_dateTime - DELTA_RUBY_TIME_ZONE - DELTA_SUMMER_TIME)
+  return adjusted_time
+}
+
 function pendingTimeInDaysSec() {
   const INTERVAL_DAYS = Number(process.env.TICKET_AUTO_CLOSE_DAYS) || 3
   const DELTA_RUBY_TIME_ZONE_MINUTES = Number(process.env.DELTA_RUBY_TIME_ZONE_MINUTES) || 0
@@ -43,4 +57,4 @@ function pendingTimeInIntervalMin() {
   return pending_time
 }
 
-module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin, _dayEndTimeInDaysSec }
+module.exports = { fDateTime, pendingTimeInDaysSec, pendingTimeInIntervalMin, _dayEndTimeInDaysSec, _dayStart, _dayEnd }
