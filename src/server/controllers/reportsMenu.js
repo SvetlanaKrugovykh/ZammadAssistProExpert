@@ -4,7 +4,9 @@ const { createReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg, false)
-  let title = buttonsConfig.chooseReportSettings.title
+  const chatId = msg.chat.id
+  let title = '📊'
+  if (!globalBuffer[chatId]?.selectedGroups && !globalBuffer[chatId]?.selectedPeriod) title = buttonsConfig.chooseReportSettings.title
   if (checkChoices) title = '📊'
   await bot.sendMessage(msg.chat.id, title, {
     reply_markup: {
