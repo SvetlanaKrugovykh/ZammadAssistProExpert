@@ -9,13 +9,11 @@ module.exports.checkReadyForReport = async function (bot, msg) {
     && (!globalBuffer[msg.chat.id]?.groupCounter || globalBuffer[msg.chat.id]?.groupCounter === 0)) {
     globalBuffer[msg.chat.id].groupCounter = 1
     await new Promise(resolve => setTimeout(resolve, 5000));
-    await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Оберіть період звіту')
     return
   }
   if (!globalBuffer[msg.chat.id]?.selectedGroups && globalBuffer[msg.chat.id]?.selectedPeriod
     && (!globalBuffer[msg.chat.id]?.periodCounter || globalBuffer[msg.chat.id]?.periodCounter === 0)) {
     if (globalBuffer[msg.chat.id]?.selectedPeriod?.periodName !== 'any_period') {
-      await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Оберіть групу(и)')
       globalBuffer[msg.chat.id].periodCounter = 1
       await reports(bot, msg)
     }
@@ -26,12 +24,10 @@ module.exports.checkReadyForReport = async function (bot, msg) {
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
       if (!globalBuffer[msg.chat.id]?.counter || globalBuffer[msg.chat.id]?.counter === 0) {
-        await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
         globalBuffer[msg.chat.id].counter = 1
         await reports(bot, msg)
       }
     } else {
-      await bot.sendMessage(msg.chat.id, '🥎 Оберіть: Отримати звіт з виконання заявок')
       await reports(bot, msg)
     }
 

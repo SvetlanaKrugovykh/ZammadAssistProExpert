@@ -3,24 +3,9 @@ const globalBuffer = require('../globalBuffer')
 const { createReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {
-  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  let title = 'Оберіть, будь ласка, параметри для формування звіту:'
-  if (checkChoices) {
-    title = '📊'
-  } else {
-    if (globalBuffer[msg.chat.id]?.groupCounter === 1 || globalBuffer[msg.chat.id]?.periodCounter === 1) {
-      if (globalBuffer[msg.chat.id]?.groupCounter === 1 && globalBuffer[msg.chat.id]?.periodCounter === 1) {
-        title = '🥎 Оберіть: Отримати звіт з виконання заявок'
-      } else if (globalBuffer[msg.chat.id]?.groupCounter === 1) {
-        title = '🥎 Оберіть: Оберіть групу(и)'
-      } else if (globalBuffer[msg.chat.id]?.periodCounter === 1) {
-        title = '🥎 Оберіть: Оберіть період звіту'
-      }
-    } else {
-      title = buttonsConfig.chooseReportSettings.title
-    }
-  }
-
+  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg, false)
+  let title = buttonsConfig.chooseReportSettings.title
+  if (checkChoices) title = '📊'
   await bot.sendMessage(msg.chat.id, title, {
     reply_markup: {
       keyboard: buttonsConfig.chooseReportSettings.buttons,
@@ -31,27 +16,28 @@ module.exports.reports = async function (bot, msg) {
 
 module.exports.getReport = async function (bot, msg) {
 
-  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
+  const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg, true)
   if (checkChoices) {
     await createReport(bot, msg)
     globalBuffer[msg.chat.id] = {}
   }
 }
 
-async function checkSelectedGroupsAndPeriod(bot, msg) {
+async function checkSelectedGroupsAndPeriod(bot, msg, isMessage) {
   const chatId = msg.chat.id
+  let result = true
   try {
     console.log(`2_selectedGroups for  ${chatId} is ${globalBuffer[chatId]?.selectedGroups}`)
     if (!globalBuffer[chatId]?.selectedGroups || globalBuffer[chatId]?.selectedGroups?.length === 0) {
-      await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
-      return false
+      if (isMessage) await bot.sendMessage(chatId, 'Ви не обрали жодної групи')
+      result = false
     }
 
     if (globalBuffer[chatId]?.selectedPeriod === undefined) {
-      await bot.sendMessage(chatId, 'Ви не обрали період')
-      return false
+      if (isMessage) await bot.sendMessage(chatId, 'Ви не обрали період')
+      result = false
     }
-    return true
+    return result
   } catch (e) {
     console.log(e)
     return false
