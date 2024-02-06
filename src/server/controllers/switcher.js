@@ -10,6 +10,7 @@ const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
+const globalBuffer = require('../globalBuffer')
 
 const selectedByUser = {}
 
@@ -77,6 +78,7 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_5':
+      globalBuffer[msg.chat.id] = {}
       await reports(bot, msg)
       break
     case '3_1':
