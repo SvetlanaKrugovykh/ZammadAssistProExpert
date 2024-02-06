@@ -143,7 +143,7 @@ module.exports.chooseData = async function (bot, msg, dataType = '') {
   const chatId = msg.chat.id
   let selectedPeriod = await checkAndSetSelectedPeriod(bot, msg, 'any_period', dataType)
   globalBuffer[msg.chat.id].periodCounter = 1
-  bot.sendMessage(chatId, `Натисніть на кнопку в календарі щоб обрати ${dataType} дату.`)
+  bot.sendMessage(chatId, `Натисніть на кнопку в календарі, щоб обрати ${dataType} дату.`)
   const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
     language: process.env.CALENDAR_LANG || 'uk'

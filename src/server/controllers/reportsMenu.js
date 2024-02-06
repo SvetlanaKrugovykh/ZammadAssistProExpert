@@ -4,7 +4,7 @@ const { createReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg)
-  let title = ''
+  let title = 'Оберіть, будь ласка, параметри для формування звіту:'
   if (checkChoices) {
     title = '📊'
   } else {
