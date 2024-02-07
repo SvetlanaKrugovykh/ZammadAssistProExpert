@@ -62,7 +62,7 @@ module.exports.chooseGroups = async function (bot, msg) {
   globalBuffer[msg.chat.id].groupCounter = 0
 
   const groupsButtons = {
-    title: 'Оберіть будь ласка групу(и):',
+    title: 'Оберіть, будь ласка, групу(и):',
     options: [{ resize_keyboard: true }],
     buttons: data.map(group => [
       { text: `👩‍👩‍👧‍👧 ${group.name} `, callback_data: `53_${group.id}` }
