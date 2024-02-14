@@ -190,7 +190,7 @@ async function switchDynamicSceenes(bot, msg) {
       await reports(bot, msg)
       return
     }
-    if (/[🏠🟣🔵🧷📌✔️➕📒📗📊📘💹]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✔️➕📕📒📗📊📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }
