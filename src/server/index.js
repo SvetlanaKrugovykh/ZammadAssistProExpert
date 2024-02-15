@@ -24,12 +24,8 @@ const app = Fastify({
   trustProxy: true
 })
 
-const downloadApp = Fastify({
-  trustProxy: true,
-  https: {
-    key: cert.key,
-    cert: cert.cert
-  }
+const interConnectApp = Fastify({
+  trustProxy: true
 })
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
@@ -51,11 +47,7 @@ cron.schedule(TICKET_AUTO_CLOSE_SCHEDULLER_STRING, () => {
 
 app.register(require('@fastify/cors'), {})
 
-const downloadPath = process.env.DOWNLOAD_APP_PATH || 'C:\\Temp\\attachments'
-downloadApp.register(fastifyStatic, {
-  root: downloadPath,
-  prefix: `/`
-})
+interConnectApp.register(require('./routes/interConnect.route'), { prefix: '/inter-connect' })
 
 bot.on('callback_query', async (callbackQuery) => {
   try {
@@ -131,4 +123,4 @@ const assistApiServer = Fastify({
   trustProxy: true,
 })
 
-module.exports = { app, assistApiServer, downloadApp, bot }
+module.exports = { app, assistApiServer, interConnectApp, bot }
