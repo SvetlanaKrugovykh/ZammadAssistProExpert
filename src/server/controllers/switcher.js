@@ -1,7 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
+const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, ticketUpdates, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
 const { reports, getReport } = require('./reportsMenu')
@@ -102,6 +102,9 @@ async function handler(bot, msg, webAppUrl) {
     case '5_4':
       await ticketRegistration(bot, msg, selectedByUser[chatId])
       break
+    case '5_14':
+      await ticketUpdates(bot, msg, selectedByUser[chatId])
+      break
     case '5_5':
       selectedByUser[chatId] = await askForPicture(bot, msg, selectedByUser[chatId])
       break
@@ -152,6 +155,15 @@ async function switchDynamicSceenes(bot, msg) {
   try {
     if (msg.text.includes('🟦')) {
       await ticketApprovalScene('', bot, '', msg, null, true)
+      return
+    }
+    if (msg.text.includes('📕')) {
+      await showTicketInfo(bot, msg)
+      selectedByUser[msg.chat.id] = {}
+      const ticketID = msg.text.match(/\d+/)?.[0]
+      if (!ticketID) return null
+      selectedByUser[msg.chat.id].ipdateTicketId = ticketID
+      await ticketUpdateScene(bot, msg)
       return
     }
     if (msg.text.includes('🟨') || msg.text.includes('🟩')) {

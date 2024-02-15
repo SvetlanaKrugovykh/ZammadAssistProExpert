@@ -26,10 +26,11 @@ async function ticketCreateScene(bot, msg) {
   }
 }
 
-async function ticketUpdateScene(bot, msg) {
+async function ticketUpdateScene(bot, msg, ticketID = '') {
   try {
     const chatId = msg.chat.id
-    await bot.sendMessage(chatId, buttonsConfig["ticketUpate"].title, {
+    const add = ' щодо заявки №_' + ticketID.toString()
+    await bot.sendMessage(chatId, buttonsConfig["ticketUpate"].title + add, {
       reply_markup: {
         keyboard: buttonsConfig["ticketUpate"].buttons,
         resize_keyboard: true,
@@ -151,6 +152,30 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     console.log(err)
   }
 }
+
+async function ticketUpdates(bot, msg, selectedByUser) {
+  try {
+    if (!selectedByUser?.ticketBody) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен коментар. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+    const user = await findUserById(msg.chat.id)
+    const body = selectedByUser.ticketBody
+
+    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
+      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
+      if (updatedTicket === null) {
+        await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return null
+      }
+    }
+
+    await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 
 async function create_ticket(user, subject, body) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
@@ -290,4 +315,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket, askForPicture }
+module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, ticketUpdates, checkUserTickets, update_ticket, askForPicture }
