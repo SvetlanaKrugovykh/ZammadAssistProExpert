@@ -166,6 +166,8 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       return
     }
     const ticketID = selectedByUser.updatedTicketId
+    const ticketData = await getTicketData(ticketID)
+    const { customer_id } = ticketData
     const timestamp = fDateTime('uk-UA', new Date())
     const comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
 

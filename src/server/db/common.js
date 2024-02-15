@@ -9,36 +9,34 @@ const pool = new Pool({
   port: Number(process.env.ZAMMAD_DB_PORT) || 5432,
 })
 
-
 async function execPgQuery(query, values, commit = false, all = false) {
   const DEBUG_LEVEL = Number(process.env.DEBUG_LEVEL) || 0
   let client
+  let result
+
   try {
-    if (DEBUG_LEVEL > 0) {
-      console.log(`execQuery ${query},${values.toString()}`
-        + ` client:${pool.database} ${pool.host}:${pool.port}`
-        + ` ${pool.user} `)
-    }
     client = await pool.connect()
+
     if (DEBUG_LEVEL > 0) {
-      console.log(`execQuery ${query},${values.toString()}`
-        + ` client:${client.processID} ${client.database} ${client.host}:${client.port}`
-        + ` ${client.user}`
-      )
+      console.log(`execQuery ${query},${values.toString()} client:${client.processID} ${client.database} ${client.host}:${client.port} ${client.user}`)
     }
-    const data = await client.query(query, values)
-    if (DEBUG_LEVEL > 0) console.log(`execQuery ${query},${values.toString()} returned ${data.rowCount} rows`)
-    if (commit) await client.query('COMMIT')
-    if (data.rows.length === 0) return null
-    if (all) return data.rows
-    return data.rows[0]
+
+    result = await client.query(query, values)
   } catch (error) {
     console.error(`Error in execQuery ${query},${values}:`, error)
-    if (commit) await client.query('ROLLBACK')
-    return null
+    result = null
   } finally {
-    if (client) client.release()
+    if (client) {
+      client.release()
+    }
   }
+
+  if (result && result.rows.length > 0) {
+    return all ? result.rows : result.rows[0]
+  }
+
+  return null
 }
+
 
 module.exports = { execPgQuery }
