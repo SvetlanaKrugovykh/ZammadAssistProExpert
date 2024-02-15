@@ -173,7 +173,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
     newTicketBody.article = { 'subject': comment }
 
-    const updatedTicket = await update_ticket(ticketID, JSON.stringify(newTicketBody), selectedByUser?.ticketAttacmentFileNames || [], false)
+    const updatedTicket = await update_ticket(ticketID, newTicketBody.article, selectedByUser?.ticketAttacmentFileNames || [], false)
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
       return null
