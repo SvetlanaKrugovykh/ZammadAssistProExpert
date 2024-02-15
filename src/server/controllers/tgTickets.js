@@ -259,7 +259,7 @@ async function checkUserTickets(bot, msg, menuItem) {
         break
     }
 
-    const data = await getTickets(state_id, customer_id)
+    const data = await getTickets(state_id, customer_id, chatId)
     let parsedData
     if (Array.isArray(data) && typeof data[0] === 'object') {
       parsedData = data
