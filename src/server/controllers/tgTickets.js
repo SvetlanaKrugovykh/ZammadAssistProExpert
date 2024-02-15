@@ -25,6 +25,21 @@ async function ticketCreateScene(bot, msg) {
     console.log(err)
   }
 }
+
+async function ticketUpdateScene(bot, msg) {
+  try {
+    const chatId = msg.chat.id
+    await bot.sendMessage(chatId, buttonsConfig["ticketUpate"].title, {
+      reply_markup: {
+        keyboard: buttonsConfig["ticketUpate"].buttons,
+        resize_keyboard: true,
+        one_time_keyboard: false
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+}
 //#endregion
 
 async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
@@ -236,6 +251,10 @@ async function checkUserTickets(bot, msg, menuItem) {
         statusIcon = '🟩'
         state_id = 4
         break
+      case '2_11':
+        statusIcon = '📕'
+        state_id = 333
+        break
       default:
         break
     }
@@ -271,4 +290,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket, askForPicture }
+module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, update_ticket, askForPicture }

@@ -1,7 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { ticketCreateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
+const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, checkUserTickets, askForPicture } = require('./tgTickets')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
 const { reports, getReport } = require('./reportsMenu')
@@ -72,6 +72,9 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_3':
+      await checkUserTickets(bot, msg, data)
+      break
+    case '2_11':
       await checkUserTickets(bot, msg, data)
       break
     case '2_4':
