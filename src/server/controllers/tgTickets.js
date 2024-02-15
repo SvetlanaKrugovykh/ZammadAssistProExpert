@@ -8,7 +8,8 @@ const { getTickets } = require('../db/ticketsDbService')
 const { findUserById } = require('../db/tgUsersService')
 const https = require('https')
 const { fDateTime } = require('../services/various')
-
+const { userReplyRecord } = require('../services/interConnect.service')
+const { getTicketData } = require('../modules/common')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -163,17 +164,26 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Не заповнен коментар. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    const timestamp = fDateTime('uk-UA', new Date(), true, true)
-    const body = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
-    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
-      const updatedTicket = await update_ticket(selectedByUser.updatedTicketId, body, selectedByUser.ticketAttacmentFileNames)
-      if (updatedTicket === null) {
-        await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
-        return null
-      }
+    const ticketID = selectedByUser.updatedTicketId
+    const ticket = await getTicketData(ticketID)
+    if (!ticket) {
+      console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
+      return null
     }
+    const timestamp = fDateTime('uk-UA', new Date(), true, true)
+    const comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
+    const ticket_body = JSON.stringify(ticket)
+    /////const updatedTicket = await update_ticket(selectedByUser.updatedTicketId, ticket_body, selectedByUser?.ticketAttacmentFileNames || [], false, comment)
+    // if (updatedTicket === null) {
+    //   await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
+    //   return null
+    // }
 
-    await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
+    const ticket_update_data = await getTicketUpdateData(ticketID)
+    await bot.sendMessage(msg.chat.id, `Дякую, зміни до Вашої заявки ${selectedByUser.ticketBody} внесено.`)
+    const body = { ticket_id: ticket.id, sender_id: 0, state_id: 222, login: msg.chat.id, message_out: selectedByUser.ticketBody, urls_out: selectedByUser?.ticketAttacmentFileNames || [] }
+    userReplyRecord(body)
+
   } catch (err) {
     console.log(err)
   }
@@ -208,7 +218,7 @@ async function create_ticket(user, subject, body) {
   }
 }
 
-async function update_ticket(ticketId, body, fileNames, override = false) {
+async function update_ticket(ticketId, body, fileNames, override = false, comment = '') {
 
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let bodyWithAttachments = body
@@ -234,6 +244,7 @@ async function update_ticket(ticketId, body, fileNames, override = false) {
 
   let data = {
     'article': {
+      'subject': comment,
       'body': bodyWithAttachments || body,
     }
   }

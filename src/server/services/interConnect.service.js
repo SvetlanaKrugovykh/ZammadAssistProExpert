@@ -14,3 +14,17 @@ module.exports.newRecord = async function (body) {
     return false
   }
 }
+
+module.exports.userReplyRecord = async function (body) {
+  try {
+    const { ticket_id, sender_id, state_id, login, message_out, urls_out } = body
+    const urls_out_string = urls_out.join(',')
+    const query = `INSERT INTO ticket_updates(state_id, ticket_id, sender_id, login, message_out, urls_out) VALUES($1, $2, $3, $4, $5, $6)`
+    const values = [state_id, ticket_id, sender_id, login, message_out, urls_out_string]
+    await execPgQuery(query, values, true)
+    return true
+  } catch (error) {
+    console.error('Error executing commands:', error.message)
+    return false
+  }
+}
