@@ -3,6 +3,9 @@ const { app, assistApiServer, downloadApp } = require('./index')
 const HOST = process.env.HOST || '127.0.0.1'
 const HOST_DOWNLOAD = process.env.HOST_DOWNLOAD || '127.0.0.1'
 const START_DOWNLOAD_APP = process.env.START_DOWNLOAD_APP || 'false'
+const updateTables = require('./db/tablesUpdate').updateTables
+
+updateTables()
 
 app.listen({ port: process.env.PORT || 7999, host: HOST }, (err, address) => {
   if (err) {
