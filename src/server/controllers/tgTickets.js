@@ -96,7 +96,7 @@ async function askForAttachment(bot, msg, selectedByUser) {
     return selectedByUser_
   } catch (err) {
     console.log(err)
-    return {}
+    return selectedByUser
   }
 }
 
