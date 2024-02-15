@@ -5,7 +5,7 @@ async function getTickets(state_id, customer_id) {
   let query = ''
   try {
     if (state_id === 333) {
-      query = 'SELECT * FROM tickets WHERE customer_id = $1 AND state_id = $2 ORDER BY created_at DESC LIMIT 10'
+      query = 'SELECT * FROM tickets WHERE customer_id = $1 AND state_id = $2 ORDER BY created_at DESC LIMIT 10' //TODO
       values = [customer_id, 1] //TODO
     } else {
       query = 'SELECT * FROM tickets WHERE customer_id = $1 AND state_id = $2 ORDER BY created_at DESC LIMIT 10'
