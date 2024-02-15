@@ -166,14 +166,10 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       return
     }
     const ticketID = selectedByUser.updatedTicketId
-    const ticketData = await getTicketData(ticketID)
     const timestamp = fDateTime('uk-UA', new Date(), true, true)
     const comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
-    const { title, group_id, priority_id, state_id, pending_time, customer_id, article } = ticketData
-    const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
-    newTicketBody.article = { 'subject': comment }
 
-    const updatedTicket = await update_ticket(ticketID, newTicketBody.article, selectedByUser?.ticketAttacmentFileNames || [], false)
+    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
       return null
