@@ -10,6 +10,7 @@ const https = require('https')
 const { fDateTime } = require('../services/various')
 const { userReplyRecord } = require('../services/interConnect.service')
 const { getTicketData } = require('../modules/common')
+const { execPgQuery } = require('../db/common')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -165,24 +166,26 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       return
     }
     const ticketID = selectedByUser.updatedTicketId
-    const ticket = await getTicketData(ticketID)
-    if (!ticket) {
-      console.log(`getChatIdByTicketID: ticketID ${ticketID} not found`)
-      return null
-    }
+    const ticketData = await getTicketData(ticketID)
     const timestamp = fDateTime('uk-UA', new Date(), true, true)
     const comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
-    const ticket_body = JSON.stringify(ticket)
-    /////const updatedTicket = await update_ticket(selectedByUser.updatedTicketId, ticket_body, selectedByUser?.ticketAttacmentFileNames || [], false, comment)
-    // if (updatedTicket === null) {
-    //   await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
-    //   return null
-    // }
+    const { title, group_id, priority_id, state_id, pending_time, customer_id, article } = ticketData
+    const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
+    newTicketBody.article = { 'subject': comment }
 
-    const ticket_update_data = await getTicketUpdateData(ticketID)
-    await bot.sendMessage(msg.chat.id, `Дякую, зміни до Вашої заявки ${selectedByUser.ticketBody} внесено.`)
-    const body = { ticket_id: ticket.id, sender_id: 0, state_id: 222, login: msg.chat.id, message_out: selectedByUser.ticketBody, urls_out: selectedByUser?.ticketAttacmentFileNames || [] }
-    userReplyRecord(body)
+    const updatedTicket = await update_ticket(ticketID, JSON.stringify(newTicketBody), selectedByUser?.ticketAttacmentFileNames || [], false)
+    if (updatedTicket === null) {
+      await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return null
+    }
+    await bot.sendMessage(msg.chat.id, `Дякую, зміни до Вашої заявки ${ticketID} внесено.`)
+
+    const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
+    ticket_update_data.sender_id = customer_id
+    ticket_update_data.state_id = 222
+    ticket_update_data.message_out = selectedByUser.ticketBody
+    ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
+    userReplyRecord(ticket_update_data)
 
   } catch (err) {
     console.log(err)
@@ -218,7 +221,7 @@ async function create_ticket(user, subject, body) {
   }
 }
 
-async function update_ticket(ticketId, body, fileNames, override = false, comment = '') {
+async function update_ticket(ticketId, body, fileNames, override = false) {
 
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let bodyWithAttachments = body
@@ -244,7 +247,6 @@ async function update_ticket(ticketId, body, fileNames, override = false, commen
 
   let data = {
     'article': {
-      'subject': comment,
       'body': bodyWithAttachments || body,
     }
   }
