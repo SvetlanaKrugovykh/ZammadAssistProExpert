@@ -155,15 +155,18 @@ async function ticketRegistration(bot, msg, selectedByUser) {
 
 async function ticketUpdates(bot, msg, selectedByUser) {
   try {
+    if (!selectedByUser?.updatedTicketId) {
+      await bot.sendMessage(msg.chat.id, 'Немає обраної заявки для оновлення\n', { parse_mode: 'HTML' })
+      return
+    }
     if (!selectedByUser?.ticketBody) {
       await bot.sendMessage(msg.chat.id, 'Не заповнен коментар. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    const user = await findUserById(msg.chat.id)
-    const body = selectedByUser.ticketBody
-
+    const timestamp = fDateTime('uk-UA', new Date(), true, true)
+    const body = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
     if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
-      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
+      const updatedTicket = await update_ticket(selectedByUser.updatedTicketId, body, selectedByUser.ticketAttacmentFileNames)
       if (updatedTicket === null) {
         await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
         return null

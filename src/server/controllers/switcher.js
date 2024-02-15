@@ -162,7 +162,7 @@ async function switchDynamicSceenes(bot, msg) {
       selectedByUser[msg.chat.id] = {}
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null
-      selectedByUser[msg.chat.id].ipdateTicketId = ticketID
+      selectedByUser[msg.chat.id].updatedTicketId = ticketID
       await ticketUpdateScene(bot, msg)
       return
     }
