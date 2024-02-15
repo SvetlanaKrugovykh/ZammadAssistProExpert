@@ -31,6 +31,7 @@ function getCallbackData(text) {
 async function handler(bot, msg, webAppUrl) {
   const data = getCallbackData(msg.text)
   const chatId = msg.chat.id
+  const adminUser = users.find(user => user.id === msg.chat.id)
   if (!selectedByUser[chatId]) selectedByUser[chatId] = {}
   console.log('The choise is:', data)
   switch (data) {
@@ -45,11 +46,7 @@ async function handler(bot, msg, webAppUrl) {
       await signUpOldForm(bot, msg)
       break
     case '0_10':
-      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
-      break
     case '0_11':
-      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
-      break
     case '0_12':
       selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
       break
@@ -57,7 +54,6 @@ async function handler(bot, msg, webAppUrl) {
       await usersRegistration(bot, msg, selectedByUser[chatId])
       break
     case '0_4':
-      const adminUser = users.find(user => user.id === msg.chat.id)
       if (adminUser) {
         await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
       } else {
@@ -69,14 +65,8 @@ async function handler(bot, msg, webAppUrl) {
       await ticketCreateScene(bot, msg)
       break
     case '2_2':
-      await checkUserTickets(bot, msg, data)
-      break
     case '2_3':
-      await checkUserTickets(bot, msg, data)
-      break
     case '2_11':
-      await checkUserTickets(bot, msg, data)
-      break
     case '2_4':
       await checkUserTickets(bot, msg, data)
       break
