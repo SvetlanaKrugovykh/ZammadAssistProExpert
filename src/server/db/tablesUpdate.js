@@ -45,7 +45,10 @@ function createTable() {
       state_id INTEGER,
       login VARCHAR,
       subject VARCHAR,
-      message VARCHAR,
+      message_in VARCHAR,
+      message_out VARCHAR,
+      urls_in VARCHAR,
+      urls_out VARCHAR,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
