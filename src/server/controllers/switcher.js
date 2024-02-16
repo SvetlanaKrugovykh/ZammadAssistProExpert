@@ -11,6 +11,7 @@ const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('.
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
 const globalBuffer = require('../globalBuffer')
+const getNewRecord = require('../services/interConnect.service').getNewRecord
 
 const selectedByUser = {}
 
@@ -157,13 +158,13 @@ async function switchDynamicSceenes(bot, msg) {
       await ticketApprovalScene('', bot, '', msg, null, true)
       return
     }
-    if (msg.text.includes('📕')) {
+    if (msg.text.includes('📕') || msg.text.includes('☎︎')) {
       await showTicketInfo(bot, msg)
       selectedByUser[msg.chat.id] = {}
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null
       selectedByUser[msg.chat.id].updatedTicketId = ticketID
-      await ticketUpdateScene(bot, msg)
+      await ticketUpdateScene(bot, msg, ticketID)
       return
     }
     if (msg.text.includes('🟨') || msg.text.includes('🟩')) {

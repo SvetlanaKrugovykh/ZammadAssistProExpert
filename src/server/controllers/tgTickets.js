@@ -8,7 +8,7 @@ const { getTickets } = require('../db/ticketsDbService')
 const { findUserById } = require('../db/tgUsersService')
 const https = require('https')
 const { fDateTime } = require('../services/various')
-const { userReplyRecord } = require('../services/interConnect.service')
+const { userReplyRecord, sendReplyToCustomer } = require('../services/interConnect.service')
 const { getTicketData } = require('../modules/common')
 const { execPgQuery } = require('../db/common')
 
@@ -179,12 +179,11 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, `Дякую, зміни до Вашої заявки ${ticketID} внесено.`)
 
     const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
-    ticket_update_data.sender_id = customer_id
     ticket_update_data.state_id = 222
     ticket_update_data.message_out = selectedByUser.ticketBody
     ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
-    userReplyRecord(ticket_update_data)
-
+    await userReplyRecord(ticket_update_data)
+    await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
   } catch (err) {
     console.log(err)
   }
@@ -265,7 +264,6 @@ async function update_ticket(ticketId, body, fileNames, override = false) {
     return null
   }
 }
-
 
 async function checkUserTickets(bot, msg, menuItem) {
   try {

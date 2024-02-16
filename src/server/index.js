@@ -1,10 +1,7 @@
 const Fastify = require('fastify')
-const fastifyStatic = require('@fastify/static')
 const cron = require('node-cron')
-const TelegramBot = require('node-telegram-bot-api')
 require('dotenv').config()
 const { buttonsConfig } = require('./modules/keyboard')
-const { cert } = require('./data/consts')
 const { users } = require('./users/users.model')
 const { handler } = require('./controllers/switcher')
 const { clientAdminMenuStarter } = require('./controllers/clientsAdmin')
@@ -14,11 +11,9 @@ const formController = require('./controllers/formController')
 const { usersStarterMenu } = require('./modules/common')
 const { isThisGroupId } = require('./modules/bot')
 const { execPgQuery } = require('./db/common')
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
-const globalBuffer = require('./globalBuffer')
+const { bot, globalBuffer } = require('./globalBuffer')
 const { checkReadyForReport } = require('./controllers/reportsController')
-const { reports } = require('./controllers/reportsMenu')
 
 const app = Fastify({
   trustProxy: true
@@ -27,8 +22,6 @@ const app = Fastify({
 const interConnectApp = Fastify({
   trustProxy: true
 })
-
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 
 const CLOSED_TICKET_SCAN_INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES) || 10
 

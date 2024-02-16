@@ -80,6 +80,15 @@ const buttonsConfig = {
     ]
   },
 
+  callTicketUpdate: {
+    title: 'Оберіть, будь ласка, дію:',
+    options: [{ resize_keyboard: true }],
+    buttons: [
+      [{ text: '☎︎ Відповідсти на додатковй запит', callback_data: '5_17' }],
+      [{ text: '↩️', callback_data: '3_3' }]
+    ]
+  },
+
   ticketApproval: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],
@@ -89,7 +98,6 @@ const buttonsConfig = {
       [{ text: '↩️', callback_data: '3_3' }]
     ]
   },
-
   clientAdminStarterButtons: {
     title: 'Оберіть, будь ласка, дію',
     options: [{ resize_keyboard: true }],

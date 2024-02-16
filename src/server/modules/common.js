@@ -162,9 +162,9 @@ async function ticketApprovalScene(ticketID, bot, ticketSubject, msg = null, tic
 
 async function ticketRemoveFromMenu(ticketID) {
   try {
-    const buttons = buttonsConfig["ticketApproval"].buttons;
+    const buttons = buttonsConfig["ticketApproval"].buttons
     for (const button of buttons) {
-      if (button[0].callback_data === '3_3') break;
+      if (button[0].callback_data === '3_3') break
       button[0].text = button[0].text.replace(` №_${ticketID.toString()}`, '')
     }
   } catch (err) {
