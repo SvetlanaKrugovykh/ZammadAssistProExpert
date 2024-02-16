@@ -42,7 +42,7 @@ async function callFeedBackMenu(chatId, ticket_id, message_in, urls_in_string) {
     const buttons = buttonsConfig["callTicketUpdate"].buttons
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
-      button[0].text = `☎︎ ${add} Відповідсти на додатковй запит `
+      button[0].text = `☎︎ ${add}. Відповісти на додатковй запит`
     }
     await bot.sendMessage(chatId, buttonsConfig["callTicketUpdate"].title, {
       reply_markup: {
