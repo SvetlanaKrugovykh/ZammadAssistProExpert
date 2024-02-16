@@ -1,5 +1,5 @@
 const { buttonsConfig } = require('../modules/keyboard')
-const globalBuffer = require('../globalBuffer')
+const { globalBuffer } = require('../globalBuffer')
 const { createReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {

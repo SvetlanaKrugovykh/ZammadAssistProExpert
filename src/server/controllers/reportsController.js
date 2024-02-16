@@ -1,7 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { createReport, getGroups } = require('../db/tgReportsService')
 const Calendar = require('telegram-inline-calendar')
-const globalBuffer = require('../globalBuffer')
+const { globalBuffer } = require('../globalBuffer')
 const { reports } = require('./reportsMenu')
 
 module.exports.checkReadyForReport = async function (bot, msg) {

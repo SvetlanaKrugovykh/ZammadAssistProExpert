@@ -2,7 +2,7 @@ const fs = require('fs')
 const util = require('util')
 const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
-const globalBuffer = require('../globalBuffer')
+const { globalBuffer } = require('../globalBuffer')
 const { _dayStart, _dayEnd } = require('../services/various')
 
 module.exports.isUsersHaveReportsRole = async function (chatId) {

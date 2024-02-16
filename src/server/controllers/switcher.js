@@ -10,7 +10,7 @@ const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
-const globalBuffer = require('../globalBuffer')
+const { globalBuffer } = require('../globalBuffer')
 const getNewRecord = require('../services/interConnect.service').getNewRecord
 
 const selectedByUser = {}
@@ -32,9 +32,10 @@ function getCallbackData(text) {
 async function handler(bot, msg, webAppUrl) {
   const data = getCallbackData(msg.text)
   const chatId = msg.chat.id
-  const adminUser = users.find(user => user.id === msg.chat.id)
-  if (!selectedByUser[chatId]) selectedByUser[chatId] = {}
-  console.log('The choise is:', data)
+  if (!selectedByUser?.[msg?.chat?.id]) selectedByUser[msg?.chat?.id] = {}
+  if (!globalBuffer?.[msg?.chat?.id]) globalBuffer[msg.chat.id] = {}
+  const adminUser = users.find(user => user.id === msg?.chat?.id)
+  console.log('The choise is:', data);
   switch (data) {
     case '0_2':
       await supportScene(bot, msg, false)
@@ -43,7 +44,6 @@ async function handler(bot, msg, webAppUrl) {
       await signUpForm(bot, msg, webAppUrl)
       break
     case '0_5':
-      selectedByUser[msg.chat.id] = {}
       await signUpOldForm(bot, msg)
       break
     case '0_10':
@@ -62,7 +62,6 @@ async function handler(bot, msg, webAppUrl) {
       }
       break
     case '2_1':
-      selectedByUser[msg.chat.id] = {}
       await ticketCreateScene(bot, msg)
       break
     case '2_2':
@@ -72,7 +71,6 @@ async function handler(bot, msg, webAppUrl) {
       await checkUserTickets(bot, msg, data)
       break
     case '2_5':
-      globalBuffer[msg.chat.id] = {}
       await reports(bot, msg)
       break
     case '3_1':
@@ -160,7 +158,6 @@ async function switchDynamicSceenes(bot, msg) {
     }
     if (msg.text.includes('📕') || msg.text.includes('☎︎')) {
       await showTicketInfo(bot, msg)
-      selectedByUser[msg.chat.id] = {}
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null
       selectedByUser[msg.chat.id].updatedTicketId = ticketID
