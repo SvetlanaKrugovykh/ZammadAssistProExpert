@@ -27,6 +27,7 @@ interConnectApp.listen({ port: process.env.PORT_FOR_CONNECT || 8003, host: HOST 
   if (err) {
     interConnectApp.log.error(err)
     console.error(err)
+    process.exit(1)
   }
   console.log(`${new Date()}:[inter-connect app] Service listening on ${address}`)
 })

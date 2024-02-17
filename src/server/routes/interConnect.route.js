@@ -5,10 +5,15 @@ module.exports = (fastify, _opts, done) => {
     method: 'POST',
     url: '/tickets/update/',
     handler: interConnectController.newRecord,
-    preHandler: [
-    ],
+    preHandler: [],
+  })
+
+  fastify.route({
+    method: 'POST',
+    url: '/tickets/data-request/',
+    handler: interConnectController.newRequest,
+    preHandler: [],
   })
 
   done()
 }
-

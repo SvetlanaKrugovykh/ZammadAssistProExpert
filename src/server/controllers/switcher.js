@@ -156,7 +156,7 @@ async function switchDynamicSceenes(bot, msg) {
       await ticketApprovalScene('', bot, '', msg, null, true)
       return
     }
-    if (msg.text.includes('📕') || msg.text.includes('☎︎')) {
+    if (msg.text.includes('📕') || msg.text.includes('☎︎') || msg.text.includes('🖐')) {
       await showTicketInfo(bot, msg)
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null

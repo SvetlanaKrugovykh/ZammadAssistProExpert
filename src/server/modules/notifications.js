@@ -28,7 +28,7 @@ async function getTicketArticles(ticketID) {
     const query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
     const values = [ticketID]
     const data = await execPgQuery(query, values, false, true)
-    return data[0]
+    return data[0] || null
   } catch (error) {
     console.error('Error of record new user data into the bot-database:', error)
   }

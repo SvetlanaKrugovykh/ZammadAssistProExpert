@@ -14,13 +14,17 @@ const { execPgQuery } = require('./db/common')
 const webAppUrl = 'https://' + process.env.WEB_APP_URL
 const { bot, globalBuffer } = require('./globalBuffer')
 const { checkReadyForReport } = require('./controllers/reportsController')
-
+const { cert } = require('./data/consts')
 const app = Fastify({
   trustProxy: true
 })
 
 const interConnectApp = Fastify({
-  trustProxy: true
+  trustProxy: true,
+  https: {
+    key: cert.key,
+    cert: cert.cert
+  }
 })
 
 const CLOSED_TICKET_SCAN_INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES) || 10

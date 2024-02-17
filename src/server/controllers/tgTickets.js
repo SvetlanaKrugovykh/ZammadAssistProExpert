@@ -11,6 +11,7 @@ const { fDateTime } = require('../services/various')
 const { userReplyRecord, sendReplyToCustomer } = require('../services/interConnect.service')
 const { getTicketData } = require('../modules/common')
 const { execPgQuery } = require('../db/common')
+const interConnectService = require('../services/interConnect.service')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -167,23 +168,39 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     }
     const ticketID = selectedByUser.updatedTicketId
     const ticketData = await getTicketData(ticketID)
-    const { customer_id } = ticketData
+    const { customer_id, owner_id } = ticketData
     const timestamp = fDateTime('uk-UA', new Date())
-    const comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
+    let comment = ''
+    const login = findUserById(owner_id).login
+
+    if (login === msg.chat.id) {
+      comment = `Надіслан запит Замовнику ${timestamp}: ${selectedByUser.ticketBody}`
+    } else {
+      comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
+    }
 
     const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
       return null
     }
-    await bot.sendMessage(msg.chat.id, `Дякую, зміни до Вашої заявки ${ticketID} внесено.`)
+    await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
 
-    const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
-    ticket_update_data.state_id = 222
-    ticket_update_data.message_out = selectedByUser.ticketBody
-    ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
-    await userReplyRecord(ticket_update_data)
-    await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
+    if (login === msg.chat.id) {
+      const msg_in = selectedByUser.ticketBody
+      const urls_in = selectedByUser?.ticketAttacmentFileNames || []
+      const body = {
+        "login": login, "ticket_id": ticketID, "state_id": 111, "message_in": msg_in, "sender_id": owner_id, "urls_in": urls_in
+      }
+      await interConnectService.newRecord(body)
+    } else {
+      const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
+      ticket_update_data.state_id = 222
+      ticket_update_data.message_out = selectedByUser.ticketBody
+      ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
+      await userReplyRecord(ticket_update_data)
+      await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
+    }
   } catch (err) {
     console.log(err)
   }
