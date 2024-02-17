@@ -8,8 +8,15 @@ module.exports.newRecord = async function (body) {
   try {
     const { ticket_id, sender_id, state_id, login, message_in, urls_in } = body
     const urls_in_string = urls_in.join(',')
-    const query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6 WHERE ticket_id=$7 AND state_id=100`
-    const values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
+    const data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=100 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticket_id], false)
+    let query = '', values = []
+    if (data.length) {
+      query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6 WHERE ticket_id=$7 AND state_id=100`
+      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
+    } else {
+      query = `INSERT INTO ticket_updates(state_id, ticket_id, sender_id, login, message_in, urls_in) VALUES($1, $2, $3, $4, $5, $6)`
+      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
+    }
     await execPgQuery(query, values, true)
     await callFeedBackMenu(login, ticket_id, message_in, urls_in_string)
     return true
