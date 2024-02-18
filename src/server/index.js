@@ -21,10 +21,10 @@ const app = Fastify({
 
 const interConnectApp = Fastify({
   trustProxy: true,
-  https: {
-    key: cert.key,
-    cert: cert.cert
-  }
+  // https: {
+  //   key: cert.key,     //TODO
+  //   cert: cert.cert
+  // }
 })
 
 const CLOSED_TICKET_SCAN_INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES) || 10
