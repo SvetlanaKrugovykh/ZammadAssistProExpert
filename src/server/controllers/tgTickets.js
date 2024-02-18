@@ -74,7 +74,7 @@ async function askForPicture(bot, msg, selectedByUser) {
     })
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
     const pictureFilePath = await bot.downloadFile(pictureFileId, process.env.DOWNLOAD_APP_PATH)
-    const pictureFileName = path.basename(pictureFilePath) + '.jpg'
+    const pictureFileName = path.basename(pictureFilePath)
     const pictureFullPath = path.join(process.env.DOWNLOAD_APP_PATH, pictureFileName)
     fs.renameSync(pictureFilePath, pictureFullPath)
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
