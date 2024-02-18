@@ -88,8 +88,10 @@ async function callFeedBackMenu(data) {
 }
 
 
-async function callRequestDataMenu(chatId, ticket_id) {
+async function callRequestDataMenu(login, ticket_id) {
   try {
+    const chatId = Number(login)
+    if (!(chatId > 0)) return
     await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Сформуйте запит за заявкою № ${ticket_id} ⚠️⚠️⚠️`)
     const add = ticket_id ? ` №_${ticket_id}` : ''
     const buttons = buttonsConfig["callTicketUpdate"].buttons
