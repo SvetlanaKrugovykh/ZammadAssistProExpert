@@ -161,6 +161,7 @@ async function switchDynamicSceenes(bot, msg) {
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null
       selectedByUser[msg.chat.id].updatedTicketId = ticketID
+      if (msg.text.includes('☎︎')) selectedByUser[msg.chat.id].customer_login = msg.chat.id
       await ticketUpdateScene(bot, msg, ticketID)
       return
     }

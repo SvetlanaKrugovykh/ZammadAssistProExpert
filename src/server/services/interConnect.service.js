@@ -10,15 +10,16 @@ module.exports.newRecord = async function (body) {
     const urls_in_string = urls_in.join(',')
     const data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=100 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticket_id], false)
     let query = '', values = []
-    if (data.length) {
-      query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6 WHERE ticket_id=$7 AND state_id=100`
-      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
+    if (data?.id) {
+      query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6 WHERE id=$7 AND state_id=100`
+      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string, data.id]
     } else {
       query = `INSERT INTO ticket_updates(state_id, ticket_id, sender_id, login, message_in, urls_in) VALUES($1, $2, $3, $4, $5, $6)`
       values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
     }
     await execPgQuery(query, values, true)
-    await callFeedBackMenu(login, ticket_id, message_in, urls_in_string)
+    const data_body = { chatId: login, ticket_id, message_in, urls_in_string }
+    await callFeedBackMenu(data_body)
     return true
   } catch (error) {
     console.error('Error executing commands:', error.message)
@@ -59,8 +60,9 @@ module.exports.userReplyRecord = async function (body) {
   }
 }
 
-async function callFeedBackMenu(chatId, ticket_id, message_in, urls_in_string) {
+async function callFeedBackMenu(data) {
   try {
+    const { chatId, ticket_id, message_in, urls_in_string } = data
     const urls = urls_in_string.split(',')
     await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} Необхідно: ${message_in} ⚠️⚠️⚠️`)
     urls.forEach(async (url_in) => {
@@ -112,7 +114,7 @@ module.exports.getNewRecord = async function (ticket_id, callFeebBack = false) {
   try {
     const data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticket_id], false)
     if (callFeebBack) {
-      callFeedBackMenu(data)
+      await callFeedBackMenu(data)
       return true
     }
     return data
@@ -128,9 +130,8 @@ module.exports.sendReplyToCustomer = async function (customer_id, ticketID, tick
     const user = await findUserById(customer_id)
     if (user) {
       const chatId = user.login
-      const urls = urls_out.split(',')
       await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} Відповідь: ${message_out} ⚠️⚠️⚠️`)
-      urls.forEach(async (url) => {
+      urls_out.forEach(async (url) => {
         await bot.sendMessage(chatId, url)
       })
       return true

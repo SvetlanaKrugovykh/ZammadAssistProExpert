@@ -171,9 +171,12 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     const { customer_id, owner_id } = ticketData
     const timestamp = fDateTime('uk-UA', new Date())
     let comment = ''
-    const login = findUserById(owner_id).login
+    const user_data = await findUserById(owner_id)
+    const owner_login = user_data.login
+    const customer_data = await findUserById(customer_id)
+    const login = customer_data.login
 
-    if (login === msg.chat.id) {
+    if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
       comment = `Надіслан запит Замовнику ${timestamp}: ${selectedByUser.ticketBody}`
     } else {
       comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
@@ -186,7 +189,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     }
     await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
 
-    if (login === msg.chat.id) {
+    if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
       const msg_in = selectedByUser.ticketBody
       const urls_in = selectedByUser?.ticketAttacmentFileNames || []
       const body = {
@@ -195,6 +198,10 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       await interConnectService.newRecord(body)
     } else {
       const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
+      if (ticket_update_data?.id) {
+        console.log(`Update ticket: ${ticketID} error: no data sting 202 interConnectService`)
+        return null
+      }
       ticket_update_data.state_id = 222
       ticket_update_data.message_out = selectedByUser.ticketBody
       ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
