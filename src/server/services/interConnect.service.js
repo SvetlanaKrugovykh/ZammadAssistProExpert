@@ -127,13 +127,17 @@ module.exports.getNewRecord = async function (ticket_id, callFeebBack = false) {
 module.exports.sendReplyToCustomer = async function (customer_id, ticketID, ticket_update_data) {
   const { message_out, urls_out } = ticket_update_data
   try {
-    const user = await findUserById(customer_id)
+    const ticketData = await getTicketData(ticketID)
+    const { owner_id } = ticketData
+    const user = await findUserById(owner_id)
     if (user) {
-      const chatId = user.login
-      await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} Відповідь: ${message_out} ⚠️⚠️⚠️`)
-      urls_out.forEach(async (url) => {
-        await bot.sendMessage(chatId, url)
-      })
+      const chatId = Number(user.login)
+      if (chatId > 0) {
+        await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} Відповідь: ${message_out} ⚠️⚠️⚠️`)
+        urls_out.forEach(async (url) => {
+          await bot.sendMessage(chatId, url)
+        })
+      }
       return true
     }
   } catch (error) {

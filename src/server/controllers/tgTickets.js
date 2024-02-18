@@ -198,7 +198,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       await interConnectService.newRecord(body)
     } else {
       const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
-      if (ticket_update_data?.id) {
+      if (!ticket_update_data?.id) {
         console.log(`Update ticket: ${ticketID} error: no data sting 202 interConnectService`)
         return null
       }
