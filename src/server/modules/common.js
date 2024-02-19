@@ -34,9 +34,10 @@ async function guestMenu(bot, msg, guestStartButtons) {
   })
 }
 
-async function registeredUserMenu(bot, msg, standardStartButtons) {
+async function registeredUserMenu(bot, msg, isStart = true) {
   const isReports = await isUsersHaveReportsRole(msg.chat.id)
-  await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
+
+  if (isStart) await bot.sendMessage(msg.chat.id, `Вітаю та бажаю приємного спілкування!, ${msg.chat.first_name} ${msg.chat.last_name}!`)
   let menuName = "standardStartButtons"
   if (isReports) menuName = "standardStartButtonsPlus"
 
