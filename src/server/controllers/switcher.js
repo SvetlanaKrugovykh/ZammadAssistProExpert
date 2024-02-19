@@ -157,7 +157,7 @@ async function switchDynamicSceenes(bot, msg) {
       return
     }
     if (msg.text.includes('📕') || msg.text.includes('☎︎') || msg.text.includes('🖐')) {
-      await showTicketInfo(bot, msg)
+      await showTicketInfo(bot, msg, true)
       const ticketID = msg.text.match(/\d+/)?.[0]
       if (!ticketID) return null
       selectedByUser[msg.chat.id].updatedTicketId = ticketID

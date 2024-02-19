@@ -1,5 +1,5 @@
 
-const { buttonsConfig } = require('../modules/keyboard')
+const { buttonsConfig, standardStartButtons } = require('../modules/keyboard')
 const { inputLineScene } = require('../controllers/inputLine')
 const fs = require('fs')
 const path = require('path')
@@ -12,6 +12,7 @@ const { userReplyRecord, sendReplyToCustomer } = require('../services/interConne
 const { getTicketData } = require('../modules/common')
 const { execPgQuery } = require('../db/common')
 const interConnectService = require('../services/interConnect.service')
+const { registeredUserMenu } = require('../modules/common')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -183,11 +184,15 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     }
 
     const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
+    selectedByUser.updatedTicketId = null
+
     if (updatedTicket === null) {
-      await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
-      return null
+      bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.`, { reply_markup: { remove_keyboard: true } })
+      registeredUserMenu(bot, msg, standardStartButtons)
     }
-    await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
+
+    bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`, { reply_markup: { remove_keyboard: true } })
+    registeredUserMenu(bot, msg, standardStartButtons)
 
     if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
       const msg_in = selectedByUser.ticketBody

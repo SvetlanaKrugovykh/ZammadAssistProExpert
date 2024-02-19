@@ -5,7 +5,7 @@ const { execPgQuery } = require('../db/common')
 const { getTicketData, ticketRemoveFromMenu, usersStarterMenu } = require('../modules/common')
 const { fDateTime, pendingTimeInIntervalMin } = require('../services/various')
 
-async function showTicketInfo(bot, msg) {
+async function showTicketInfo(bot, msg, isRequest = false) {
   try {
     const ticketID = msg.text.match(/\d+/)?.[0]
     if (!ticketID) return null
@@ -15,9 +15,10 @@ async function showTicketInfo(bot, msg) {
     const owner = await findOwnerById(ticket.owner_id)
     const article = await getTicketArticles(ticketID)
     const article_body = article ? article?.body : ''
+    const content = isRequest ? 'Коментар Виконавця' : 'Зміст'
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
     if (ticket.state_id === 1) owner_PIB = 'Відсутній'
-    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n Зміст: \n${article_body.toString()}`)
+    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n ${content}: \n${article_body.toString()}`)
   } catch (err) {
     console.log(err)
   }
