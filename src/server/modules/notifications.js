@@ -103,4 +103,4 @@ async function ticketReturn(bot, msg) {
   await usersStarterMenu(bot, msg)
 }
 
-module.exports = { ticketApprove, ticketReturn, showTicketInfo }
+module.exports = { ticketApprove, ticketReturn, showTicketInfo, getTicketArticles }

@@ -3,6 +3,7 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { bot } = require('../globalBuffer')
 const { findUserById } = require('../db/tgUsersService')
 const { getTicketData } = require('../modules/common')
+const { getTicketArticles } = require('../modules/notifications')
 
 module.exports.newRecord = async function (body) {
   try {
@@ -32,11 +33,35 @@ module.exports.newRequest = async function (body) {
     const { currentPageURL } = body
     const psrts = currentPageURL.split('/')
     const ticket_id = psrts[psrts.length - 1]
+    if (!(ticket_id > 0)) return false
+    const ticket = await getTicketData(ticket_id)
+    if (!ticket) return null
+    const user_data = await findUserById(ticket.customer_id)
+    const article = await getTicketArticles(ticket_id)
+    const article_body = article ? article?.body : ''
+    const message_in = `Додатковий запит від користувача: ${article_body}`
+    const urls_in = ['123']
+    const data_body = {
+      login: user_data.login,
+      ticket_id,
+      state_id: 111,
+      message_in,
+      sender_id: ticket.customer_id,
+      urls_in
+    }
+    await module.exports.newRecord(data_body)
+    return true
+  } catch (error) {
+    console.error('Error executing commands:', error.message)
+    return false
+  }
+}
+
+async function oldVersionOfnewRequest(ticket_id) {
+  try {
     const query = `INSERT INTO ticket_updates(state_id, ticket_id) VALUES($1, $2)`
     const values = [100, ticket_id]
     await execPgQuery(query, values, true)
-    const ticket = await getTicketData(ticket_id)
-    if (!ticket) return null
     const user_data = await findUserById(ticket.owner_id)
     await callRequestDataMenu(user_data.login, ticket_id)
     return true
