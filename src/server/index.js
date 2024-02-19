@@ -23,7 +23,8 @@ const interConnectApp = Fastify({
   trustProxy: true,
   https: {
     key: cert.key,
-    cert: cert.cert
+    cert: cert.cert,
+    ca: cert.ca
   }
 })
 
