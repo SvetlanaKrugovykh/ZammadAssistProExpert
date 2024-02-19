@@ -348,7 +348,7 @@ async function checkUserTickets(bot, msg, menuItem) {
         }
       })
     } else {
-      await bot.sendMessage(chatId, 'На даний момент немає заявок з обраним статусом.')
+      await bot.sendMessage(chatId, 'На цей час немає заявок з обраним статусом.')
     }
 
   } catch (err) {

@@ -18,7 +18,7 @@ async function showTicketInfo(bot, msg, isRequest = false) {
     const content = isRequest ? 'Коментар Виконавця' : 'Зміст'
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
     if (ticket.state_id === 1) owner_PIB = 'Відсутній'
-    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n ${content}: \n${article_body.toString()}`)
+    await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n <b>${content}</b>: \n${article_body.toString()}`, { parse_mode: 'HTML' })
   } catch (err) {
     console.log(err)
   }
