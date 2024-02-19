@@ -187,11 +187,11 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     selectedByUser.updatedTicketId = null
 
     if (updatedTicket === null) {
-      bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.`, { reply_markup: { remove_keyboard: true } })
+      await bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.\n`, { parse_mode: 'HTML' })
       registeredUserMenu(bot, msg, standardStartButtons)
     }
 
-    bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`, { reply_markup: { remove_keyboard: true } })
+    await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
     registeredUserMenu(bot, msg, standardStartButtons)
 
     if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
