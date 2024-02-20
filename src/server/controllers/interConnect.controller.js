@@ -17,6 +17,7 @@ module.exports.newRecord = async function (request, _reply) {
 
 module.exports.newRequest = async function (request, _reply) {
   try {
+    console.log('newRequest', request?.body)
     const body = request.body
     const message = await interConnectService.newRequest(body)
     if (!message) {
