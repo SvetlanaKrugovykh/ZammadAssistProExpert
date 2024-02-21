@@ -14,8 +14,8 @@ async function showTicketInfo(bot, msg, isRequest = false) {
     const { id, title, number, created_at, updated_at } = ticket
     const owner = await findOwnerById(ticket.owner_id)
     const article = await getTicketArticles(ticketID)
-    const article_body = article ? article?.body : ''
-    const content = isRequest ? 'Коментар Виконавця' : 'Зміст'
+    const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
+    const content = isRequest ? `Коментар Виконавця ${article?.from}` : 'Зміст'
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
     if (ticket.state_id === 1) owner_PIB = 'Відсутній'
     await bot.sendMessage(msg.chat.id, `№_${id}: ${title}\nНомер заявки: ${number}\nВиконавець: ${owner_PIB}\nДата створення: ${fDateTime('uk-UA', created_at)}\nДата останнього оновлення: ${fDateTime('uk-UA', updated_at)}\n <b>${content}</b>: \n${article_body.toString()}`, { parse_mode: 'HTML' })
@@ -29,7 +29,8 @@ async function getTicketArticles(ticketID) {
     const query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
     const values = [ticketID]
     const data = await execPgQuery(query, values, false, true)
-    return data[0] || null
+    const article = data.length > 0 ? data[0] : null
+    return article
   } catch (error) {
     console.error('Error of record new user data into the bot-database:', error)
   }
