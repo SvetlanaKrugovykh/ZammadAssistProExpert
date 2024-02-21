@@ -39,8 +39,8 @@ module.exports.newRequest = async function (body) {
     const user_data = await findUserById(ticket.customer_id)
     const article = await getTicketArticles(ticket_id)
     const article_body = article ? article?.body : ''
-    const message_in = `Додатковий запит від користувача: ${article_body}`
-    const urls_in = ['123']
+    const message_in = article_body
+    const urls_in = [message_in]
     const data_body = {
       login: user_data.login,
       ticket_id,

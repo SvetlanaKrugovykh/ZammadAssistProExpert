@@ -165,7 +165,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       return
     }
     if (!selectedByUser?.ticketBody) {
-      await bot.sendMessage(msg.chat.id, 'Не заповнен коментар. Операцію скасовано\n', { parse_mode: 'HTML' })
+      await bot.sendMessage(msg.chat.id, 'Ви не внесли дані, аби ми мали можливість оновити заявку.\n', { parse_mode: 'HTML' })
       return
     }
     const ticketID = selectedByUser.updatedTicketId
