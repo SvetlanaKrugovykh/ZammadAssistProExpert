@@ -11,12 +11,14 @@ $(window).on('load', function () {
 
     buttonRequest.css({
       'margin-top': '25px',
-      'background-color': 'orange',
-      'сolor': 'grey',
-      'width': '97px',
-      'height': '60px',
+      'background-color': '#cc553a',
+      'color': '#FFFFFF',
+      'width': '197px',
+      'height': '80px',
       'position': 'relative',
-      'display': 'flex'
+      'display': 'flex',
+      'justify-content': 'center',
+      'align-items': 'center',
     });
 
     buttonRequest.on('click', function () {
@@ -35,7 +37,7 @@ $(window).on('load', function () {
         body: JSON.stringify(requestData)
       };
 
-      fetch('https://name:8001/inter-connect/tickets/data-request/', options)
+      fetch('https://NAME:8001/inter-connect/tickets/data-request/', options)
         .then(response => response.json())
         .then(data => {
           console.log(data);
