@@ -1,0 +1,14 @@
+/opt/zammad/config/initializers/content_security_policy.rb 
+ 
+ string 44
+-- 
+  policy.default_src :self, :ws, :wss, 'https://images.zammad.com'
+  
+++
+   policy.default_src :self, :ws, :wss, 'https://images.zammad.com', 'https://???:8001'
+ 
+
+========================================================
+
+# find / -name "application.js"
+/opt/zammad/app/assets/javascripts/application.js
