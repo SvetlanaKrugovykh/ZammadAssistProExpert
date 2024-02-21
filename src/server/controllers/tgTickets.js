@@ -13,6 +13,7 @@ const { getTicketData } = require('../modules/common')
 const { execPgQuery } = require('../db/common')
 const interConnectService = require('../services/interConnect.service')
 const { registeredUserMenu } = require('../modules/common')
+const { update_ticket } = require('../modules/update_ticket')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -144,7 +145,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       return null
     }
     if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
-      const updatedTicket = await module.exports.update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
+      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
       if (updatedTicket === null) {
         await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
         return null
@@ -183,7 +184,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
     }
 
-    const updatedTicket = await module.exports.update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
+    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
     selectedByUser.updatedTicketId = null
 
     if (updatedTicket === null) {
