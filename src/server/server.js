@@ -1,6 +1,7 @@
 require('dotenv').config()
 const { app, assistApiServer, interConnectApp } = require('./index')
 const HOST = process.env.HOST || '127.0.0.1'
+const HOST_FOR_CONNECT = process.env.HOST_FOR_CONNECT || '127.0.0.1'
 const updateTables = require('./db/tablesUpdate').updateTables
 
 updateTables()
@@ -23,7 +24,7 @@ assistApiServer.listen({ port: process.env.PORT_FOR_ASSIST_API || 8002, host: HO
 })
 
 
-interConnectApp.listen({ port: process.env.PORT_FOR_CONNECT || 8003, host: HOST }, (err, address) => {
+interConnectApp.listen({ port: process.env.PORT_FOR_CONNECT || 8003, host: HOST_FOR_CONNECT }, (err, address) => {
   if (err) {
     interConnectApp.log.error(err)
     console.error(err)
