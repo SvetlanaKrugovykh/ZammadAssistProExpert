@@ -35,7 +35,7 @@ $(window).on('load', function () {
         body: JSON.stringify(requestData)
       };
 
-      fetch('https://servicedesk.lotok.ua:8001/inter-connect/tickets/data-request/', options)
+      fetch('https://name:8001/inter-connect/tickets/data-request/', options)
         .then(response => response.json())
         .then(data => {
           console.log(data);
