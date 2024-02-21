@@ -1,5 +1,6 @@
 const https = require('https')
 require('dotenv').config()
+const fs = require('fs')
 
 module.exports.update_ticket = async function (ticketId, body, fileNames, override = false) {
 
