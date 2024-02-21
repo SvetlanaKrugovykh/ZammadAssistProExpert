@@ -92,7 +92,7 @@ async function callFeedBackMenu(data) {
     const urls = urls_in_string.split(',')
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
-    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно додатново надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
+    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
     urls.forEach(async (url_in) => {
       await bot.sendMessage(chatId, url_in)
     })
