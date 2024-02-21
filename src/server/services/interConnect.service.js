@@ -41,7 +41,7 @@ module.exports.newRequest = async function (body) {
     if (!article) return false
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
-    const urls_in = [message_in, `від ${article?.from}`]
+    const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
     const data_body = {
       login: user_data.login,
       ticket_id,
