@@ -1,6 +1,7 @@
 const https = require('https')
 require('dotenv').config()
 const fs = require('fs')
+const axios = require('axios')
 
 module.exports.update_ticket = async function (ticketId, body, fileNames, override = false) {
 
@@ -10,7 +11,7 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
 
   for (const element of fileNames) {
     const file_name = element.replace(process.env.DOWNLOAD_APP_PATH, '')
-    const old_file_name = `${process.env.DOWNLOAD_APP_PATH}${slash}${file_name}`
+    const old_file_name = `${process.env.DOWNLOAD_APP_PATH}${file_name}`
     const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
     const newFilePath = `${newCatalog}${slash}${file_name}`
 
