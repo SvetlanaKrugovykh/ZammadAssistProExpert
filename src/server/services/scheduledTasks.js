@@ -1,5 +1,5 @@
 const { execPgQuery } = require('../db/common')
-const { update_ticket } = require('../controllers/tgTickets')
+const { update_ticket } = require('../modules/update_ticket')
 const { findUserById, findOwnerById } = require('../db/tgUsersService')
 const { ticketApprovalScene, getTicketData, getArticleData, cleanTicketsFromMenu } = require('../modules/common')
 const { fDateTime, pendingTimeInDaysSec, _dayEndTimeInDaysSec } = require('../services/various')

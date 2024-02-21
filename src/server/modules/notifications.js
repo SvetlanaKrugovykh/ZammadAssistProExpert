@@ -1,4 +1,4 @@
-const { update_ticket } = require('../controllers/tgTickets')
+const { update_ticket } = require('../modules/update_ticket')
 const { findOwnerById } = require('../db/tgUsersService')
 const { saveChangesToTicket } = require('../services/scheduledTasks')
 const { execPgQuery } = require('../db/common')
