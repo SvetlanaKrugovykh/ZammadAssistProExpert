@@ -106,6 +106,7 @@ async function getAndSendAttachmentUrlById(data, attachmentId) {
     })
     console.log(`File ${fileFullName} saved`)
     await bot.sendDocument(data.chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })
+    fs.unlinkSync(fileFullName)
     return true
   } catch (err) {
     console.log(err)
@@ -142,7 +143,7 @@ module.exports.userReplyRecord = async function (body) {
 
 async function callFeedBackMenu(data) {
   try {
-    const { chatId, ticket_id, message_in, urls_in, urls_in_string } = data
+    const { chatId, ticket_id, message_in, urls_in } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
     await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
