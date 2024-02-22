@@ -105,8 +105,7 @@ async function getAndSendAttachmentUrlById(data, attachmentId) {
       stream.on('error', reject);
     })
     console.log(`File ${fileFullName} saved`)
-    const chatId = 701079281 //TODO
-    await bot.sendDocument(chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })  //data.chatId //TODO
+    await bot.sendDocument(data.chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })
     fs.unlinkSync(fileFullName)
     return true
   } catch (err) {
@@ -144,10 +143,7 @@ module.exports.userReplyRecord = async function (body) {
 
 async function callFeedBackMenu(data) {
   try {
-    const { ticket_id, message_in, urls_in } = data   //chatId, //TODO
-    const chatId = 701079281 //TODO
-
-
+    const { chatId, ticket_id, message_in, urls_in } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
     await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
