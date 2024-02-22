@@ -242,7 +242,7 @@ async function getAndSendAttachmentToPerformer(chatId, ticketId, urls_out) {
       const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
       console.log('getAndSendAttachmentToPerformer', filePathWithSingleSlash)
       if (fs.existsSync(filePathWithSingleSlash)) {
-        await bot.sendDocument(chatId, filePathWithSingleSlash, { filename: filePathWithSingleSlash, caption: filePathWithSingleSlash })
+        await bot.sendDocument(chatId, filePathWithSingleSlash, { caption: url_out })
       }
     }
     return true
