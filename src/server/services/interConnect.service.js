@@ -40,6 +40,7 @@ module.exports.newRequest = async function (body) {
     const article = await getTicketArticles(ticket_id)
     if (!article) return false
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
+    if (article_body.includes('Отримана відповідь від Замовника')) return false
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
     const data_body = {
