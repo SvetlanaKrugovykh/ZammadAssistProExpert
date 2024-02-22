@@ -1,5 +1,6 @@
 const axios = require('axios')
 const https = require('https')
+const fs = require('fs')
 const { execPgQuery } = require('../db/common')
 const { buttonsConfig } = require('../modules/keyboard')
 const { bot } = require('../globalBuffer')
@@ -86,13 +87,26 @@ async function getAttachmentIds(article_id) {
 }
 
 async function getAndSendAttachmentUrlById(data, attachmentId) {
-  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN }
   const httpsAgent = new https.Agent({ rejectUnauthorized: false })
   const url = `${process.env.ZAMMAD_API_URL}/ticket_attachment/${data.ticket_id}/${data.article_id}/${attachmentId.id}`
   try {
-    const response = await axios.get(url, { headers, httpsAgent })
-    const attachmentData = Buffer.from(response.data, 'binary')
-    await bot.sendDocument(data.chatId, attachmentData, { caption: attachmentId.fileName })
+    const response = await axios.get(url, { headers, httpsAgent, responseType: 'stream' })
+    if (!response.data) return
+
+    const TEMP_CATALOG = process.env.TEMP_CATALOG
+    if (!fs.existsSync(TEMP_CATALOG)) fs.mkdirSync(TEMP_CATALOG, { recursive: true })
+    const fileFullName = `${TEMP_CATALOG}${attachmentId.fileName}`
+
+    const stream = fs.createWriteStream(fileFullName)
+    response.data.pipe(stream)
+    await new Promise((resolve, reject) => {
+      stream.on('finish', resolve);
+      stream.on('error', reject);
+    })
+    console.log(`File ${fileFullName} saved`)
+    await bot.sendDocument(data.chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })
+    return true
   } catch (err) {
     console.log(err)
   }
