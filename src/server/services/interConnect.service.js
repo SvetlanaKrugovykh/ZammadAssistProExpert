@@ -1,13 +1,16 @@
+const axios = require('axios')
+const https = require('https')
 const { execPgQuery } = require('../db/common')
 const { buttonsConfig } = require('../modules/keyboard')
 const { bot } = require('../globalBuffer')
 const { findUserById } = require('../db/tgUsersService')
 const { getTicketData } = require('../modules/common')
 const { getTicketArticles } = require('../modules/notifications')
+require('dotenv').config()
 
 module.exports.newRecord = async function (body) {
   try {
-    const { ticket_id, sender_id, state_id, login, message_in, urls_in } = body
+    const { ticket_id, article_id, sender_id, state_id, login, message_in, urls_in } = body
     const urls_in_string = urls_in.join(',')
     const data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=100 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticket_id], false)
     let query = '', values = []
@@ -19,7 +22,7 @@ module.exports.newRecord = async function (body) {
       values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
     }
     await execPgQuery(query, values, true)
-    const data_body = { chatId: login, ticket_id, message_in, urls_in_string }
+    const data_body = { chatId: login, ticket_id, article_id, message_in, urls_in, urls_in_string }
     await callFeedBackMenu(data_body)
     return true
   } catch (error) {
@@ -42,10 +45,16 @@ module.exports.newRequest = async function (body) {
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     if (article_body.includes('Отримана відповідь від Замовника')) return false
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
+    const article_id = article?.id
+    const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
+    attachmentIds.forEach(async (attachId) => {
+      urls_in.push(attachId)
+    })
     const data_body = {
       login: user_data.login,
       ticket_id,
+      article_id,
       state_id: 111,
       message_in,
       sender_id: ticket.customer_id,
@@ -56,6 +65,36 @@ module.exports.newRequest = async function (body) {
   } catch (error) {
     console.error('Error executing commands:', error.message)
     return false
+  }
+}
+
+
+async function getAttachmentIds(article_id) {
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+  const url = `${process.env.ZAMMAD_API_URL}/ticket_articles/${article_id}`
+  try {
+    const response = await axios.get(url, { headers, httpsAgent })
+    const article = response.data
+    if (!article?.attachments) return []
+    const articleIds = article.attachments.map(attachment => ({ id: attachment.id, fileName: attachment.filename }))
+    return articleIds
+  } catch (err) {
+    console.log(err)
+    return []
+  }
+}
+
+async function getAndSendAttachmentUrlById(data, attachmentId) {
+  const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false })
+  const url = `${process.env.ZAMMAD_API_URL}/ticket_attachment/${data.ticket_id}/${data.article_id}/${attachmentId.id}`
+  try {
+    const response = await axios.get(url, { headers, httpsAgent })
+    const attachmentData = Buffer.from(response.data, 'binary')
+    await bot.sendDocument(data.chatId, attachmentData, { caption: attachmentId.fileName })
+  } catch (err) {
+    console.log(err)
   }
 }
 
@@ -89,14 +128,17 @@ module.exports.userReplyRecord = async function (body) {
 
 async function callFeedBackMenu(data) {
   try {
-    const { chatId, ticket_id, message_in, urls_in_string } = data
-    const urls = urls_in_string.split(',')
+    const { chatId, ticket_id, message_in, urls_in, urls_in_string } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
     await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
-    urls.forEach(async (url_in) => {
-      await bot.sendMessage(chatId, url_in)
-    })
+    for (const url_in of urls_in) {
+      if (typeof url_in === 'string') {
+        await bot.sendMessage(chatId, url_in)
+      } else if (typeof url_in === 'object') {
+        await getAndSendAttachmentUrlById(data, url_in)
+      }
+    }
     const add = ticket_id ? ` №_${ticket_id}` : ''
     const buttons = buttonsConfig["callTicketUpdate"].buttons
     for (const button of buttons) {

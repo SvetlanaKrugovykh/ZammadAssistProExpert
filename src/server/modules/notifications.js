@@ -29,6 +29,7 @@ async function getTicketArticles(ticketID) {
     const query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
     const values = [ticketID]
     const data = await execPgQuery(query, values, false, true)
+    if (!data) return null
     const article = data.length > 0 ? data[0] : null
     return article
   } catch (error) {
