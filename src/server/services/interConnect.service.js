@@ -216,20 +216,35 @@ module.exports.sendReplyToCustomer = async function (customer_id, ticketID, tick
   const { message_out, urls_out } = ticket_update_data
   try {
     const ticketData = await getTicketData(ticketID)
-    const { owner_id } = ticketData
+    const { title, owner_id } = ticketData
     const user = await findUserById(owner_id)
     if (user) {
       const chatId = Number(user.login)
       if (chatId > 0) {
-        await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} Відповідь: ${message_out} ⚠️⚠️⚠️`)
-        urls_out.forEach(async (url) => {
-          await bot.sendMessage(chatId, url)
-        })
+        await bot.sendMessage(chatId, `⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} на тему ${title} Відповідь: <b>${message_out}</b> ⚠️`, { parse_mode: 'HTML' })
+        await getAndSendAttachmentToPerformer(chatId, urls_out)
       }
       return true
     }
   } catch (error) {
     console.error('Error executing commands:', error.message)
     return false
+  }
+}
+
+
+async function getAndSendAttachmentToPerformer(data, urls_out) {
+  try {
+    for (const url_out of urls_out) {
+      const filePath = path.join(process.env.DOWNLOAD_APP_PATH, url_out)
+      const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
+      console.log('getAndSendAttachmentToPerformer', filePathWithSingleSlash)
+      if (fs.existsSync(filePathWithSingleSlash)) {
+        await bot.sendDocument(data.chatId, fileFullName, { filename: filePathWithSingleSlash, caption: filePathWithSingleSlash })
+      }
+    }
+    return true
+  } catch (err) {
+    console.log(err)
   }
 }
