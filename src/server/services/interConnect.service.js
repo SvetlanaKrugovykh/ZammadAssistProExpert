@@ -105,7 +105,8 @@ async function getAndSendAttachmentUrlById(data, attachmentId) {
       stream.on('error', reject);
     })
     console.log(`File ${fileFullName} saved`)
-    await bot.sendDocument(data.chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })
+    const chatId = 701079281 //TODO
+    await bot.sendDocument(chatId, fileFullName, { filename: attachmentId.fileName, caption: attachmentId.fileName })  //data.chatId //TODO
     fs.unlinkSync(fileFullName)
     return true
   } catch (err) {
@@ -143,7 +144,10 @@ module.exports.userReplyRecord = async function (body) {
 
 async function callFeedBackMenu(data) {
   try {
-    const { chatId, ticket_id, message_in, urls_in } = data
+    const { ticket_id, message_in, urls_in } = data   //chatId, //TODO
+    const chatId = 701079281 //TODO
+
+
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
     await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
@@ -222,7 +226,7 @@ module.exports.sendReplyToCustomer = async function (customer_id, ticketID, tick
       const chatId = Number(user.login)
       if (chatId > 0) {
         await bot.sendMessage(chatId, `⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} на тему ${title} Відповідь: <b>${message_out}</b> ⚠️`, { parse_mode: 'HTML' })
-        await getAndSendAttachmentToPerformer(chatId, urls_out)
+        await getAndSendAttachmentToPerformer(chatId, ticketID, urls_out)
       }
       return true
     }
@@ -233,14 +237,16 @@ module.exports.sendReplyToCustomer = async function (customer_id, ticketID, tick
 }
 
 
-async function getAndSendAttachmentToPerformer(data, urls_out) {
+async function getAndSendAttachmentToPerformer(chatId, ticketId, urls_out) {
   try {
+    const slash = process.env.SLASH
     for (const url_out of urls_out) {
-      const filePath = path.join(process.env.DOWNLOAD_APP_PATH, url_out)
+      const Catalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
+      const filePath = `${Catalog}${slash}${url_out}`
       const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
       console.log('getAndSendAttachmentToPerformer', filePathWithSingleSlash)
       if (fs.existsSync(filePathWithSingleSlash)) {
-        await bot.sendDocument(data.chatId, fileFullName, { filename: filePathWithSingleSlash, caption: filePathWithSingleSlash })
+        await bot.sendDocument(chatId, filePathWithSingleSlash, { filename: filePathWithSingleSlash, caption: filePathWithSingleSlash })
       }
     }
     return true
