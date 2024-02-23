@@ -146,7 +146,7 @@ async function callFeedBackMenu(data) {
     const { chatId, ticket_id, message_in, urls_in } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
-    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title} необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
+    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title}, необхідно надати <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
     for (const url_in of urls_in) {
       if (typeof url_in === 'string') {
         await bot.sendMessage(chatId, url_in)
@@ -158,7 +158,7 @@ async function callFeedBackMenu(data) {
     const buttons = buttonsConfig["callTicketUpdate"].buttons
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
-      button[0].text = `☎︎ ${add}. Відповісти на додатковй запит`
+      button[0].text = `☎︎ ${add}. Відповісти на додатковий запит`
     }
     await bot.sendMessage(chatId, buttonsConfig["callTicketUpdate"].title, {
       reply_markup: {
