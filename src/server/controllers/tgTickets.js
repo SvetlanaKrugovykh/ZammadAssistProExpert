@@ -90,11 +90,24 @@ async function askForPicture(bot, msg, selectedByUser) {
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
-    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
+    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл или натисніть /cancel, щоб скасувати:')
+
     const attachmentMsg = await new Promise((resolve, reject) => {
-      bot.once('document', resolve)
-      bot.once('text', () => reject(new Error('Invalid input')))
+      bot.once('message', (message) => {
+        if (message.document) {
+          resolve(message)
+        } else if (message.text.toLowerCase() !== '/cancel') {
+          reject(new Error('Invalid input'))
+        }
+      })
+
+      bot.once('text', (cancelMessage) => {
+        if (cancelMessage.text.toLowerCase() === '/cancel') {
+          reject(new Error('Action canceled'))
+        }
+      })
     })
+
     const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
     return selectedByUser_
   } catch (err) {
