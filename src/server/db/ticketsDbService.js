@@ -5,7 +5,18 @@ async function getTickets(state_id, customer_id, chatId) {
   let query = ''
   try {
     if (state_id === 333) {
-      query = `SELECT t.* FROM tickets t JOIN(SELECT ticket_id FROM ticket_updates WHERE login = '${chatId.toString()}' AND state_id = 111) tu ON t.id = tu.ticket_id ORDER BY created_at DESC LIMIT 10`
+      query = `
+  SELECT t.*, tu.subject AS article_id 
+  FROM tickets t 
+  JOIN (
+    SELECT ticket_id, subject, created_at 
+    FROM ticket_updates 
+    WHERE login = '${chatId.toString()}' AND state_id = 111
+  ) tu 
+  ON t.id = tu.ticket_id 
+  ORDER BY tu.created_at DESC 
+  LIMIT 10
+`;
       values = []
     } else {
       query = 'SELECT * FROM tickets WHERE customer_id = $1 AND state_id = $2 ORDER BY created_at DESC LIMIT 10'
@@ -21,3 +32,4 @@ async function getTickets(state_id, customer_id, chatId) {
 }
 
 module.exports = { getTickets }
+

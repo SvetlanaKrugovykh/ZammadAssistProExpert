@@ -17,11 +17,11 @@ module.exports.newRecord = async function (body) {
     const data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=100 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticket_id], false)
     let query = '', values = []
     if (data?.id) {
-      query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6 WHERE id=$7 AND state_id=100`
-      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string, data.id]
+      query = `UPDATE ticket_updates SET state_id=$1, ticket_id=$2, sender_id=$3, login=$4, message_in=$5, urls_in=$6, subject=$7 WHERE id=$8 AND state_id=100`
+      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string, article_id, data.id]
     } else {
-      query = `INSERT INTO ticket_updates(state_id, ticket_id, sender_id, login, message_in, urls_in) VALUES($1, $2, $3, $4, $5, $6)`
-      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string]
+      query = `INSERT INTO ticket_updates(state_id, ticket_id, sender_id, login, message_in, urls_in, subject) VALUES($1, $2, $3, $4, $5, $6, $7)`
+      values = [state_id, ticket_id, sender_id, login, message_in, urls_in_string, article_id]
     }
     await execPgQuery(query, values, true)
     const data_body = { chatId: login, ticket_id, article_id, message_in, urls_in, urls_in_string }
@@ -48,7 +48,7 @@ module.exports.newRequest = async function (body) {
     if (article_body.includes('Отримана відповідь від Замовника')) return false
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
-    const comment = `.Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}.`
+    const comment = `.Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
     if (!article_body.includes(' відправлено замовнику ')) addArticleComment(article, comment)
     const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
@@ -145,7 +145,7 @@ module.exports.userReplyRecord = async function (body) {
 
 async function callFeedBackMenu(data) {
   try {
-    const { chatId, ticket_id, message_in, urls_in } = data
+    const { chatId, ticket_id, message_in, urls_in, article_id } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
     await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title}, необхідно надати <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
@@ -160,7 +160,7 @@ async function callFeedBackMenu(data) {
     const buttons = buttonsConfig["callTicketUpdate"].buttons
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
-      button[0].text = `☎︎ ${add}. Відповісти на додатковий запит`
+      button[0].text = `☎︎ ${add}. Відповісти на додатковий запит. Код запиту:${article_id}`
     }
     await bot.sendMessage(chatId, buttonsConfig["callTicketUpdate"].title, {
       reply_markup: {
