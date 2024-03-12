@@ -8,12 +8,13 @@ const { fDateTime, pendingTimeInIntervalMin } = require('../services/various')
 async function showTicketInfo(bot, msg, isRequest = false) {
   try {
     const ticketID = msg.text.match(/\d+/)?.[0]
+    const articleID = msg.text.match(/Код запиту:(\d+)/)?.[1]
     if (!ticketID) return null
     const ticket = await getTicketData(ticketID)
     if (!ticket) return null
     const { id, title, number, created_at, updated_at } = ticket
     const owner = await findOwnerById(ticket.owner_id)
-    const article = await getTicketArticles(ticketID)
+    const article = await getTicketArticles(ticketID, articleID)
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     const content = isRequest ? `Коментар Виконавця ${article?.from}` : 'Зміст'
     let owner_PIB = owner ? `${owner.firstname} ${owner.lastname}` : ticket.owner_id.toString()
@@ -24,10 +25,18 @@ async function showTicketInfo(bot, msg, isRequest = false) {
   }
 }
 
-async function getTicketArticles(ticketID) {
+async function getTicketArticles(ticketID, articleID = '') {
   try {
-    const query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
-    const values = [ticketID]
+    let query = ''
+    let values = []
+
+    if (Number(articleID) > 0) {
+      query = 'SELECT * FROM ticket_articles WHERE id = $1 ORDER BY updated_at DESC LIMIT 1'
+      values = [articleID]
+    } else {
+      query = 'SELECT * FROM ticket_articles WHERE ticket_id = $1 ORDER BY updated_at DESC LIMIT 1'
+      values = [ticketID]
+    }
     const data = await execPgQuery(query, values, false, true)
     if (!data) return null
     const article = data.length > 0 ? data[0] : null
