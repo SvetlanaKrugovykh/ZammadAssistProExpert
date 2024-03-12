@@ -124,9 +124,18 @@ async function askForAttachment(bot, msg, selectedByUser) {
 
 async function addTicketAttachment(bot, msg, selectedByUser) {
   try {
-    const fileId = msg.document.file_id
-    const fileExtension = path.extname(msg.document.file_name)
-    const fileName = `attachment_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
+    let fileId, fileName
+    if (msg.document) {
+      fileId = msg.document.file_id
+      fileName = msg.document.file_name
+    } else if (msg.photo) {
+      fileId = msg.photo.file_id
+      fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
+    } else {
+      throw new Error('Invalid message type')
+    }
+
+    const fileExtension = path.extname(fileName)
     const filePath = path.join(process.env.DOWNLOAD_APP_PATH, fileName)
     const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
     const file = fs.createWriteStream(filePathWithSingleSlash)
