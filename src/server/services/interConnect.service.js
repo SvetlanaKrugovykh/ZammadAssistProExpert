@@ -5,8 +5,9 @@ const { execPgQuery } = require('../db/common')
 const { buttonsConfig } = require('../modules/keyboard')
 const { bot } = require('../globalBuffer')
 const { findUserById } = require('../db/tgUsersService')
-const { getTicketData } = require('../modules/common')
+const { getTicketData, addArticleComment } = require('../modules/common')
 const { getTicketArticles } = require('../modules/notifications')
+const { fDateTime } = require('../services/various')
 require('dotenv').config()
 
 module.exports.newRecord = async function (body) {
@@ -47,6 +48,8 @@ module.exports.newRequest = async function (body) {
     if (article_body.includes('Отримана відповідь від Замовника')) return false
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
+    const comment = `.Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}.`
+    if (!article_body.includes(' відправлено замовнику ')) addArticleComment(article, comment)
     const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
     attachmentIds.forEach(async (attachId) => {
@@ -68,7 +71,6 @@ module.exports.newRequest = async function (body) {
     return false
   }
 }
-
 
 async function getAttachmentIds(article_id) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }

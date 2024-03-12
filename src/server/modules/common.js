@@ -4,6 +4,7 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { findUserById } = require('../db/tgUsersService')
 const { isBotBlocked } = require('../modules/bot')
 const { isUsersHaveReportsRole } = require('../db/tgReportsService')
+const { execPgQuery } = require('../db/common')
 require('dotenv').config()
 //#region mainScrnes
 
@@ -77,6 +78,17 @@ async function getArticleData(ticketID, text) {
       if (article.body.includes(text) && compareTimeInMin(article.updated_at)) return true
     }
     return false
+  } catch (err) {
+    console.log(err)
+    return null
+  }
+}
+
+async function addArticleComment(article, text) {
+  try {
+    const query = `UPDATE ticket_articles SET subject = '${article.subject + text}' WHERE id = '${article.id}'`
+    await execPgQuery(query, [], true)
+    return true
   } catch (err) {
     console.log(err)
     return null
@@ -193,5 +205,5 @@ async function cleanTicketsFromMenu() {
 
 module.exports = {
   getTicketData, getArticleData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu,
-  usersStarterMenu, registeredUserMenu
+  usersStarterMenu, registeredUserMenu, addArticleComment
 }
