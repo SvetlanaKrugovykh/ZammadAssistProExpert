@@ -70,15 +70,25 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
 async function askForPicture(bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
+
     const pictureMsg = await new Promise((resolve, reject) => {
       bot.once('photo', resolve)
-      bot.once('text', () => reject(new Error('Invalid input')))
+      bot.once('document', () => reject(new Error('Invalid input')))
+      bot.once('text', (cancelMessage) => {
+        if (cancelMessage.text.toLowerCase() === '/cancel') {
+          reject(new Error('Action canceled'))
+        } else {
+          reject(new Error('Invalid input'))
+        }
+      })
     })
+
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
     const pictureFilePath = await bot.downloadFile(pictureFileId, process.env.DOWNLOAD_APP_PATH)
     const pictureFileName = path.basename(pictureFilePath)
     const pictureFullPath = path.join(process.env.DOWNLOAD_APP_PATH, pictureFileName)
     fs.renameSync(pictureFilePath, pictureFullPath)
+
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
     return selectedByUser_
@@ -87,6 +97,9 @@ async function askForPicture(bot, msg, selectedByUser) {
     return {}
   }
 }
+
+
+
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
@@ -128,6 +141,8 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     if (msg.document) {
       fileId = msg.document.file_id
       fileName = msg.document.file_name
+      const fileExtension = path.extname(fileName)
+      fileName = `file_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
     } else if (msg.photo) {
       fileId = msg.photo.file_id
       fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
@@ -135,7 +150,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       throw new Error('Invalid message type')
     }
 
-    const fileExtension = path.extname(fileName)
+
     const filePath = path.join(process.env.DOWNLOAD_APP_PATH, fileName)
     const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
     const file = fs.createWriteStream(filePathWithSingleSlash)
@@ -147,6 +162,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     })
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
+    console.log(`addTicketAttachment: `, fileName)
     return newSelectedByUser
   } catch (err) {
     console.log(err)
