@@ -96,6 +96,12 @@ async function askForAttachment(bot, msg, selectedByUser) {
       bot.once('message', (message) => {
         if (message.document) {
           resolve(message)
+        } else if (message.photo) {
+          const largestPhoto = message.photo.reduce((prev, current) => {
+            return (prev.width * prev.height > current.width * current.height) ? prev : current
+          })
+          message.photo = largestPhoto
+          resolve(message)
         } else if (message.text.toLowerCase() !== '/cancel') {
           reject(new Error('Invalid input'))
         }
