@@ -86,7 +86,7 @@ async function getArticleData(ticketID, text) {
 
 async function addArticleComment(article, text) {
   try {
-    const query = `UPDATE ticket_articles SET subject = '${article.subject + text}' WHERE id = '${article.id}'`
+    const query = `UPDATE ticket_articles SET subject = '${article.subject + text}' WHERE id = ${article.id}`
     await execPgQuery(query, [], true)
     return true
   } catch (err) {
