@@ -160,6 +160,9 @@ async function ticketRegistration(bot, msg, selectedByUser) {
 
 async function ticketUpdates(bot, msg, selectedByUser) {
   try {
+    console.log(`ticketUpdates selectedByUser.updatedTicketId`, selectedByUser?.updatedTicketId)
+    console.log(`ticketUpdates selectedByUser.ticketBody`, selectedByUser?.ticketBody)
+
     if (!selectedByUser?.updatedTicketId) {
       await bot.sendMessage(msg.chat.id, 'Немає обраної заявки для оновлення\n', { parse_mode: 'HTML' })
       return
