@@ -8,6 +8,7 @@ const { findUserById } = require('../db/tgUsersService')
 const { getTicketData, addArticleComment } = require('../modules/common')
 const { getTicketArticles } = require('../modules/notifications')
 const { fDateTime } = require('../services/various')
+const { update_ticket } = require('../modules/update_ticket')
 require('dotenv').config()
 
 module.exports.newRecord = async function (body) {
@@ -46,9 +47,11 @@ module.exports.newRequest = async function (body) {
     if (!article) return false
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     if (article_body.includes('Отримана відповідь від Замовника')) return false
+    if (article_body.includes(' відправлено замовнику ')) return false
     const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
     const comment = `.Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
+    await writeTimeToTicket(ticket, message_in + comment)
     if (!article_body.includes(' відправлено замовнику ')) addArticleComment(article, comment)
     const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
@@ -70,6 +73,16 @@ module.exports.newRequest = async function (body) {
     console.error('Error executing commands:', error.message)
     return false
   }
+}
+
+async function writeTimeToTicket(ticket, comment) {
+  try {
+    await update_ticket(ticket.id, comment, [], false)
+  } catch (error) {
+    console.error('Error writeTimeToTicket:', error.message)
+    return false
+  }
+
 }
 
 async function getAttachmentIds(article_id) {
@@ -115,20 +128,6 @@ async function getAndSendAttachmentUrlById(data, attachmentId) {
   }
 }
 
-async function oldVersionOfnewRequest(ticket_id) {
-  try {
-    const query = `INSERT INTO ticket_updates(state_id, ticket_id) VALUES($1, $2)`
-    const values = [100, ticket_id]
-    await execPgQuery(query, values, true)
-    const user_data = await findUserById(ticket.owner_id)
-    await callRequestDataMenu(user_data.login, ticket_id)
-    return true
-  } catch (error) {
-    console.error('Error executing commands:', error.message)
-    return false
-  }
-}
-
 module.exports.userReplyRecord = async function (body) {
   try {
     const { ticket_id, sender_id, state_id, login, message_out, urls_out, id } = body
@@ -161,31 +160,6 @@ async function callFeedBackMenu(data) {
     for (const button of buttons) {
       if (button[0].callback_data === '3_3') break
       button[0].text = `☎︎ ${add}. Відповісти на додатковий запит. Код запиту:${article_id}`
-    }
-    await bot.sendMessage(chatId, buttonsConfig["callTicketUpdate"].title, {
-      reply_markup: {
-        keyboard: buttons,
-        resize_keyboard: true,
-        one_time_keyboard: false
-      }
-    })
-  } catch (error) {
-    console.error('Error executing commands:', error.message)
-    return false
-  }
-}
-
-
-async function callRequestDataMenu(login, ticket_id) {
-  try {
-    const chatId = Number(login)
-    if (!(chatId > 0)) return
-    await bot.sendMessage(chatId, `⚠️⚠️⚠️ Увага! Сформуйте запит за заявкою № ${ticket_id} ⚠️⚠️⚠️`)
-    const add = ticket_id ? ` №_${ticket_id}` : ''
-    const buttons = buttonsConfig["callTicketUpdate"].buttons
-    for (const button of buttons) {
-      if (button[0].callback_data === '3_3') break
-      button[0].text = `🖐 ${add}. Сформувати запит користувачу за заявкою № ${ticket_id}`
     }
     await bot.sendMessage(chatId, buttonsConfig["callTicketUpdate"].title, {
       reply_markup: {
