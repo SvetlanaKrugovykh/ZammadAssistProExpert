@@ -62,6 +62,7 @@ async function handler(bot, msg, webAppUrl) {
       }
       break
     case '2_1':
+      selectedByUser[chatId] = {}
       await ticketCreateScene(bot, msg)
       break
     case '2_2':
