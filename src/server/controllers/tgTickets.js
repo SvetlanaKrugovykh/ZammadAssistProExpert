@@ -16,6 +16,7 @@ const { execPgQuery } = require('../db/common')
 const interConnectService = require('../services/interConnect.service')
 const { registeredUserMenu } = require('../modules/common')
 const { update_ticket } = require('../modules/update_ticket')
+const { globalBuffer } = require('../globalBuffer')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -201,6 +202,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     }
 
     await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
+    globalBuffer[msg.chat.id].ticketCreated = true
   } catch (err) {
     console.log(err)
   }
@@ -239,6 +241,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
 
     const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
     selectedByUser.updatedTicketId = null
+    globalBuffer[msg.chat.id].TicketUpdated = true
 
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.\n`, { parse_mode: 'HTML' })

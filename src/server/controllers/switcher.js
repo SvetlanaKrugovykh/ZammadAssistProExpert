@@ -99,12 +99,14 @@ async function handler(bot, msg, webAppUrl) {
       selectedByUser[chatId] = await askForAttachment(bot, msg, selectedByUser[chatId])
       break
     case '5_4':
+      globalBuffer[chatId].TicketCreated = false
       await ticketRegistration(bot, msg, selectedByUser[chatId])
-      selectedByUser[chatId] = {}
+      if (globalBuffer[chatId]?.TicketCreated) selectedByUser[chatId] = {}
       break
     case '5_14':
+      globalBuffer[chatId].TicketUpdated = false
       await ticketUpdates(bot, msg, selectedByUser[chatId])
-      selectedByUser[chatId] = {}
+      if (globalBuffer[chatId]?.TicketUpdated) selectedByUser[chatId] = {}
       break
     case '5_5':
       selectedByUser[chatId] = await askForPicture(bot, msg, selectedByUser[chatId])
