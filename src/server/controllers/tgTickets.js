@@ -85,8 +85,6 @@ async function askForPicture(bot, msg, selectedByUser) {
       })
     })
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
-    const ticket_ID = selectedByUser.updatedTicketId || null
-
     const dirPath = process.env.DOWNLOAD_APP_PATH
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
@@ -102,16 +100,6 @@ async function askForPicture(bot, msg, selectedByUser) {
       file.on('finish', resolve)
       file.on('error', reject)
     })
-
-    if (ticket_ID) {
-      const subDirPath = path.join(dirPath, ticket_ID.toString())
-      if (!fs.existsSync(subDirPath)) {
-        fs.mkdirSync(subDirPath, { recursive: true })
-      }
-
-      const pictureFullPath = path.join(subDirPath, pictureFileName)
-      fs.renameSync(pictureFilePath, pictureFullPath)
-    }
 
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
@@ -176,8 +164,6 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     } else {
       throw new Error('Invalid message type')
     }
-    const ticket_ID = selectedByUser.updatedTicketId || null
-
     const dirPath = process.env.DOWNLOAD_APP_PATH
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
@@ -188,16 +174,6 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     const file = fs.createWriteStream(filePath)
 
     await pipeline(fileStream, file)
-    if (ticket_ID) {
-      const subDirPath = path.join(dirPath, ticket_ID.toString())
-      if (!fs.existsSync(subDirPath)) {
-        fs.mkdirSync(subDirPath, { recursive: true })
-      }
-
-      const fileFullPath = path.join(subDirPath, fileName)
-      fs.renameSync(filePath, fileFullPath)
-    }
-
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
 
