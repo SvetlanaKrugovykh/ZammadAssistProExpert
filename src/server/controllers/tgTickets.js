@@ -4,6 +4,8 @@ const { inputLineScene } = require('../controllers/inputLine')
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
+const util = require('util')
+const pipeline = util.promisify(require('stream').pipeline)
 const { getTickets } = require('../db/ticketsDbService')
 const { findUserById } = require('../db/tgUsersService')
 const https = require('https')
@@ -103,11 +105,11 @@ async function askForPicture(bot, msg, selectedByUser) {
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
-    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл или натисніть /cancel, щоб скасувати:')
+    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл або натисніть /cancel, щоб скасувати:')
 
     const attachmentMsg = await new Promise((resolve, reject) => {
       bot.once('message', (message) => {
-        if (message.document) {
+        if (message?.document) {
           resolve(message)
         } else if (message.photo) {
           const largestPhoto = message.photo.reduce((prev, current) => {
@@ -138,7 +140,7 @@ async function askForAttachment(bot, msg, selectedByUser) {
 async function addTicketAttachment(bot, msg, selectedByUser) {
   try {
     let fileId, fileName
-    if (msg.document) {
+    if (msg?.document) {
       fileId = msg.document.file_id
       fileName = msg.document.file_name
       const fileExtension = path.extname(fileName)
@@ -150,18 +152,20 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       throw new Error('Invalid message type')
     }
 
+    const dirPath = process.env.DOWNLOAD_APP_PATH
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
+    }
 
-    const filePath = path.join(process.env.DOWNLOAD_APP_PATH, fileName)
-    const filePathWithSingleSlash = filePath.replace(/\/\//g, '/')
-    const file = fs.createWriteStream(filePathWithSingleSlash)
+    const filePath = path.join(dirPath, fileName)
     const fileStream = await bot.getFileStream(fileId)
-    fileStream.pipe(file)
-    await new Promise((resolve, reject) => {
-      file.on('finish', resolve)
-      file.on('error', reject)
-    })
+    const file = fs.createWriteStream(filePath)
+
+    await pipeline(fileStream, file)
+
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
+
     console.log(`addTicketAttachment: `, fileName)
     return newSelectedByUser
   } catch (err) {
@@ -172,11 +176,11 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
 
 async function ticketRegistration(bot, msg, selectedByUser) {
   try {
-    if (!selectedByUser?.ticketTitle) {
+    if (!selectedByUser?.ticketTitle || selectedByUser?.ticketTitle.includes('🔵 Ввести зміст (такий')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнена тема заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    if (!selectedByUser?.ticketBody) {
+    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🟣 Ввести змістовну тему')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнен зміст заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
@@ -211,7 +215,9 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Немає обраної заявки для оновлення\n', { parse_mode: 'HTML' })
       return
     }
-    if (!selectedByUser?.ticketBody) {
+    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🟣 Ввести змістовну тему')
+      || selectedByUser?.ticketBody.includes('🔵 Ввести коментар')
+      || selectedByUser?.ticketBody.includes('📌 Оновити заявку')) {
       await bot.sendMessage(msg.chat.id, 'Ви не внесли дані, аби ми мали можливість оновити заявку.\n', { parse_mode: 'HTML' })
       return
     }

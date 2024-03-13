@@ -100,9 +100,11 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '5_4':
       await ticketRegistration(bot, msg, selectedByUser[chatId])
+      selectedByUser[chatId] = {}
       break
     case '5_14':
       await ticketUpdates(bot, msg, selectedByUser[chatId])
+      selectedByUser[chatId] = {}
       break
     case '5_5':
       selectedByUser[chatId] = await askForPicture(bot, msg, selectedByUser[chatId])

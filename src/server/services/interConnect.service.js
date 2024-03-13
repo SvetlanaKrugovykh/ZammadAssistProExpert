@@ -48,9 +48,9 @@ module.exports.newRequest = async function (body) {
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     if (article_body.includes('Отримана відповідь від Замовника')) return false
     if (article_body.includes(' відправлено замовнику ')) return false
-    const message_in = article_body ? `: ${article_body}` : 'Додатковий запит відсутній'
+    const message_in = article_body ? ` ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
-    const comment = `.Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
+    const comment = ` Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
     await writeTimeToTicket(ticket, message_in + comment)
     if (!article_body.includes(' відправлено замовнику ')) addArticleComment(article, comment)
     const attachmentIds = await getAttachmentIds(article_id)
