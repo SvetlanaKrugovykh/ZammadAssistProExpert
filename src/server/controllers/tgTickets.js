@@ -76,13 +76,6 @@ async function askForPicture(bot, msg, selectedByUser) {
 
     const pictureMsg = await new Promise((resolve, reject) => {
       bot.once('photo', resolve)
-      bot.once('text', (cancelMessage) => {
-        if (cancelMessage.text.toLowerCase() === '/cancel') {
-          reject(new Error('Action canceled'))
-        } else {
-          reject(new Error('Invalid input'))
-        }
-      })
     })
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
     const dirPath = process.env.DOWNLOAD_APP_PATH
