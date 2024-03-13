@@ -147,7 +147,7 @@ async function callFeedBackMenu(data) {
     const { chatId, ticket_id, message_in, urls_in, article_id } = data
     const ticket_data = await getTicketData(ticket_id)
     const { title } = ticket_data
-    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title}, необхідно надати <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
+    await bot.sendMessage(chatId, `⚠️ Увага! Аби ми мали можливість оперативно допомогти із заявкою № ${ticket_id} на тему ${title}, необхідно надати: <b>${message_in}</b> ⚠️`, { parse_mode: 'HTML' })
     for (const url_in of urls_in) {
       if (typeof url_in === 'string') {
         await bot.sendMessage(chatId, url_in)
