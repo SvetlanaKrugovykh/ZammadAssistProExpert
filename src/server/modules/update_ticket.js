@@ -17,12 +17,18 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
 
     try {
       await fs.promises.mkdir(newCatalog, { recursive: true })
+      await fs.promises.access(old_file_name, fs.constants.F_OK)
       await fs.promises.rename(old_file_name, newFilePath)
       console.log(`File ${element} moved to ${newFilePath}`)
     } catch (err) {
-      console.log(err)
+      if (err.code === 'ENOENT') {
+        console.log(`File ${old_file_name} does not exist`)
+      } else {
+        console.log(err)
+      }
       continue
     }
+
     const fileUrl = `${process.env.DOWNLOAD_URL}${ticketId}/${file_name}`
     bodyWithAttachments += `\n${fileUrl}`
   }
