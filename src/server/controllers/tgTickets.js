@@ -76,7 +76,6 @@ async function askForPicture(bot, msg, selectedByUser) {
 
     const pictureMsg = await new Promise((resolve, reject) => {
       bot.once('photo', resolve)
-      bot.once('document', () => reject(new Error('Invalid input')))
       bot.once('text', (cancelMessage) => {
         if (cancelMessage.text.toLowerCase() === '/cancel') {
           reject(new Error('Action canceled'))
@@ -85,11 +84,16 @@ async function askForPicture(bot, msg, selectedByUser) {
         }
       })
     })
-
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
-    const pictureFilePath = await bot.downloadFile(pictureFileId, process.env.DOWNLOAD_APP_PATH)
+
+    const dirPath = process.env.DOWNLOAD_APP_PATH
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
+    }
+
+    const pictureFilePath = await bot.downloadFile(pictureFileId, dirPath)
     const pictureFileName = path.basename(pictureFilePath)
-    const pictureFullPath = path.join(process.env.DOWNLOAD_APP_PATH, pictureFileName)
+    const pictureFullPath = path.join(dirPath, pictureFileName)
     fs.renameSync(pictureFilePath, pictureFullPath)
 
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
@@ -100,9 +104,6 @@ async function askForPicture(bot, msg, selectedByUser) {
     return {}
   }
 }
-
-
-
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
