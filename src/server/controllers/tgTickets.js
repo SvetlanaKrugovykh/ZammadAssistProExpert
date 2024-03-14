@@ -73,6 +73,8 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
 async function askForPicture(bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
+    const dirPath = process.env.DOWNLOAD_APP_PATH
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
 
     const pictureMsg = await new Promise((resolve, reject) => {
       bot.once('photo', (photoMsg) => {
@@ -85,8 +87,6 @@ async function askForPicture(bot, msg, selectedByUser) {
     })
     if (pictureMsg.photo && pictureMsg.photo.length > 0) {
       const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
-      const dirPath = process.env.DOWNLOAD_APP_PATH
-      if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
 
       const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
       const pictureFilePath = path.join(dirPath, pictureFileName)
@@ -101,6 +101,7 @@ async function askForPicture(bot, msg, selectedByUser) {
 
       const fileNames = selectedByUser.ticketAttacmentFileNames || []
       const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
+      console.log(`added TicketPicture: `, pictureFileName)
       return selectedByUser_
     } else {
       console.log('No photo found in message')
@@ -114,7 +115,7 @@ async function askForPicture(bot, msg, selectedByUser) {
 
 async function askForAttachment(bot, msg, selectedByUser) {
   try {
-    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл або натисніть /cancel, щоб скасувати:')
+    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
     const attachmentMsg = await new Promise((resolve, reject) => {
       bot.once('message', (message) => {
@@ -126,22 +127,9 @@ async function askForAttachment(bot, msg, selectedByUser) {
           })
           message.photo = largestPhoto
           resolve(message)
-        } else if (message.text.toLowerCase() !== '/cancel') {
-          console.log('Invalid input')
-        }
-      })
-
-      bot.once('text', (cancelMessage) => {
-        if (cancelMessage.text.toLowerCase() === '/cancel') {
-          reject(new Error('Action canceled'))
         }
       })
     })
-
-    const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
-    }
 
     const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
     return selectedByUser_
@@ -154,6 +142,8 @@ async function askForAttachment(bot, msg, selectedByUser) {
 
 async function addTicketAttachment(bot, msg, selectedByUser) {
   try {
+    const dirPath = process.env.DOWNLOAD_APP_PATH
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
     let fileId, fileName
     if (msg?.document) {
       fileId = msg.document.file_id
@@ -164,11 +154,8 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       fileId = msg.photo.file_id
       fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
     } else {
-      throw new Error('Invalid message type')
-    }
-    const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
+      console.log('Invalid file attachment input')
+      return selectedByUser
     }
 
     const filePath = path.join(dirPath, fileName)
@@ -179,7 +166,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     const fileNames = selectedByUser.ticketAttacmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
 
-    console.log(`addTicketAttachment: `, fileName)
+    console.log(`added TicketAttachment: `, fileName)
     return newSelectedByUser
   } catch (err) {
     console.log(err)
