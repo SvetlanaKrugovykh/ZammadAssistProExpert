@@ -75,28 +75,37 @@ async function askForPicture(bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
 
     const pictureMsg = await new Promise((resolve, reject) => {
-      bot.once('photo', resolve)
+      bot.once('photo', (photoMsg) => {
+        if (photoMsg && photoMsg.photo) {
+          resolve(photoMsg)
+        } else {
+          console.log('No photo found in message')
+        }
+      })
     })
-    const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
-    const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
+    if (pictureMsg.photo && pictureMsg.photo.length > 0) {
+      const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
+      const dirPath = process.env.DOWNLOAD_APP_PATH
+      if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
+
+      const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
+      const pictureFilePath = path.join(dirPath, pictureFileName)
+
+      const fileStream = await bot.getFileStream(pictureFileId)
+      const file = fs.createWriteStream(pictureFilePath)
+      await new Promise((resolve, reject) => {
+        fileStream.pipe(file)
+        file.on('finish', resolve)
+        file.on('error', reject)
+      })
+
+      const fileNames = selectedByUser.ticketAttacmentFileNames || []
+      const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
+      return selectedByUser_
+    } else {
+      console.log('No photo found in message')
+      return selectedByUser
     }
-
-    const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
-    const pictureFilePath = path.join(dirPath, pictureFileName)
-
-    const fileStream = await bot.getFileStream(pictureFileId)
-    const file = fs.createWriteStream(pictureFilePath)
-    await new Promise((resolve, reject) => {
-      fileStream.pipe(file)
-      file.on('finish', resolve)
-      file.on('error', reject)
-    })
-
-    const fileNames = selectedByUser.ticketAttacmentFileNames || []
-    const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
-    return selectedByUser_
   } catch (err) {
     console.log(err)
     return {}
