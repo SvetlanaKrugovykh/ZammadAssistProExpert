@@ -89,7 +89,7 @@ async function askForPicture(bot, msg, selectedByUser) {
       const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
 
       const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
-      const pictureFilePath = path.join(dirPath, pictureFileName)
+      const pictureFilePath = path.join(dirPath, pictureFileName).replace(/\/\//g, '/')
 
       const fileStream = await bot.getFileStream(pictureFileId)
       const file = fs.createWriteStream(pictureFilePath)
@@ -158,7 +158,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       return selectedByUser
     }
 
-    const filePath = path.join(dirPath, fileName)
+    const filePath = path.join(dirPath, fileName).replace(/\/\//g, '/')
     const fileStream = await bot.getFileStream(fileId)
     const file = fs.createWriteStream(filePath)
 
@@ -197,6 +197,9 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       if (updatedTicket === null) {
         await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
         return null
+      } else {
+        console.log(`Ticket ${ticket.id} updated with attachments`)
+        selectedByUser.ticketAttacmentFileNames = []
       }
     }
 
@@ -245,6 +248,9 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.\n`, { parse_mode: 'HTML' })
       registeredUserMenu(bot, msg, false)
+    } else {
+      console.log(`Ticket ${ticketID} updated with attachments`)
+      selectedByUser.ticketAttacmentFileNames = []
     }
 
     await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
