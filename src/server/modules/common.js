@@ -195,5 +195,5 @@ async function cleanTicketsFromMenu() {
 
 module.exports = {
   getTicketData, getArticleData, ticketApprovalScene, ticketRemoveFromMenu, cleanTicketsFromMenu,
-  usersStarterMenu, registeredUserMenu, addArticleComment
+  usersStarterMenu, registeredUserMenu
 }
