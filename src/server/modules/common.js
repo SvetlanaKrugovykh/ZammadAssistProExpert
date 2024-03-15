@@ -84,16 +84,6 @@ async function getArticleData(ticketID, text) {
   }
 }
 
-async function addArticleComment(article, text) {
-  try {
-    const query = `UPDATE ticket_articles SET subject = '${article.subject + text}' WHERE id = ${article.id}`
-    await execPgQuery(query, [], true)
-    return true
-  } catch (err) {
-    console.log(err)
-    return null
-  }
-}
 
 function compareTimeInMin(updated_at) {
   let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11

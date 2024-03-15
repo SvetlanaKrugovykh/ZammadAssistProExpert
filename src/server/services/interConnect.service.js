@@ -52,7 +52,6 @@ module.exports.newRequest = async function (body) {
     const article_id = article?.id
     const comment = ` Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
     await writeTimeToTicket(ticket, message_in + comment)
-    if (!article_body.includes(' відправлено замовнику ')) addArticleComment(article, comment)
     const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
     attachmentIds.forEach(async (attachId) => {
