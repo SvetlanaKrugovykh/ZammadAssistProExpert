@@ -248,9 +248,9 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     if (updatedTicket === null) {
       await bot.sendMessage(msg.chat.id, `Під час додавання вкладень до заявки №_${ticketID} виникла помилка. Операцію скасовано.\n`, { parse_mode: 'HTML' })
       registeredUserMenu(bot, msg, false)
+      return
     } else {
       console.log(`Ticket ${ticketID} updated with attachments`)
-      selectedByUser.ticketAttacmentFileNames = []
     }
 
     await bot.sendMessage(msg.chat.id, `Дякую, зміни до заявки ${ticketID} внесено.`)
@@ -267,7 +267,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       const ticket_update_data = await execPgQuery(`SELECT * FROM ticket_updates WHERE state_id=111 AND ticket_id=$1 ORDER BY updated_at DESC LIMIT 1`, [ticketID], true)
       if (!ticket_update_data?.id) {
         console.log(`Update ticket: ${ticketID} error: no data sting 202 interConnectService`)
-        return null
+        return
       }
       ticket_update_data.state_id = 222
       ticket_update_data.message_out = selectedByUser.ticketBody
@@ -275,6 +275,9 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       await userReplyRecord(ticket_update_data)
       await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
     }
+
+    selectedByUser.ticketAttacmentFileNames = []
+
   } catch (err) {
     console.log(err)
   }
