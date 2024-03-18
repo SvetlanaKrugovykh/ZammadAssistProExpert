@@ -10,6 +10,7 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
   const slash = process.env.SLASH
 
   for (const element of fileNames) {
+    console.log(`file element: ${element}`)
     const file_name = element.replace(process.env.DOWNLOAD_APP_PATH, '')
     const old_file_name = `${process.env.DOWNLOAD_APP_PATH}${file_name}`.replace(/\/\//g, '/')
     const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
