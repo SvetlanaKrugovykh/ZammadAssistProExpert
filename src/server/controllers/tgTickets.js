@@ -57,7 +57,7 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
     if (menuItem === '5_2') inputLenghth = 2
     const txtCommand = await inputLineScene(bot, msg)
 
-    if (txtCommand.length < 7) {
+    if (txtCommand.length < inputLenghth) {
       await bot.sendMessage(msg.chat.id, 'Незрозуміле введення. Операцію скасовано\n', { parse_mode: 'HTML' })
       return selectedByUser
     }
