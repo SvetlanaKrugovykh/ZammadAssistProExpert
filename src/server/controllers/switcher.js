@@ -11,7 +11,7 @@ const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('.
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
 const { globalBuffer } = require('../globalBuffer')
-const getNewRecord = require('../services/interConnect.service').getNewRecord
+
 
 const selectedByUser = {}
 
@@ -31,10 +31,23 @@ function getCallbackData(text) {
 
 async function handler(bot, msg, webAppUrl) {
   const data = getCallbackData(msg.text)
-  const chatId = msg.chat.id
-  if (!selectedByUser?.[msg?.chat?.id]) selectedByUser[msg?.chat?.id] = {}
-  if (!globalBuffer?.[msg?.chat?.id]) globalBuffer[msg.chat.id] = {}
-  const adminUser = users.find(user => user.id === msg?.chat?.id)
+  const chatId = msg?.chat?.id
+  if (!chatId) return
+
+  let selected_ = null
+  if (!selectedByUser[chatId]) selectedByUser[chatId] = {}
+  if (!globalBuffer[chatId]) globalBuffer[chatId] = {}
+
+  if (globalBuffer[chatId]?.TicketCreated) {
+    selectedByUser[chatId] = {}
+    globalBuffer[chatId].TicketCreated = false
+  }
+  if (globalBuffer[chatId]?.TicketUpdated) {
+    selectedByUser[chatId] = {}
+    globalBuffer[chatId].TicketUpdated = false
+  }
+
+  const adminUser = users.find(user => user.id === chatId)
   console.log('The choise is:', data);
   switch (data) {
     case '0_2':
@@ -49,7 +62,8 @@ async function handler(bot, msg, webAppUrl) {
     case '0_10':
     case '0_11':
     case '0_12':
-      selectedByUser[chatId] = await usersTextInput(bot, msg, data, selectedByUser[chatId])
+      selected_ = await usersTextInput(bot, msg, data, selectedByUser[chatId])
+      if (selected_) selectedByUser[chatId] = selected_
       break
     case '0_13':
       await usersRegistration(bot, msg, selectedByUser[chatId])
@@ -90,26 +104,36 @@ async function handler(bot, msg, webAppUrl) {
       })
       break
     case '5_1':
-      selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+      selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+      if (selected_) selectedByUser[chatId] = selected_
       break
     case '5_2':
-      selectedByUser[chatId] = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+      selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+      if (selected_) selectedByUser[chatId] = selected_
       break
     case '5_3':
-      selectedByUser[chatId] = await askForAttachment(bot, msg, selectedByUser[chatId])
+      selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
+      if (selected_) selectedByUser[chatId] = selected_
       break
     case '5_4':
       globalBuffer[chatId].TicketCreated = false
       await ticketRegistration(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketCreated) selectedByUser[chatId] = {}
+      if (globalBuffer[chatId]?.TicketCreated) {
+        selectedByUser[chatId] = {}
+        globalBuffer[chatId].TicketCreated = false
+      }
       break
     case '5_14':
       globalBuffer[chatId].TicketUpdated = false
       await ticketUpdates(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketUpdated) selectedByUser[chatId] = {}
+      if (globalBuffer[chatId]?.TicketUpdated) {
+        selectedByUser[chatId] = {}
+        globalBuffer[chatId].TicketUpdated = false
+      }
       break
     case '5_5':
-      selectedByUser[chatId] = await askForPicture(bot, msg, selectedByUser[chatId])
+      selected_ = await askForPicture(bot, msg, selectedByUser[chatId])
+      if (selected_) selectedByUser[chatId] = selected_
       break
     case '7_1':
       await ticketApprove(bot, msg)

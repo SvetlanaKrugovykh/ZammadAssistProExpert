@@ -77,7 +77,10 @@ async function askForPicture(bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
     const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
+      console.log(`Directory ${dirPath} created successfully`)
+    }
 
     const pictureMsg = await new Promise((resolve, reject) => {
       bot.once('photo', (photoMsg) => {
@@ -85,9 +88,11 @@ async function askForPicture(bot, msg, selectedByUser) {
           resolve(photoMsg)
         } else {
           console.log('No photo found in message')
+          reject(new Error('No photo found in message'))
         }
       })
     })
+
     if (pictureMsg.photo && pictureMsg.photo.length > 0) {
       const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
 
@@ -96,10 +101,23 @@ async function askForPicture(bot, msg, selectedByUser) {
 
       const fileStream = await bot.getFileStream(pictureFileId)
       const file = fs.createWriteStream(pictureFilePath)
+      fileStream.on('error', (err) => {
+        console.error('Error receiving file stream:', err)
+        file.close()
+        fs.unlinkSync(pictureFilePath)
+      })
+
       await new Promise((resolve, reject) => {
         fileStream.pipe(file)
-        file.on('finish', resolve)
-        file.on('error', reject)
+        file.on('finish', () => {
+          console.log('File saved successfully:', pictureFilePath)
+          resolve()
+        })
+        file.on('error', (err) => {
+          console.error('Error writing file:', err)
+          fs.unlinkSync(pictureFilePath)
+          reject(err)
+        })
       })
 
       const fileNames = selectedByUser.ticketAttacmentFileNames || []
@@ -146,7 +164,10 @@ async function askForAttachment(bot, msg, selectedByUser) {
 async function addTicketAttachment(bot, msg, selectedByUser) {
   try {
     const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
+      console.log(`Directory ${dirPath} created successfully`)
+    }
     let fileId, fileName
     if (msg?.document) {
       fileId = msg.document.file_id

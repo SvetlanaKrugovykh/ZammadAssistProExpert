@@ -17,7 +17,10 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
     const newFilePath = `${newCatalog}${slash}${file_name}`.replace(/\/\//g, '/')
 
     try {
-      await fs.promises.mkdir(newCatalog, { recursive: true })
+      if (!fs.existsSync(newCatalog)) {
+        fs.mkdirSync(newCatalog, { recursive: true })
+        console.log(`Directory ${newCatalog} created successfully`)
+      }
       await fs.promises.access(old_file_name, fs.constants.F_OK)
       await fs.promises.rename(old_file_name, newFilePath)
       console.log(`File ${element} moved to ${newFilePath}`)
