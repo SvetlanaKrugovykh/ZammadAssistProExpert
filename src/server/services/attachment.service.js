@@ -9,13 +9,18 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
-    const attachmentMsg = await Promise.race([
-      new Promise((resolve) => bot.once('document', resolve)),
-      new Promise((resolve) => bot.once('photo', resolve))
-    ])
+    const attachmentMsg = await new Promise((resolve, reject) => {
+      bot.once('document', resolve)
+      bot.once('photo', resolve)
+      bot.once('text', () => reject(new Error('Invalid input')))
+    })
 
     const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
-    return selectedByUser_
+    if (selectedByUser_ === null) {
+      return selectedByUser
+    } else {
+      return selectedByUser_
+    }
   } catch (err) {
     console.error(err)
     return selectedByUser
@@ -91,11 +96,11 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       const fileExtension = path.extname(fileName) || '.unknown'
       fileName = `file_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
     } else if (msg && msg.photo) {
-      fileId = msg.photo[file.photo.length - 1].file_id
+      fileId = msg.photo[msg.photo.length - 1].file_id
       fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
     } else {
       console.log('Invalid file attachment input')
-      return selectedByUser
+      return null
     }
 
     const filePath = path.join(dirPath, fileName).replace(/\/\//g, '/')
@@ -109,6 +114,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
         console.error('Error writing file:', err)
         fs.unlinkSync(filePath)
         reject(err)
+        return null
       })
     })
 
