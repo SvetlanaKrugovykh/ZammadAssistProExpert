@@ -10,28 +10,24 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
     const attachmentMsg = await new Promise((resolve, reject) => {
-      const handleMessage = (message) => {
+      bot.once('message', (message) => {
         if (message?.document || message?.photo) {
-          if (message.photo) {
-            const largestPhoto = message.photo.reduce((prev, current) => {
-              return (prev.width * prev.height > current.width * current.height) ? prev : current
-            })
-            message = { ...message, photo: largestPhoto }
-          }
-          bot.off('message', handleMessage)
           resolve(message)
+        } else {
+          console.log('No file found in message')
+          reject(new Error('No file found in message'))
         }
-      }
-      bot.on('message', handleMessage)
+      })
     })
 
     const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
     return selectedByUser_
   } catch (err) {
-    console.log(err)
+    console.error(err)
     return selectedByUser
   }
 }
+
 
 
 module.exports.askForPicture = async function (bot, msg, selectedByUser) {
@@ -93,6 +89,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
   try {
     const dirPath = process.env.DOWNLOAD_APP_PATH
     await checkDirPath(dirPath)
+    console.log(`addTicketAttachment started: ${msg?.document?.file_name}`)
 
     let fileId, fileName
     if (msg && msg.document) {
