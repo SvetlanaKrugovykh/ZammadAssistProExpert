@@ -3,27 +3,32 @@ require('dotenv').config()
 const fs = require('fs')
 const axios = require('axios')
 
+async function checkNewCatalogPath(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true })
+    console.log(`Directory ${dirPath} created successfully`)
+  }
+}
+
 module.exports.update_ticket = async function (ticketId, body, fileNames, override = false) {
 
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let bodyWithAttachments = body
   const slash = process.env.SLASH
+  const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
+  await checkNewCatalogPath(newCatalog)
 
   for (const element of fileNames) {
     console.log(`file element: ${element}`)
     const file_name = element.replace(process.env.DOWNLOAD_APP_PATH, '')
     const old_file_name = `${process.env.DOWNLOAD_APP_PATH}${file_name}`.replace(/\/\//g, '/')
-    const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
     const newFilePath = `${newCatalog}${slash}${file_name}`.replace(/\/\//g, '/')
-
     try {
-      if (!fs.existsSync(newCatalog)) {
-        fs.mkdirSync(newCatalog, { recursive: true })
-        console.log(`Directory ${newCatalog} created successfully`)
-      }
       await fs.promises.access(old_file_name, fs.constants.F_OK)
       await fs.promises.rename(old_file_name, newFilePath)
       console.log(`File ${element} moved to ${newFilePath}`)
+      const fileUrl = `${process.env.DOWNLOAD_URL}${ticketId}/${file_name}`
+      bodyWithAttachments += `\n${fileUrl}`
     } catch (err) {
       if (err.code === 'ENOENT') {
         console.log(`File ${old_file_name} does not exist`)
@@ -32,9 +37,6 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
       }
       continue
     }
-
-    const fileUrl = `${process.env.DOWNLOAD_URL}${ticketId}/${file_name}`
-    bodyWithAttachments += `\n${fileUrl}`
   }
 
   let data = {
