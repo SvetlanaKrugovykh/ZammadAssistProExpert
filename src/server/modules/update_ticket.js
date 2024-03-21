@@ -17,6 +17,8 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
   const slash = process.env.SLASH
   const newCatalog = `${process.env.DOWNLOAD_APP_PATH}${ticketId}`
   await checkNewCatalogPath(newCatalog)
+  console.log(`start of update: ${ticketId}`)
+  console.log(`fileNames: ${fileNames}`)
 
   for (const element of fileNames) {
     console.log(`file element: ${element}`)
