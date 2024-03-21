@@ -11,7 +11,7 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
 
     const attachmentMsg = await new Promise((resolve, reject) => {
       bot.once('message', (message) => {
-        if (message?.document || message?.photo) {
+        if (message?.document || message?.photo || (message?.photo && message.photo.length > 0)) {
           resolve(message)
         } else {
           console.log('No file found in message')
@@ -27,7 +27,6 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
     return selectedByUser
   }
 }
-
 
 
 module.exports.askForPicture = async function (bot, msg, selectedByUser) {
