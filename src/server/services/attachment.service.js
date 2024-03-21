@@ -10,13 +10,12 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
     const attachmentMsg = await new Promise((resolve, reject) => {
-      bot.once('message', (message) => {
-        if (message?.document || message?.photo || (message?.photo && message.photo.length > 0)) {
-          resolve(message)
-        } else {
-          console.log('No file found in message')
-          reject(new Error('No file found in message'))
-        }
+      bot.once('document', (documentMsg) => {
+        resolve(documentMsg)
+      })
+
+      bot.once('photo', (photoMsg) => {
+        resolve(photoMsg)
       })
     })
 
