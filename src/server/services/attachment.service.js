@@ -95,13 +95,13 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     await checkDirPath(dirPath)
 
     let fileId, fileName
-    if (msg?.document) {
+    if (msg && msg.document) {
       fileId = msg.document.file_id
       fileName = msg.document.file_name
       const fileExtension = path.extname(fileName) || '.unknown'
       fileName = `file_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
     } else if (msg && msg.photo) {
-      fileId = msg.photo.file_id
+      fileId = msg.photo[file.photo.length - 1].file_id
       fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
     } else {
       console.log('Invalid file attachment input')
@@ -112,9 +112,19 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     const fileStream = await bot.getFileStream(fileId)
     const file = fs.createWriteStream(filePath)
 
-    await pipeline(fileStream, file)
+    await new Promise((resolve, reject) => {
+      fileStream.pipe(file)
+      file.on('finish', resolve)
+      file.on('error', (err) => {
+        console.error('Error writing file:', err)
+        fs.unlinkSync(filePath)
+        reject(err)
+      })
+    })
+
     const fileNames = selectedByUser.ticketAttachmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttachmentFileNames: [...fileNames, fileName] }
+    console.log(`addTicketAttachment fileNames: +${fileName} `, fileNames)
 
     console.log(`added TicketAttachment: `, fileName)
     return newSelectedByUser
