@@ -1,11 +1,7 @@
 
 const { buttonsConfig, standardStartButtons } = require('../modules/keyboard')
 const { inputLineScene } = require('../controllers/inputLine')
-const fs = require('fs')
-const path = require('path')
 const axios = require('axios')
-const util = require('util')
-const pipeline = util.promisify(require('stream').pipeline)
 const { getTickets } = require('../db/ticketsDbService')
 const { findUserById } = require('../db/tgUsersService')
 const https = require('https')
@@ -54,7 +50,7 @@ async function ticketUpdateScene(bot, msg, ticketID = '') {
 async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   try {
     let inputLenghth = 7
-    if (menuItem === '5_2') inputLenghth = 2
+    if (msg?.text.includes('оментар')) inputLenghth = 2
     const txtCommand = await inputLineScene(bot, msg)
 
     if (txtCommand.length < inputLenghth) {
@@ -67,131 +63,6 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
       selectedByUser = { ...selectedByUser, ticketBody: txtCommand }
     }
     return selectedByUser
-  } catch (err) {
-    console.log(err)
-    return selectedByUser
-  }
-}
-
-async function askForPicture(bot, msg, selectedByUser) {
-  try {
-    await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
-    const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
-      console.log(`Directory ${dirPath} created successfully`)
-    }
-
-    const pictureMsg = await new Promise((resolve, reject) => {
-      bot.once('photo', (photoMsg) => {
-        if (photoMsg && photoMsg.photo) {
-          resolve(photoMsg)
-        } else {
-          console.log('No photo found in message')
-          reject(new Error('No photo found in message'))
-        }
-      })
-    })
-
-    if (pictureMsg.photo && pictureMsg.photo.length > 0) {
-      const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
-
-      const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
-      const pictureFilePath = path.join(dirPath, pictureFileName).replace(/\/\//g, '/')
-
-      const fileStream = await bot.getFileStream(pictureFileId)
-      const file = fs.createWriteStream(pictureFilePath)
-      fileStream.on('error', (err) => {
-        console.error('Error receiving file stream:', err)
-        file.close()
-        fs.unlinkSync(pictureFilePath)
-      })
-
-      await new Promise((resolve, reject) => {
-        fileStream.pipe(file)
-        file.on('finish', () => {
-          console.log('File saved successfully:', pictureFilePath)
-          resolve()
-        })
-        file.on('error', (err) => {
-          console.error('Error writing file:', err)
-          fs.unlinkSync(pictureFilePath)
-          reject(err)
-        })
-      })
-
-      const fileNames = selectedByUser.ticketAttacmentFileNames || []
-      const selectedByUser_ = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, pictureFileName] }
-      console.log(`added TicketPicture: `, pictureFileName)
-      return selectedByUser_
-    } else {
-      console.log('No photo found in message')
-      return selectedByUser
-    }
-  } catch (err) {
-    console.log(err)
-    return {}
-  }
-}
-
-async function askForAttachment(bot, msg, selectedByUser) {
-  try {
-    await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
-
-    const attachmentMsg = await new Promise((resolve, reject) => {
-      bot.once('message', (message) => {
-        if (message?.document) {
-          resolve(message)
-        } else if (message.photo) {
-          const largestPhoto = message.photo.reduce((prev, current) => {
-            return (prev.width * prev.height > current.width * current.height) ? prev : current
-          })
-          message.photo = largestPhoto
-          resolve(message)
-        }
-      })
-    })
-
-    const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
-    return selectedByUser_
-  } catch (err) {
-    console.log(err)
-    return selectedByUser
-  }
-}
-
-
-async function addTicketAttachment(bot, msg, selectedByUser) {
-  try {
-    const dirPath = process.env.DOWNLOAD_APP_PATH
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true })
-      console.log(`Directory ${dirPath} created successfully`)
-    }
-    let fileId, fileName
-    if (msg?.document) {
-      fileId = msg.document.file_id
-      fileName = msg.document.file_name
-      const fileExtension = path.extname(fileName)
-      fileName = `file_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
-    } else if (msg.photo) {
-      fileId = msg.photo.file_id
-      fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
-    } else {
-      console.log('Invalid file attachment input')
-      return selectedByUser
-    }
-
-    const filePath = path.join(dirPath, fileName).replace(/\/\//g, '/')
-    const fileStream = await bot.getFileStream(fileId)
-    const file = fs.createWriteStream(filePath)
-
-    await pipeline(fileStream, file)
-    const fileNames = selectedByUser.ticketAttacmentFileNames || []
-    const newSelectedByUser = { ...selectedByUser, ticketAttacmentFileNames: [...fileNames, fileName] }
-
-    console.log(`added TicketAttachment: `, fileName)
-    return newSelectedByUser
   } catch (err) {
     console.log(err)
     return selectedByUser
@@ -216,14 +87,14 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Під час реєстрації заявки виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
       return null
     }
-    if (Array.isArray(selectedByUser?.ticketAttacmentFileNames)) {
-      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttacmentFileNames)
+    if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
+      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttachmentFileNames)
       if (updatedTicket === null) {
         await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
         return null
       } else {
         console.log(`Ticket ${ticket.id} updated with attachments`)
-        selectedByUser.ticketAttacmentFileNames = []
+        selectedByUser.ticketAttachmentFileNames = []
       }
     }
 
@@ -265,7 +136,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
     }
 
-    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttacmentFileNames || [], false)
+    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttachmentFileNames || [], false)
     selectedByUser.updatedTicketId = null
     globalBuffer[msg.chat.id].TicketUpdated = true
 
@@ -282,7 +153,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
 
     if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
       const msg_in = selectedByUser.ticketBody
-      const urls_in = selectedByUser?.ticketAttacmentFileNames || []
+      const urls_in = selectedByUser?.ticketAttachmentFileNames || []
       const body = {
         "login": login, "ticket_id": ticketID, "state_id": 111, "message_in": msg_in, "sender_id": owner_id, "urls_in": urls_in
       }
@@ -295,12 +166,12 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       }
       ticket_update_data.state_id = 222
       ticket_update_data.message_out = selectedByUser.ticketBody
-      ticket_update_data.urls_out = selectedByUser?.ticketAttacmentFileNames || []
+      ticket_update_data.urls_out = selectedByUser?.ticketAttachmentFileNames || []
       await userReplyRecord(ticket_update_data)
       await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
     }
 
-    selectedByUser.ticketAttacmentFileNames = []
+    selectedByUser.ticketAttachmentFileNames = []
 
   } catch (err) {
     console.log(err)
@@ -398,4 +269,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, ticketUpdates, checkUserTickets, askForPicture }
+module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistration, ticketUpdates, checkUserTickets }

@@ -1,7 +1,8 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, askForAttachment, ticketRegistration, ticketUpdates, checkUserTickets, askForPicture } = require('./tgTickets')
+const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistration, ticketUpdates, checkUserTickets } = require('./tgTickets')
+const { askForPicture, askForAttachment } = require('../services/attachment.service')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
 const { reports, getReport } = require('./reportsMenu')
@@ -10,10 +11,7 @@ const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
-const { globalBuffer } = require('../globalBuffer')
-
-
-const selectedByUser = {}
+const { globalBuffer, selectedByUser } = require('../globalBuffer')
 
 //#region staticKeyboad
 function getCallbackData(text) {
