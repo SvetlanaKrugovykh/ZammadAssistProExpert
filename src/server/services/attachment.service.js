@@ -9,15 +9,10 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
-    const attachmentMsg = await new Promise((resolve, reject) => {
-      bot.once('document', (documentMsg) => {
-        resolve(documentMsg)
-      })
-
-      bot.once('photo', (photoMsg) => {
-        resolve(photoMsg)
-      })
-    })
+    const attachmentMsg = await Promise.race([
+      new Promise((resolve) => bot.once('document', resolve)),
+      new Promise((resolve) => bot.once('photo', resolve))
+    ])
 
     const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
     return selectedByUser_
