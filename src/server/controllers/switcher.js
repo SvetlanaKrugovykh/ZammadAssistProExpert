@@ -111,11 +111,21 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '5_3':
       selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
-      if (selected_) selectedByUser[chatId] = selected_
+      if (selected_) {
+        selectedByUser[chatId].ticketAttachmentFileNames = Array.from(new Set([
+          ...(selectedByUser[chatId].ticketAttachmentFileNames || []),
+          ...selected_.ticketAttachmentFileNames
+        ]))
+      }
       break
     case '5_5':
       selected_ = await askForPicture(bot, msg, selectedByUser[chatId])
-      if (selected_) selectedByUser[chatId] = selected_
+      if (selected_) {
+        selectedByUser[chatId].ticketAttachmentFileNames = Array.from(new Set([
+          ...(selectedByUser[chatId].ticketAttachmentFileNames || []),
+          ...selected_.ticketAttachmentFileNames
+        ]))
+      }
       break
     case '5_4':
       globalBuffer[chatId].TicketCreated = false
