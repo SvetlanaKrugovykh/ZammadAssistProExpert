@@ -68,7 +68,7 @@ async function ticketApprove(bot, msg) {
   const p_time = pendingTimeInIntervalMin()
   newTicketBody.pending_time = p_time
 
-  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true, msg.chat.id)
   if (updatedTicket) console.log(`Update ticket to ApprovedClose: ${ticketID}`)
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'затверджено')
@@ -101,7 +101,7 @@ async function ticketReturn(bot, msg) {
   newTicketBody.article = article
   newTicketBody.pending_time = null
 
-  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true)
+  const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true, msg.chat.id)
   if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'повернуто')

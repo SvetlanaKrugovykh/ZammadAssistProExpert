@@ -88,7 +88,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
       return null
     }
     if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
-      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttachmentFileNames)
+      const updatedTicket = await update_ticket(ticket.id, body, selectedByUser.ticketAttachmentFileNames, false, msg.chat.id)
       if (updatedTicket === null) {
         await bot.sendMessage(msg.chat.id, 'Під час додавання вкладень виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
         return null
@@ -136,7 +136,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       comment = `Отримана відповідь від Замовника ${timestamp}: ${selectedByUser.ticketBody}`
     }
 
-    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttachmentFileNames || [], false)
+    const updatedTicket = await update_ticket(ticketID, comment, selectedByUser?.ticketAttachmentFileNames || [], false, msg.chat.id)
     selectedByUser.updatedTicketId = null
     globalBuffer[msg.chat.id].TicketUpdated = true
 

@@ -2,6 +2,7 @@ const https = require('https')
 require('dotenv').config()
 const fs = require('fs')
 const axios = require('axios')
+const path = require('path')
 
 async function checkNewCatalogPath(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -10,7 +11,7 @@ async function checkNewCatalogPath(dirPath) {
   }
 }
 
-module.exports.update_ticket = async function (ticketId, body, fileNames, override = false) {
+module.exports.update_ticket = async function (ticketId, body, fileNames, override = false, chatID = '') {
 
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let bodyWithAttachments = body
@@ -41,6 +42,11 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
     }
   }
 
+  if (chatID) {
+    let bodyWithAttachments_ = await moveFiles(newCatalog, ticketId, chatID, bodyWithAttachments)
+    if (bodyWithAttachments_) bodyWithAttachments = bodyWithAttachments_
+  }
+
   let data = {
     'article': {
       'body': bodyWithAttachments || body,
@@ -60,6 +66,34 @@ module.exports.update_ticket = async function (ticketId, body, fileNames, overri
   } catch (err) {
     console.log(`ERROR of update ticket: ${ticketId} updated_at: ${updated_at}`)
     console.log(`url: ${url}, data: ${JSON.stringify(data)}, headers: ${JSON.stringify(headers)}`)
+    return null
+  }
+}
+
+async function moveFiles(newCatalog, ticketId, chatID, bodyWithAttachments = '') {
+  try {
+    const directoryPath = process.env.DOWNLOAD_APP_PATH
+    const files = await fs.promises.readdir(directoryPath)
+    const filesToMove = files.filter(file => file.includes(`_${chatID.toString()}_`))
+
+    for (const file of filesToMove) {
+      const oldFilePath = path.join(directoryPath, file)
+      const newFilePath = path.join(newCatalog, file)
+
+      try {
+        await fs.promises.rename(oldFilePath, newFilePath)
+        console.log(`File ${file} moved ADDITIONALY to ${newFilePath}`)
+        const file_name = file.replace(process.env.DOWNLOAD_APP_PATH, '')
+        const fileUrl = `${process.env.DOWNLOAD_URL}${ticketId}/${file_name}`
+        bodyWithAttachments += `\n${fileUrl}`
+      } catch (err) {
+        console.error(`Error moving ADDITIONALY file ${file}:`, err)
+        return null
+      }
+    }
+    return bodyWithAttachments
+  } catch (err) {
+    console.error('Error:', err)
     return null
   }
 }
