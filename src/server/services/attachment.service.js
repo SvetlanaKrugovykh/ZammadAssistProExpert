@@ -31,6 +31,7 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
 module.exports.askForPicture = async function (bot, msg, selectedByUser) {
   try {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, вставте картинку:')
+    console.log(`askForPicture started:`)
 
     const dirPath = process.env.DOWNLOAD_APP_PATH
     await checkDirPath(dirPath)
@@ -47,7 +48,7 @@ module.exports.askForPicture = async function (bot, msg, selectedByUser) {
 
     if (!pictureMsg.photo || pictureMsg.photo.length === 0) {
       console.log('No photo found in message')
-      return selectedByUser
+      return null
     }
 
     const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
@@ -61,6 +62,7 @@ module.exports.askForPicture = async function (bot, msg, selectedByUser) {
       console.error('Error receiving file stream:', err)
       file.close()
       fs.unlinkSync(pictureFilePath)
+      return null
     })
 
     await new Promise((resolve, reject) => {
@@ -70,6 +72,7 @@ module.exports.askForPicture = async function (bot, msg, selectedByUser) {
         console.error('Error writing file:', err)
         fs.unlinkSync(pictureFilePath)
         reject(err)
+        return null
       })
     })
 
@@ -79,7 +82,7 @@ module.exports.askForPicture = async function (bot, msg, selectedByUser) {
     return selectedByUser_
   } catch (err) {
     console.log(err)
-    return selectedByUser
+    return null
   }
 }
 
