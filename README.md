@@ -27,4 +27,4 @@ ZammadAssistProExpert is a powerful tool for managing service-desk data, handlin
 
 ## Comments
 
-I`m not recommend to use Zammand for anybody
+I`m ready to recommend to use Zammand for everybody
