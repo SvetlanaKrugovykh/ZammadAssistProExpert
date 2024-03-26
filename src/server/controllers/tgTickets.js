@@ -117,7 +117,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🟣 Ввести змістовну тему')
       || selectedByUser?.ticketBody.includes('🔵 Ввести коментар')
       || selectedByUser?.ticketBody.includes('📌 Оновити заявку')) {
-      await bot.sendMessage(msg.chat.id, 'Ви не внесли дані, аби ми мали можливість оновити заявку.\n', { parse_mode: 'HTML' })
+      await bot.sendMessage(msg.chat.id, 'Аби ми мали можливість оновити заявку, внесіть супроводжуючий коментар через відповідну кнопку меню.\n', { parse_mode: 'HTML' })
       return
     }
     const ticketID = selectedByUser.updatedTicketId
