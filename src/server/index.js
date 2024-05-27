@@ -45,8 +45,8 @@ cron.schedule(TICKET_AUTO_CLOSE_SCHEDULLER_STRING, () => {
 
 app.register(require('@fastify/cors'), {})
 interConnectApp.register(require('@fastify/cors'), { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] })
-
 interConnectApp.register(require('./routes/interConnect.route'), { prefix: '/inter-connect' })
+interConnectApp.register(require('./routes/subdivisions.route'), { prefix: '/assist-api' })
 
 bot.on('callback_query', async (callbackQuery) => {
   try {
