@@ -6,6 +6,7 @@ const { askForPicture, askForAttachment } = require('../services/attachment.serv
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
 const { reports, getReport } = require('./reportsMenu')
+const { msgSenderMenu } = require('./msgSenderMenu')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -84,6 +85,9 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '2_5':
       await reports(bot, msg)
+      break
+    case '2_7':
+      await msgSenderMenu(bot, msg)
       break
     case '3_1':
       await clientsAdminGetInfo(bot, msg)

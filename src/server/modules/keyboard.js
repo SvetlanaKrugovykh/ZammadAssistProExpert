@@ -52,6 +52,7 @@ const buttonsConfig = {
       [{ text: '📘 Заявки, що виконані та очікують Вашого затвердження', callback_data: '2_3' }],
       [{ text: '📗 Переглянути заявки, що вже є виконаними', callback_data: '2_4' }],
       [{ text: '📊 Звітність', callback_data: '2_5' }],
+      [{ text: '📧 Відправка повідомлень', callback_data: '2_7' }],
       [{ text: '🏠', callback_data: '0_4' }]
     ]
   },
