@@ -6,7 +6,7 @@ const { askForPicture, askForAttachment } = require('../services/attachment.serv
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
 const { reports, getReport } = require('./reportsMenu')
-const { msgSenderMenu } = require('./msgSenderMenu')
+const { msgSenderMenu, chooseSubdivisionsFromList, messageCreateScene, messageSender } = require('./msgSenderMenu')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
 const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('../modules/common')
@@ -163,6 +163,18 @@ async function handler(bot, msg, webAppUrl) {
       await chooseGroups(bot, msg)
       await checkReadyForReport(bot, msg)
       break
+    case '19_1':
+      await chooseSubdivisionsFromList(bot, msg)
+      break
+    case '19_4':
+      messageCreateScene(bot, msg)
+      break
+    case '15_4':
+      await messageSender(bot, msg, selectedByUser[chatId])
+      if (globalBuffer[chatId]?.TicketCreated) {
+        selectedByUser[chatId] = {}
+      }
+      break
     case '9_2':
       await chooseTypeOfPeriod(bot, msg)
       break
@@ -235,7 +247,7 @@ async function switchDynamicSceenes(bot, msg) {
       await reports(bot, msg)
       return
     }
-    if (/[🏠🟣🔵🧷📌✔️➕📕📒📗📊📘💹]/.test(msg.text)) {
+    if (/[🏠🟣🔵🧷📌✉✔️➕📕📒📗📊📘💹]/.test(msg.text)) {
       goBack(bot, msg)
       return
     }

@@ -1,6 +1,6 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { globalBuffer } = require('../globalBuffer')
-
+const { execPgQuery } = require('../db/common')
 module.exports.msgSenderMenu = async function (bot, msg) {
   const checkChoices = await checkSelectedPeoplesAndSubdivisions(bot, msg, false)
   const chatId = msg.chat.id
@@ -9,10 +9,78 @@ module.exports.msgSenderMenu = async function (bot, msg) {
   if (checkChoices) title = '📧'
   await bot.sendMessage(msg.chat.id, title, {
     reply_markup: {
-      keyboard: buttonsConfig.chooseReportSettings.buttons,
+      keyboard: buttonsConfig.chooseSenMessageSettings.buttons,
       resize_keyboard: true
     }
   })
+}
+
+
+module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
+  const data = await getSubdivisions()
+  const chatId = msg.chat.id
+
+  if (!data && data.length === 0) {
+    await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних підрозділів.')
+    return
+  }
+
+  if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
+  globalBuffer[chatId].availableSubdivisions = data
+  globalBuffer[chatId].selectedSubdivisions = []
+  globalBuffer[msg.chat.id].SubdivisionsCounter = 0
+
+  const subdivisionsButtons = {
+    title: 'Оберіть, будь ласка, підрозділ(и):',
+    options: [{ resize_keyboard: true }],
+    buttons: data.map(subdivision => [
+      { text: `🤽🏿‍♂️ ${subdivision.subdivision_name} `, callback_data: `63_${subdivision.id}` }
+    ])
+  }
+  await bot.sendMessage(msg.chat.id, subdivisionsButtons.title, {
+    reply_markup: {
+      inline_keyboard: subdivisionsButtons.buttons,
+      resize_keyboard: true
+    }
+  })
+}
+module.exports.messageCreateScene = async function (bot, msg) {
+  try {
+    const chatId = msg.chat.id
+    await bot.sendMessage(chatId, buttonsConfig["messageCreate"].title, {
+      reply_markup: {
+        keyboard: buttonsConfig["messageCreate"].buttons,
+        resize_keyboard: true,
+        one_time_keyboard: false
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+module.exports.messageSender = async function (bot, msg, selectedByUser) {
+  try {
+    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return
+    }
+
+    await bot.sendMessage(msg.chat.id, `Повідомлення відправлено.`)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+async function getSubdivisions() {
+  try {
+    const data = await execPgQuery('SELECT * FROM subdivisions ORDER BY subdivision_name ASC', [], false, true)
+    if (data === null) return null
+    return data
+  } catch (error) {
+    console.error('Error in function getSubdivisions:', error)
+    return null
+  }
 }
 
 module.exports.msgSend = async function (bot, msg) {
