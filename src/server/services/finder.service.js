@@ -6,7 +6,7 @@ module.exports.findCustomers = async function (bot, msg) {
     const inputLength = 2
     const txtForSeek = await inputLineScene(bot, msg)
     if (txtForSeek.length < inputLength) return
-    const data = await execPgQuery(`SELECT * FROM users WHERE firstname LIKE $1`, [`%${txtForSeek}%`], false, true)
+    const data = await execPgQuery(`SELECT * FROM users WHERE firstname ILIKE $1`, [`%${txtForSeek}%`], false, true)
     if (!Array.isArray(data)) {
       await bot.sendMessage(msg.chat.id, 'Користувачів не знайдено')
       return
