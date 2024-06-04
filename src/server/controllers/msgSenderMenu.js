@@ -1,6 +1,9 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { globalBuffer } = require('../globalBuffer')
 const { execPgQuery } = require('../db/common')
+const { findUserById } = require('../db/tgUsersService')
+
+
 module.exports.msgSenderMenu = async function (bot, msg) {
   const checkChoices = await checkSelectedPeoplesAndSubdivisions(bot, msg, false)
   const chatId = msg.chat.id
@@ -61,11 +64,17 @@ module.exports.messageCreateScene = async function (bot, msg) {
 
 module.exports.messageSender = async function (bot, msg, selectedByUser) {
   try {
-    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
-      await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
-      return
+    if (globalBuffer[msg.chat.id].selectedCustomers.length === 0) {
+      if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
+        await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
+        return
+      }
+    } else {
+      for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
+        const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
+        if (user) await bot.sendMessage(user.login, selectedByUser?.ticketBody)
+      }
     }
-
     await bot.sendMessage(msg.chat.id, `Повідомлення відправлено.`)
   } catch (err) {
     console.log(err)
