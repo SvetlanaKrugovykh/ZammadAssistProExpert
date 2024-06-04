@@ -172,7 +172,7 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '15_4':
       await messageSender(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketCreated) {
+      if (globalBuffer[chatId]?.TicketCreated || globalBuffer[chatId]?.msgSent) {
         selectedByUser[chatId] = {}
       }
       break

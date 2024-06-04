@@ -2,7 +2,8 @@ const { buttonsConfig } = require('../modules/keyboard')
 const { globalBuffer } = require('../globalBuffer')
 const { execPgQuery } = require('../db/common')
 const { findUserById } = require('../db/tgUsersService')
-
+const fs = require('fs')
+require('dotenv').config()
 
 module.exports.msgSenderMenu = async function (bot, msg) {
   const checkChoices = await checkSelectedPeoplesAndSubdivisions(bot, msg, false)
@@ -17,7 +18,6 @@ module.exports.msgSenderMenu = async function (bot, msg) {
     }
   })
 }
-
 
 module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
   const data = await getSubdivisions()
@@ -70,10 +70,21 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
         return
       }
     } else {
+      const dirPath = process.env.DOWNLOAD_APP_PATH
       for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
         const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
-        if (user) await bot.sendMessage(user.login, selectedByUser?.ticketBody)
+        console.log(user)
+        if (user) {
+          await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
+          for (const attachmentFileName of selectedByUser?.ticketAttachmentFileNames) {
+            const fileFullName = `${dirPath}${attachmentFileName}`
+            await bot.sendDocument(user.login, fileFullName, { filename: attachmentFileName, caption: attachmentFileName })
+            fs.unlinkSync(fileFullName)
+          }
+        }
       }
+      globalBuffer[msg.chat.id].selectedCustomers = []
+      globalBuffer[msg.chat.id].msgSent = true
     }
     await bot.sendMessage(msg.chat.id, `Повідомлення відправлено.`)
   } catch (err) {
