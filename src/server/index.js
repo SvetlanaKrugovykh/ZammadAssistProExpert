@@ -56,6 +56,7 @@ bot.on('callback_query', async (callbackQuery) => {
     if (globalBuffer[chatId] === undefined) globalBuffer[chatId] = {}
     const selectedGroups = globalBuffer[chatId].selectedGroups || []
     const selectedSubdivisions = globalBuffer[chatId].selectedSubdivisions || []
+    const selectedCustomers = globalBuffer[chatId].selectedCustomers || []
 
     if (callbackQuery.data.startsWith('53_')) {
       const selectedGroup = callbackQuery.data
@@ -78,6 +79,17 @@ bot.on('callback_query', async (callbackQuery) => {
       console.log(`[${chatId}-${messageId}].Обрано: ${selectedSubdivision}`)
       let SubdivisionName = Subdivision ? Subdivision.subdivision_name : id
       await bot.sendMessage(chatId, `Обрано: ${SubdivisionName}`)
+    }
+    if (callbackQuery.data.startsWith('73_')) {
+      const selectedCustomer = callbackQuery.data
+      selectedCustomers.push(selectedCustomer)
+      globalBuffer[chatId].selectedCustomers = selectedCustomers
+      console.log(`1_selectedCustomers for  ${chatId} is ${globalBuffer[chatId]?.selectedCustomers}`)
+      const Customers = await execPgQuery(`SELECT * FROM users WHERE id=$1`, [Number(selectedCustomer.replace('73_', ''))], false, true)
+      const Customer = Customers.find(g => g.id === Number(selectedCustomer.replace('73_', '')))
+      console.log(`[${chatId}-${messageId}].Обрано: ${selectedCustomer}`)
+      let CustomerName = Customer ? Customer.firstname + ' ' + Customer.lastname : id
+      await bot.sendMessage(chatId, `Обрано: ${CustomerName}`)
     }
     await checkReadyForReport(bot, callbackQuery.message)
     return
