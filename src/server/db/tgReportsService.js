@@ -4,6 +4,7 @@ const execPgQuery = require('./common').execPgQuery
 const moment = require('moment')
 const { globalBuffer } = require('../globalBuffer')
 const { _dayStart, _dayEnd } = require('../services/various')
+const { sklepy } = require('../data/sklepy')
 
 module.exports.isUsersHaveReportsRole = async function (chatId) {
   try {
@@ -53,7 +54,7 @@ async function createNetReportHtml(bot, chatId, data, period) {
       text: `
       <table>
         <tr>
-          <th>№ТП</th>
+          <th>№ ТП</th>
           <th>Адреса</th>
           <th>Дата</th>
           <th>Недоступність в хвилинах на дату</th>
@@ -62,12 +63,21 @@ async function createNetReportHtml(bot, chatId, data, period) {
     });
 
     data.forEach(item => {
+      let address = 'Address not found';
+
+      if (Array.isArray(sklepy)) {
+        const sklepItem = sklepy.find(sklep => sklep.sklep === item.title);
+        if (sklepItem) {
+          address = sklepItem.adress;
+        }
+      }
+
       content.push({
         text: `
         <tr>
           <td>${item.title}</td>
-          <td>${item?.address}</td>
-          <td>${item.start_of_day_close_escalation_at}</td>
+          <td>${address}</td>
+          <td>${item.start_of_close_at}</td>
           <td>${item.total_interval}</td>
         </tr>
       `, style: 'defaultStyle', fontSize: '14px'
@@ -344,12 +354,12 @@ module.exports.createNetReport = async function (bot, msg) {
     const dayStart = _dayStart(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0))
     const dayEnd = _dayEnd(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999))
 
-    const data = await execPgQuery(`SELECT id, title, created_at, close_escalation_at, 
+    const data = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       DATE_TRUNC('day', close_escalation_at) as start_of_day_close_escalation_at, 
-       ROUND(EXTRACT(EPOCH FROM (close_escalation_at - created_at))/60) as interval
+       DATE_TRUNC('day', close_at) as start_of_close_at, 
+       ROUND(EXTRACT(EPOCH FROM (close_at - created_at))/60) as interval
        FROM tickets 
-       WHERE created_at>=$1 AND created_at<$2 AND state_id = 2 AND group_id = 7 AND title LIKE $3 ORDER BY created_at;`,
+       WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
 
     if (data === null) {
@@ -360,15 +370,15 @@ module.exports.createNetReport = async function (bot, msg) {
 
     const preparedData = data.map(item => ({
       title: item.title.replace('Недоступний Інтернет на хосте ', '').toLowerCase(),
-      start_of_day_close_escalation_at: item.start_of_day_close_escalation_at.toISOString().split('T')[0],
+      start_of_close_at: item.start_of_close_at.toISOString().split('T')[0],
       interval: Number(item.interval)
     }));
     const groupedData = preparedData.reduce((acc, item) => {
-      const key = item.title + item.start_of_day_close_escalation_at;
+      const key = item.title + item.start_of_close_at;
       if (!acc[key]) {
         acc[key] = {
           title: item.title,
-          start_of_day_close_escalation_at: item.start_of_day_close_escalation_at,
+          start_of_close_at: item.start_of_close_at,
           total_interval: 0
         };
       }
@@ -384,10 +394,10 @@ module.exports.createNetReport = async function (bot, msg) {
       if (a.title > b.title) {
         return 1;
       }
-      if (a.start_of_day_close_escalation_at < b.start_of_day_close_escalation_at) {
+      if (a.start_of_close_at < b.start_of_close_at) {
         return -1;
       }
-      if (a.start_of_day_close_escalation_at > b.start_of_day_close_escalation_at) {
+      if (a.start_of_close_at > b.start_of_close_at) {
         return 1;
       }
       return 0;
