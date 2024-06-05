@@ -1,6 +1,6 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { globalBuffer } = require('../globalBuffer')
-const { createReport } = require('../db/tgReportsService')
+const { createReport, createNetReport } = require('../db/tgReportsService')
 
 module.exports.reports = async function (bot, msg) {
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg, false)
@@ -23,6 +23,16 @@ module.exports.getReport = async function (bot, msg) {
     await createReport(bot, msg)
     globalBuffer[msg.chat.id] = {}
   }
+}
+
+module.exports.getNetReport = async function (bot, msg) {
+
+  if (globalBuffer[msg.chat.id]?.selectedPeriod === undefined) {
+    await bot.sendMessage(msg.chat.id, 'Ви не обрали період')
+    return
+  }
+  await createNetReport(bot, msg)
+  globalBuffer[msg.chat.id] = {}
 }
 
 async function checkSelectedGroupsAndPeriod(bot, msg, isMessage) {

@@ -5,7 +5,7 @@ const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistrati
 const { askForPicture, askForAttachment } = require('../services/attachment.service')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
-const { reports, getReport } = require('./reportsMenu')
+const { reports, getReport, getNetReport } = require('./reportsMenu')
 const { msgSenderMenu, chooseSubdivisionsFromList, messageCreateScene, messageSender } = require('./msgSenderMenu')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
@@ -181,6 +181,9 @@ async function handler(bot, msg, webAppUrl) {
       break
     case '9_3':
       await getReport(bot, msg)
+      break
+    case '9_4':
+      await getNetReport(bot, msg)
       break
     case 'any_period':
       await chooseData(bot, msg, 'початкову')

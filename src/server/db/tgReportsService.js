@@ -41,6 +41,49 @@ async function getGroupsFilter(chatId) {
   }
 }
 
+async function createNetReportHtml(bot, chatId, data, period) {
+  try {
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
+    const content = []
+    content.push(
+      { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
+    )
+
+    content.push({
+      text: `
+      <table>
+        <tr>
+          <th>№ТП</th>
+          <th>Адреса</th>
+          <th>Дата</th>
+          <th>Недоступність в хвилинах на дату</th>
+        </tr>
+    `, style: 'defaultStyle', fontSize: '14px'
+    });
+
+    data.forEach(item => {
+      content.push({
+        text: `
+        <tr>
+          <td>${item.title}</td>
+          <td>${item?.address}</td>
+          <td>${item.start_of_day_close_escalation_at}</td>
+          <td>${item.total_interval}</td>
+        </tr>
+      `, style: 'defaultStyle', fontSize: '14px'
+      });
+    });
+
+    content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' });
+
+    const htmlContent = createHtmlContent(content)
+    await writeHtmlToFile(htmlContent, `${REPORTS_CATALOG}${chatId}.html`)
+    return true
+  } catch (error) {
+    console.error('Error in function createNetReportHtml:', error)
+    return null
+  }
+}
 
 async function createReportHtml(bot, chatId, data, period) {
   try {
@@ -144,6 +187,7 @@ function getStatusName(stateId) {
 }
 
 function createHtmlContent(content) {
+
   let htmlContent = '<html><head>'
   htmlContent += '<meta charset="utf-8">'
   htmlContent += '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -155,6 +199,9 @@ function createHtmlContent(content) {
   htmlContent += 'h2 { font-weight: normal; font-size: 16px; }'
   htmlContent += 'p { font-size: 14px; }'
   htmlContent += 'ul { list-style-type: none; padding-left: 0; }'
+  htmlContent += 'table { width: 100%; border-collapse: collapse; }'
+  htmlContent += 'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; width: 25%; }'
+  htmlContent += 'th { background-color: #4CAF50; color: white; }'
   htmlContent += '</style>'
   htmlContent += '</head><body>'
 
@@ -190,44 +237,9 @@ module.exports.createReport = async function (bot, msg) {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
 
-    let period = {}
-    switch (periodName) {
-      case 'today':
-        period = {
-          start: new Date(new Date().setHours(0, 0, 0, 0)),
-          end: new Date(new Date().setHours(23, 59, 59, 999))
-        }
-        break
-      case 'last_week':
-        period = {
-          start: new Date(new Date().setDate(new Date().getDate() - 7)),
-          end: new Date()
-        }
-        break
-      case 'last_month':
-        period = {
-          start: new Date(new Date().setDate(new Date().getDate() - 30)),
-          end: new Date()
-        }
-        break
-      case 'last_year':
-        period = {
-          start: new Date(new Date().setDate(new Date().getDate() - 365)),
-          end: new Date()
-        }
-        break
-      case 'any_period':
-        period = globalBuffer[msg.chat.id].selectedPeriod
-        if (period.start > period.end) {
-          const start = period.end
-          const end = period.start
-          period.start = start
-          period.end = end
-        }
-        break
-      default:
-        return null
-    }
+    const period = definePeriod(periodName)
+    if (period === null) return 0
+
     const currentDate = new Date()
     if (period.start > currentDate) period.start = currentDate
     if (period.end > currentDate) period.end = currentDate
@@ -252,6 +264,136 @@ module.exports.createReport = async function (bot, msg) {
       return null
     }
     await createReportHtml(bot, msg.chat.id, data, period)
+    globalBuffer[msg.chat.id] = {}
+
+    if (fs.existsSync(filePath)) {
+      try {
+        await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {
+          caption: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`,
+          contentType: 'application/octet-stream',
+        })
+      } catch (error) {
+        console.error('Error sending document:', error)
+      }
+    } else {
+      console.log(`File not found: ${filePath}`)
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in function createReport:', error)
+    return null
+  }
+}
+
+function definePeriod(periodName) {
+  let period = {}
+  switch (periodName) {
+    case 'today':
+      period = {
+        start: new Date(new Date().setHours(0, 0, 0, 0)),
+        end: new Date(new Date().setHours(23, 59, 59, 999))
+      }
+      break
+    case 'last_week':
+      period = {
+        start: new Date(new Date().setDate(new Date().getDate() - 7)),
+        end: new Date()
+      }
+      break
+    case 'last_month':
+      period = {
+        start: new Date(new Date().setDate(new Date().getDate() - 30)),
+        end: new Date()
+      }
+      break
+    case 'last_year':
+      period = {
+        start: new Date(new Date().setDate(new Date().getDate() - 365)),
+        end: new Date()
+      }
+      break
+    case 'any_period':
+      period = globalBuffer[msg.chat.id].selectedPeriod
+      if (period.start > period.end) {
+        const start = period.end
+        const end = period.start
+        period.start = start
+        period.end = end
+      }
+      break
+    default:
+      return null
+  }
+  return period
+}
+
+module.exports.createNetReport = async function (bot, msg) {
+  try {
+    const periodName = globalBuffer[msg.chat.id].selectedPeriod.periodName
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
+    const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
+
+    const period = definePeriod(periodName)
+    if (period === null) return 0
+
+    const currentDate = new Date()
+    if (period.start > currentDate) period.start = currentDate
+    if (period.end > currentDate) period.end = currentDate
+
+    const dayStart = _dayStart(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0))
+    const dayEnd = _dayEnd(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999))
+
+    const data = await execPgQuery(`SELECT id, title, created_at, close_escalation_at, 
+       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
+       DATE_TRUNC('day', close_escalation_at) as start_of_day_close_escalation_at, 
+       ROUND(EXTRACT(EPOCH FROM (close_escalation_at - created_at))/60) as interval
+       FROM tickets 
+       WHERE created_at>=$1 AND created_at<$2 AND state_id = 2 AND group_id = 7 AND title LIKE $3 ORDER BY created_at;`,
+      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+
+    if (data === null) {
+      await bot.sendMessage(msg.chat.id, 'Немає даних для формування звіту за обраний період')
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      return null
+    }
+
+    const preparedData = data.map(item => ({
+      title: item.title.replace('Недоступний Інтернет на хосте ', '').toLowerCase(),
+      start_of_day_close_escalation_at: item.start_of_day_close_escalation_at.toISOString().split('T')[0],
+      interval: Number(item.interval)
+    }));
+    const groupedData = preparedData.reduce((acc, item) => {
+      const key = item.title + item.start_of_day_close_escalation_at;
+      if (!acc[key]) {
+        acc[key] = {
+          title: item.title,
+          start_of_day_close_escalation_at: item.start_of_day_close_escalation_at,
+          total_interval: 0
+        };
+      }
+      acc[key].total_interval += item.interval;
+      return acc;
+    }, {});
+
+    const resultData = Object.values(groupedData);
+    const sortedData = resultData.sort((a, b) => {
+      if (a.title < b.title) {
+        return -1;
+      }
+      if (a.title > b.title) {
+        return 1;
+      }
+      if (a.start_of_day_close_escalation_at < b.start_of_day_close_escalation_at) {
+        return -1;
+      }
+      if (a.start_of_day_close_escalation_at > b.start_of_day_close_escalation_at) {
+        return 1;
+      }
+      return 0;
+    });
+
+    await createNetReportHtml(bot, msg.chat.id, sortedData, period)
     globalBuffer[msg.chat.id] = {}
 
     if (fs.existsSync(filePath)) {

@@ -129,6 +129,7 @@ const buttonsConfig = {
       [{ text: '👨‍👨‍👦 Обрати групу(и)', callback_data: '9_1' }],
       [{ text: '📆 Обрати період', callback_data: '9_2' }],
       [{ text: '📉 Отримати звіт з виконання заявок', callback_data: '9_3' }],
+      [{ text: '❌ Отримати звіт з недоступності сервісів', callback_data: '9_4' }],
       [{ text: '↩️', callback_data: '3_3' }]
     ]
   },
