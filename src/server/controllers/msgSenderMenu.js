@@ -71,6 +71,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       }
     } else {
       const dirPath = process.env.DOWNLOAD_APP_PATH
+      globalBuffer[msg.chat.id].msgSent = false
       for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
         const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
         console.log(user)
