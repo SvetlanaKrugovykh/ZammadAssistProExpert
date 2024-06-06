@@ -174,6 +174,7 @@ async function handler(bot, msg, webAppUrl) {
       await messageSender(bot, msg, selectedByUser[chatId])
       if (globalBuffer[chatId]?.TicketCreated || globalBuffer[chatId]?.msgSent) {
         selectedByUser[chatId] = {}
+        goBack(bot, msg)
       }
       break
     case '9_2':
