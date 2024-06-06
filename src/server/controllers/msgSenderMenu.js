@@ -49,8 +49,11 @@ module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
 }
 module.exports.messageCreateScene = async function (bot, msg) {
   try {
-    const chatId = msg.chat.id
-    await bot.sendMessage(chatId, buttonsConfig["messageCreate"].title, {
+    if (globalBuffer[msg.chat.id]?.selectedCustomers === undefined) {
+      await bot.sendMessage(msg.chat.id, 'Для можливості відправки повідомлення оберіть отримувача/ів')
+      return false
+    }
+    await bot.sendMessage(msg.chat.id, buttonsConfig["messageCreate"].title, {
       reply_markup: {
         keyboard: buttonsConfig["messageCreate"].buttons,
         resize_keyboard: true,
