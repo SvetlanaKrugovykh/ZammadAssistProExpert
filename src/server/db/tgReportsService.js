@@ -369,6 +369,26 @@ module.exports.createNetReport = async function (bot, msg) {
        ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
 
+    const dataOpenForCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
+       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
+       DATE_TRUNC('day', created_at) as start_of_close_at, 
+       ROUND((EXTRACT(EPOCH FROM ((DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') - created_at))/3600)::numeric, 1) as interval       
+       FROM tickets 
+       WHERE DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day',created_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
+       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
+       ORDER BY created_at;`,
+      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+
+    const dataCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
+       DATE_TRUNC('day', close_at) as start_of_day_created_at, 
+       DATE_TRUNC('day', close_at) as start_of_close_at, 
+       ROUND(EXTRACT(EPOCH FROM (close_at - DATE_TRUNC('day', close_at))/3600)::numeric, 1) as interval
+       FROM tickets 
+       WHERE DATE_TRUNC('day',close_at)>=$1 AND DATE_TRUNC('day',close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
+       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
+       ORDER BY created_at;`,
+      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+
     const result = await execPgQuery(`SELECT NOW() as current_timestamp;`, [])
     console.log(result.current_timestamp)
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 0
@@ -383,29 +403,7 @@ module.exports.createNetReport = async function (bot, msg) {
        AND DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day', created_at)<=$2 
        AND state_id <> 4 AND group_id = 7 AND title LIKE $3 
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
-
-    const dataOpenForCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
-       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       (DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM ((DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') - created_at))/3600)::numeric, 1) as interval       
-       FROM tickets 
-       WHERE DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day',created_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
-       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
-       ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
-
-    const dataCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, 
-       DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second' as close_at, 
-       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       DATE_TRUNC('day', close_at) as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM (close_at - created_at))/3600)::numeric, 1) as interval
-       FROM tickets 
-       WHERE DATE_TRUNC('day',close_at)>=$1 AND DATE_TRUNC('day',close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
-       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
-       ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
-
+      [dayStart, dayEnd, 'Недоступний Інтернет на хосте m001'], false, true) || []
 
     const data = [...dataOpen, ...dataCloseDayInDay, ...dataOpenForCloseAnotherDay, ...dataCloseAnotherDay]
     if (data === null) {
