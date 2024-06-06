@@ -381,11 +381,10 @@ module.exports.createNetReport = async function (bot, msg) {
        ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
 
-
     const dataOpenForCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
        (DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') as start_of_close_at, 
-       ROUND(EXTRACT(EPOCH FROM ((DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') - created_at))/3600, 1) as interval       
+       ROUND((EXTRACT(EPOCH FROM ((DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') - created_at))/3600)::numeric, 1) as interval       
        FROM tickets 
        WHERE DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day',created_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
        AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
@@ -396,12 +395,13 @@ module.exports.createNetReport = async function (bot, msg) {
        DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second' as close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
        DATE_TRUNC('day', close_at) as start_of_close_at, 
-       ROUND(EXTRACT(EPOCH FROM (close_at - created_at))/3600, 1) as interval
+       ROUND((EXTRACT(EPOCH FROM (close_at - created_at))/3600)::numeric, 1) as interval
        FROM tickets 
        WHERE DATE_TRUNC('day',close_at)>=$1 AND DATE_TRUNC('day',close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
        AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
        ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+
 
     const data = [...dataOpen, ...dataCloseDayInDay, ...dataOpenForCloseAnotherDay, ...dataCloseAnotherDay]
     if (data === null) {
