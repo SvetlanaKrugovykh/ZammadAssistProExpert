@@ -403,7 +403,7 @@ module.exports.createNetReport = async function (bot, msg) {
        AND DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day', created_at)<=$2 
        AND state_id <> 4 AND group_id = 7 AND title LIKE $3 
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет на хосте m001'], false, true) || []
+      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
 
     const data = [...dataOpen, ...dataCloseDayInDay, ...dataOpenForCloseAnotherDay, ...dataCloseAnotherDay]
     if (data === null) {
