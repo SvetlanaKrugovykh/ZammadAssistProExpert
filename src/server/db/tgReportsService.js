@@ -369,10 +369,15 @@ module.exports.createNetReport = async function (bot, msg) {
        ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
 
+    const result = await execPgQuery(`SELECT NOW() as current_timestamp;`, [])
+    console.log(result.current_timestamp)
+    const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 0
+    console.log('hoursToAdd:', hoursToAdd)
+
     const dataOpen = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       NOW() as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as interval
+       (NOW() + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
+       ROUND((EXTRACT(EPOCH FROM ((NOW() + INTERVAL '${hoursToAdd} hours') - created_at))/3600)::numeric, 1) as interval
        FROM tickets 
        WHERE DATE_TRUNC('day', created_at) = CURRENT_DATE 
        AND DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day', created_at)<=$2 
