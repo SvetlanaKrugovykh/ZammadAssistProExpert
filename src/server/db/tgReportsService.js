@@ -362,13 +362,12 @@ module.exports.createNetReport = async function (bot, msg) {
     const dataCloseDayInDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
        DATE_TRUNC('day', close_at) as start_of_close_at, 
-       ROUND(EXTRACT(EPOCH FROM (close_at - created_at))/3600)::numeric, 1) as interval
+       ROUND((EXTRACT(EPOCH FROM (close_at - created_at))/3600)::numeric, 1) as interval
        FROM tickets 
        WHERE DATE_TRUNC('day', close_at)>=$1 AND DATE_TRUNC('day', close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title LIKE $3 
        AND DATE_TRUNC('day', created_at) = DATE_TRUNC('day', close_at)
        ORDER BY created_at;`,
       [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
-
 
     const dataOpen = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
