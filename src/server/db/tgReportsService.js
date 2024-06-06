@@ -247,7 +247,7 @@ module.exports.createReport = async function (bot, msg) {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
 
-    const period = definePeriod(periodName)
+    const period = definePeriod(periodName, msg)
     if (period === null) return 0
 
     const currentDate = new Date()
@@ -296,7 +296,7 @@ module.exports.createReport = async function (bot, msg) {
   }
 }
 
-function definePeriod(periodName) {
+function definePeriod(periodName, msg) {
   let period = {}
   switch (periodName) {
     case 'today':
@@ -344,7 +344,7 @@ module.exports.createNetReport = async function (bot, msg) {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const filePath = `${REPORTS_CATALOG}${msg.chat.id}.html`
 
-    const period = definePeriod(periodName)
+    const period = definePeriod(periodName, msg)
     if (period === null) return 0
 
     const currentDate = new Date()
@@ -372,9 +372,9 @@ module.exports.createNetReport = async function (bot, msg) {
       title: item.title.replace('Недоступний Інтернет на хосте ', '').toLowerCase(),
       start_of_close_at: item.start_of_close_at.toISOString().split('T')[0],
       interval: Number(item.interval)
-    }));
+    }))
     const groupedData = preparedData.reduce((acc, item) => {
-      const key = item.title + item.start_of_close_at;
+      const key = item.title + item.start_of_close_at
       if (!acc[key]) {
         acc[key] = {
           title: item.title,
@@ -383,25 +383,25 @@ module.exports.createNetReport = async function (bot, msg) {
         };
       }
       acc[key].total_interval += item.interval;
-      return acc;
-    }, {});
+      return acc
+    }, {})
 
     const resultData = Object.values(groupedData);
     const sortedData = resultData.sort((a, b) => {
       if (a.title < b.title) {
-        return -1;
+        return -1
       }
       if (a.title > b.title) {
-        return 1;
+        return 1
       }
       if (a.start_of_close_at < b.start_of_close_at) {
-        return -1;
+        return -1
       }
       if (a.start_of_close_at > b.start_of_close_at) {
-        return 1;
+        return 1
       }
-      return 0;
-    });
+      return 0
+    })
 
     await createNetReportHtml(bot, msg.chat.id, sortedData, period)
     globalBuffer[msg.chat.id] = {}
