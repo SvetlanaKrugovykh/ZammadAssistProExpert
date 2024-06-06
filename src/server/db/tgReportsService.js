@@ -256,6 +256,8 @@ module.exports.createReport = async function (bot, msg) {
 
     const dayStart = _dayStart(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0))
     const dayEnd = _dayEnd(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999))
+    console.log('report dayStart:', dayStart)
+    console.log('report dayEnd:', dayEnd)
     const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id < 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const dataClose = await execPgQuery(`SELECT group_id, 4 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id > 4  GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
@@ -353,6 +355,8 @@ module.exports.createNetReport = async function (bot, msg) {
 
     const dayStart = _dayStart(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0))
     const dayEnd = _dayEnd(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999))
+    console.log('Net report dayStart:', dayStart)
+    console.log('Net report dayEnd:', dayEnd)
 
     const data = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
