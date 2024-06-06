@@ -67,30 +67,36 @@ module.exports.messageCreateScene = async function (bot, msg) {
 
 module.exports.messageSender = async function (bot, msg, selectedByUser) {
   try {
-    if (globalBuffer[msg.chat.id].selectedCustomers.length === 0) {
-      if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
-        await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
-        return
-      }
-    } else {
-      const dirPath = process.env.DOWNLOAD_APP_PATH
-      globalBuffer[msg.chat.id].msgSent = false
-      for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
-        const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
-        console.log(user)
-        if (user) {
-          await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
-          for (const attachmentFileName of selectedByUser?.ticketAttachmentFileNames) {
+    if (globalBuffer[msg.chat.id]?.selectedCustomers === undefined
+      || globalBuffer[msg.chat.id]?.selectedCustomers.length === 0) {
+      await bot.sendMessage(msg.chat.id, 'Для можливості відправки повідомлення оберіть отримувача/ів')
+      return false
+    }
+
+    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
+      await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
+      return false
+    }
+
+    const dirPath = process.env.DOWNLOAD_APP_PATH
+    globalBuffer[msg.chat.id].msgSent = false
+    for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
+      const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
+      console.log(user)
+      if (user) {
+        await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
+        if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
+          for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
             const fileFullName = `${dirPath}${attachmentFileName}`
             await bot.sendDocument(user.login, fileFullName, { filename: attachmentFileName, caption: attachmentFileName })
             fs.unlinkSync(fileFullName)
           }
         }
       }
-      globalBuffer[msg.chat.id].selectedCustomers = []
-      globalBuffer[msg.chat.id].msgSent = true
     }
-    await bot.sendMessage(msg.chat.id, `Повідомлення відправлено.`)
+    globalBuffer[msg.chat.id].selectedCustomers = []
+    globalBuffer[msg.chat.id].msgSent = true
+
   } catch (err) {
     console.log(err)
   }
