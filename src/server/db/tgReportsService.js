@@ -353,9 +353,14 @@ module.exports.createNetReport = async function (bot, msg) {
     if (period.start > currentDate) period.start = currentDate
     if (period.end > currentDate) period.end = currentDate
 
+    const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 0
+    console.log('hoursToAdd:', hoursToAdd)
 
-    const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0);
-    const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999);
+    const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0)
+    dayStart.setHours(dayStart.getHours() + hoursToAdd);
+    const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
+    dayEnd.setHours(dayEnd.getHours() + hoursToAdd);
+
     console.log('Net report dayStart:', dayStart)
     console.log('Net report dayEnd:', dayEnd)
 
@@ -391,8 +396,6 @@ module.exports.createNetReport = async function (bot, msg) {
 
     const result = await execPgQuery(`SELECT NOW() as current_timestamp;`, [])
     console.log(result.current_timestamp)
-    const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 0
-    console.log('hoursToAdd:', hoursToAdd)
 
     const dataOpen = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
