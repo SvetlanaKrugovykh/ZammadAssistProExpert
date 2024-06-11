@@ -174,7 +174,7 @@ async function handler(bot, msg, webAppUrl) {
       await messageSender(bot, msg, selectedByUser[chatId])
       if (globalBuffer[chatId]?.TicketCreated || globalBuffer[chatId]?.msgSent) {
         selectedByUser[chatId] = {}
-        goBack(bot, msg)
+        goBack(bot, msg, true)
       }
       break
     case '9_2':
@@ -262,9 +262,9 @@ async function switchDynamicSceenes(bot, msg) {
   } catch (error) { console.log(error) }
 }
 
-async function goBack(bot, msg) {
+async function goBack(bot, msg, forcefully = false) {
   try {
-    if (msg.text.includes('🏠')) {
+    if (msg.text.includes('🏠') || forcefully) {
       const adminUser = users.find(user => user.id === msg.chat.id)
       if (adminUser) {
         await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])

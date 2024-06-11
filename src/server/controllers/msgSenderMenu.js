@@ -89,13 +89,19 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
           for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
             const fileFullName = `${dirPath}${attachmentFileName}`
             await bot.sendDocument(user.login, fileFullName, { filename: attachmentFileName, caption: attachmentFileName })
-            fs.unlinkSync(fileFullName)
           }
         }
       }
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
+    for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
+      const fileFullName = `${dirPath}${attachmentFileName}`
+      fs.unlinkSync(fileFullName)
+    }
+
     await bot.sendMessage(msg.chat.id, 'Повідомлення відправлено', { parse_mode: 'HTML' })
     globalBuffer[msg.chat.id].selectedCustomers = []
+    globalBuffer[msg.chat.id].ticketAttachmentFileNames = []
     globalBuffer[msg.chat.id].msgSent = true
 
   } catch (err) {
