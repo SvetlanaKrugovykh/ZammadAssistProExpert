@@ -9,7 +9,7 @@ module.exports.msgSenderMenu = async function (bot, msg) {
   const checkChoices = await checkSelectedPeoplesAndSubdivisions(bot, msg, false)
   const chatId = msg.chat.id
   let title = '📧'
-  if (!globalBuffer[chatId]?.selectedGroups && !globalBuffer[chatId]?.selectedPeriod) title = buttonsConfig.chooseReportSettings.title
+  if (!globalBuffer[chatId]?.selectedGroups && !globalBuffer[chatId]?.selectedPeriod) title = buttonsConfig.chooseSenMessageSettings.title
   if (checkChoices) title = '📧'
   await bot.sendMessage(msg.chat.id, title, {
     reply_markup: {
