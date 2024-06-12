@@ -72,6 +72,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       await bot.sendMessage(msg.chat.id, 'Для можливості відправки повідомлення оберіть отримувача/ів')
       return false
     }
+    globalBuffer[msg.chat.id].selectedCustomers = [...new Set(globalBuffer[msg.chat.id].selectedCustomers)]
 
     if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
@@ -80,6 +81,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
 
     const dirPath = process.env.DOWNLOAD_APP_PATH
     globalBuffer[msg.chat.id].msgSent = false
+
     for (const selectedCustomer of globalBuffer[msg.chat.id].selectedCustomers) {
       const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
       console.log(user)
@@ -94,6 +96,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       }
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
+
     for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
       const fileFullName = `${dirPath}${attachmentFileName}`
       fs.unlinkSync(fileFullName)
