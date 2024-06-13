@@ -36,7 +36,7 @@ module.exports.createListOfCustomers = async function (bot, msg) {
     if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) return
     const modifiedSubdivisions = selectedSubdivisions.map(subdivision => subdivision.replace('63_', ''))
 
-    const data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true)
+    const data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
     let data_shops = [];
     if (selectedSubdivisions.includes("63_28")) {
       data_shops = await execPgQuery(`SELECT * FROM users WHERE email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
