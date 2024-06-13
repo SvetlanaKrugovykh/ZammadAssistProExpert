@@ -70,6 +70,7 @@ bot.on('callback_query', async (callbackQuery) => {
       await bot.sendMessage(chatId, `Обрано: ${groupName}`)
     }
     if (callbackQuery.data.startsWith('63_')) {
+      globalBuffer[chatId].selectionFlag = false
       const selectedSubdivision = callbackQuery.data
       selectedSubdivisions.push(selectedSubdivision)
       globalBuffer[chatId].selectedSubdivisions = selectedSubdivisions
@@ -80,17 +81,33 @@ bot.on('callback_query', async (callbackQuery) => {
       let SubdivisionName = Subdivision ? Subdivision.subdivision_name : id
       await bot.sendMessage(chatId, `Обрано: ${SubdivisionName}`)
     }
+
     if (callbackQuery.data.startsWith('73_')) {
+      let title = 'Додано:'
       const selectedCustomer = callbackQuery.data
-      selectedCustomers.push(selectedCustomer)
+      if (globalBuffer[chatId]?.selectAction === 'selection') {
+        console.log('selection', selectedCustomer)
+        globalBuffer[chatId].selectionFlag = true
+      }
+      if (globalBuffer[chatId]?.selectAction === 'finalize') {
+        console.log('finalize', selectedCustomer)
+        title = 'Видалено:'
+        const index = selectedCustomers.indexOf(selectedCustomer);
+        if (index !== -1) {
+          selectedCustomers.splice(index, 1)
+        }
+      } else {
+        selectedCustomers.push(selectedCustomer)
+      }
       globalBuffer[chatId].selectedCustomers = selectedCustomers
       console.log(`1_selectedCustomers for  ${chatId} is ${globalBuffer[chatId]?.selectedCustomers}`)
       const Customers = await execPgQuery(`SELECT * FROM users WHERE id=$1`, [Number(selectedCustomer.replace('73_', ''))], false, true)
       const Customer = Customers.find(g => g.id === Number(selectedCustomer.replace('73_', '')))
-      console.log(`[${chatId}-${messageId}].Обрано: ${selectedCustomer}`)
+      console.log(`[${chatId}-${messageId}]. ${title} ${selectedCustomer}`)
       let CustomerName = Customer ? Customer.firstname + ' ' + Customer.lastname : id
-      await bot.sendMessage(chatId, `Обрано: ${CustomerName}`)
+      await bot.sendMessage(chatId, `${title} ${CustomerName}`)
     }
+
     await checkReadyForReport(bot, callbackQuery.message)
     return
   }

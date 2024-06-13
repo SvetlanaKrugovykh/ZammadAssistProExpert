@@ -174,6 +174,9 @@ async function handler(bot, msg, webAppUrl) {
       await messageSender(bot, msg, selectedByUser[chatId])
       if (globalBuffer[chatId]?.TicketCreated || globalBuffer[chatId]?.msgSent) {
         selectedByUser[chatId] = {}
+        globalBuffer[chatId].selectedCustomers = []
+        globalBuffer[chatId].selectedSubdivisions = []
+        globalBuffer[chatId].ticketAttachmentFileNames = []
         goBack(bot, msg, true)
       }
       break
@@ -197,7 +200,7 @@ async function handler(bot, msg, webAppUrl) {
       await findCustomers(bot, msg)
       break
     case '19_5':
-      await createListOfCustomers(bot, msg, 'finilize')
+      await createListOfCustomers(bot, msg, 'finalize')
       break
     default:
       if (msg.text === undefined) return

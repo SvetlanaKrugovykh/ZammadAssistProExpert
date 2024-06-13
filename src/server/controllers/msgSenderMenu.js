@@ -106,6 +106,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
 
     await bot.sendMessage(msg.chat.id, 'Повідомлення відправлено', { parse_mode: 'HTML' })
     globalBuffer[msg.chat.id].selectedCustomers = []
+    globalBuffer[msg.chat.id].selectedSubdivisions = []
     globalBuffer[msg.chat.id].ticketAttachmentFileNames = []
     globalBuffer[msg.chat.id].msgSent = true
 

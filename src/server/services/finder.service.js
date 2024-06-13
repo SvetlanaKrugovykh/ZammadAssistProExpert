@@ -4,15 +4,17 @@ const { globalBuffer } = require('../globalBuffer')
 
 module.exports.findCustomers = async function (bot, msg) {
   try {
+    const chatId = msg.chat.id
     const inputLength = 2
     const txtForSeek = await inputLineScene(bot, msg)
     if (txtForSeek.length < inputLength) return
     const data = await execPgQuery(`SELECT * FROM users WHERE firstname ILIKE $1 OR lastname ILIKE  $1`, [`%${txtForSeek}%`], false, true)
     if (!Array.isArray(data)) {
-      await bot.sendMessage(msg.chat.id, 'Користувачів не знайдено')
+      await bot.sendMessage(chatId, 'Користувачів не знайдено')
       return
     }
 
+    globalBuffer[chatId].selectAction = 'selection'
     const customerButtons = {
       title: 'Оберіть, будь ласка, співробітника:',
       options: [{ resize_keyboard: true }],
@@ -20,7 +22,7 @@ module.exports.findCustomers = async function (bot, msg) {
         { text: `👦🏼 ${customer.firstname} ${customer.lastname}`, callback_data: `73_${customer.id}` }
       ])
     }
-    await bot.sendMessage(msg.chat.id, "Знайдені користувачі", {
+    await bot.sendMessage(chatId, "Знайдені користувачі", {
       reply_markup: {
         inline_keyboard: customerButtons.buttons,
         resize_keyboard: true
@@ -32,26 +34,45 @@ module.exports.findCustomers = async function (bot, msg) {
 
 module.exports.createListOfCustomers = async function (bot, msg, action = '') {
   try {
-    const selectedSubdivisions = globalBuffer[msg.chat.id]?.selectedSubdivisions
+    const chatId = msg.chat.id
+    const selectedSubdivisions = globalBuffer[chatId]?.selectedSubdivisions
     if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) return
     const modifiedSubdivisions = selectedSubdivisions.map(subdivision => subdivision.replace('63_', ''))
 
-    const data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
-    let data_shops = [];
-    if (selectedSubdivisions.includes("63_28")) {
-      data_shops = await execPgQuery(`SELECT * FROM users WHERE email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
+    let data = []
+    let data_shops = []
+
+    if (!globalBuffer[chatId]?.selectionFlag) {
+      data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
+      if (selectedSubdivisions.includes("63_28"))
+        data_shops = await execPgQuery(`SELECT * FROM users WHERE email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
     }
 
-    const combinedData = data.concat(data_shops);
+    let combinedData = data.concat(data_shops)
+    let addedCustomers = []
+
+    if (action === 'finalize') {
+      if (!globalBuffer[chatId]?.selectionFlag) {
+        for (const subDivCustomer of combinedData) {
+          globalBuffer[chatId]?.selectedCustomers.push(`73_${subDivCustomer.id}`)
+        }
+      }
+      if (Array.isArray(globalBuffer[chatId]?.selectedCustomers) && globalBuffer[chatId]?.selectedCustomers.length > 0) {
+        const addedCustomersIds = globalBuffer[chatId].selectedCustomers.map(customer => customer.replace('73_', ''))
+        addedCustomers = await execPgQuery(`SELECT * FROM users WHERE id = ANY($1)`, [addedCustomersIds], false, true) || []
+      }
+      combinedData = combinedData.concat(addedCustomers)
+    }
+
+    combinedData = Array.from(new Set(combinedData.map(JSON.stringify))).map(JSON.parse)
     combinedData.sort((a, b) => a.firstname > b.firstname ? 1 : -1)
 
     if (!Array.isArray(combinedData) || combinedData.length === 0) {
-      await bot.sendMessage(msg.chat.id, 'Користувачів не знайдено')
+      await bot.sendMessage(chatId, 'Користувачів не знайдено')
       return
     }
 
-    // if (action === 'selection') globalBuffer[msg.chat.id].selectedUsers = combinedData  //TODO
-    // if (action === 'finilize') globalBuffer[msg.chat.id].selectedUsers = []             //TODO
+    if (action !== '') globalBuffer[chatId].selectAction = action
 
     const customerButtons = {
       title: 'Обрано співробітників :',
@@ -60,7 +81,7 @@ module.exports.createListOfCustomers = async function (bot, msg, action = '') {
         { text: `👦🏼 ${customer.firstname} ${customer.lastname}`, callback_data: `73_${customer.id}` }
       ])
     }
-    await bot.sendMessage(msg.chat.id, "Знайдені користувачі", {
+    await bot.sendMessage(chatId, "Знайдені користувачі", {
       reply_markup: {
         inline_keyboard: customerButtons.buttons,
         resize_keyboard: true
