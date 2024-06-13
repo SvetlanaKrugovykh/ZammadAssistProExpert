@@ -8,5 +8,12 @@ module.exports = (fastify, _opts, done) => {
     preHandler: [],
   })
 
+  fastify.route({
+    method: 'POST',
+    url: '/subdivisions/assign/',
+    handler: subdivisionsController.AssignSubdivisions,
+    preHandler: [],
+  })
+
   done()
 }

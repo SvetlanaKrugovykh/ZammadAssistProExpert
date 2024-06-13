@@ -15,3 +15,17 @@ module.exports.UpdateSubdivisions = async function (request, _reply) {
   }
 }
 
+module.exports.AssignSubdivisions = async function (request, _reply) {
+  try {
+    const body = request.body
+    const message = await subdivisionsService.AssignSubdivisions(body)
+    if (!message) {
+      throw new HttpError[501]('Command execution failed')
+    }
+    return {
+      message: `done `
+    }
+  } catch (error) {
+    throw new HttpError[500](error.message)
+  }
+}

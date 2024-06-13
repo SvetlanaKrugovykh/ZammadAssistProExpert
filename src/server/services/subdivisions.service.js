@@ -26,3 +26,25 @@ module.exports.UpdateSubdivisions = async function (body) {
     return false
   }
 }
+
+module.exports.AssignSubdivisions = async function (body) {
+  try {
+    const { users_array } = body
+    for (const user_ of users_array) {
+      console.log(user_);
+      const data = await execPgQuery(`SELECT * FROM users WHERE id=$1 LIMIT 1`, [user_.id], false)
+      let query = '', values = []
+      if (data?.id) {
+        query = `UPDATE users SET id=$1, departments=$2 WHERE id=$1`
+        values = [user_.id, user_.subdivision_id]
+      } else {
+        console.log('User not found', user_);
+      }
+      await execPgQuery(query, values, true)
+    }
+    return true
+  } catch (error) {
+    console.error('Error executing commands:', error.message)
+    return false
+  }
+}
