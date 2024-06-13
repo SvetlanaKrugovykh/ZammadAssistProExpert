@@ -13,7 +13,7 @@ const { ticketApprovalScene, usersStarterMenu, registeredUserMenu } = require('.
 const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
 const { globalBuffer, selectedByUser } = require('../globalBuffer')
-const { findCustomers } = require('../services/finder.service')
+const { findCustomers, createListOfCustomers } = require('../services/finder.service')
 
 //#region staticKeyboad
 function getCallbackData(text) {
@@ -189,6 +189,9 @@ async function handler(bot, msg, webAppUrl) {
     case 'any_period':
       await chooseData(bot, msg, 'початкову')
       await chooseData(bot, msg, 'кінцеву')
+      break
+    case '19_2':
+      await createListOfCustomers(bot, msg)
       break
     case '19_3':
       await findCustomers(bot, msg)
