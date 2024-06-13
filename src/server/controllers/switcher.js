@@ -191,10 +191,13 @@ async function handler(bot, msg, webAppUrl) {
       await chooseData(bot, msg, 'кінцеву')
       break
     case '19_2':
-      await createListOfCustomers(bot, msg)
+      await createListOfCustomers(bot, msg, 'selection')
       break
     case '19_3':
       await findCustomers(bot, msg)
+      break
+    case '19_5':
+      await createListOfCustomers(bot, msg, 'finilize')
       break
     default:
       if (msg.text === undefined) return

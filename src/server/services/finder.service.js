@@ -30,7 +30,7 @@ module.exports.findCustomers = async function (bot, msg) {
   } catch (error) { console.log(error) }
 }
 
-module.exports.createListOfCustomers = async function (bot, msg) {
+module.exports.createListOfCustomers = async function (bot, msg, action = '') {
   try {
     const selectedSubdivisions = globalBuffer[msg.chat.id]?.selectedSubdivisions
     if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) return
@@ -49,6 +49,9 @@ module.exports.createListOfCustomers = async function (bot, msg) {
       await bot.sendMessage(msg.chat.id, 'Користувачів не знайдено')
       return
     }
+
+    // if (action === 'selection') globalBuffer[msg.chat.id].selectedUsers = combinedData  //TODO
+    // if (action === 'finilize') globalBuffer[msg.chat.id].selectedUsers = []             //TODO
 
     const customerButtons = {
       title: 'Обрано співробітників :',

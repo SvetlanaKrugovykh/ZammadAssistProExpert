@@ -97,9 +97,11 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
 
-    for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
-      const fileFullName = `${dirPath}${attachmentFileName}`
-      fs.unlinkSync(fileFullName)
+    if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
+      for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
+        const fileFullName = `${dirPath}${attachmentFileName}`
+        fs.unlinkSync(fileFullName)
+      }
     }
 
     await bot.sendMessage(msg.chat.id, 'Повідомлення відправлено', { parse_mode: 'HTML' })
