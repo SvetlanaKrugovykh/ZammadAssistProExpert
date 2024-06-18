@@ -44,6 +44,7 @@ module.exports.createListOfCustomers = async function (bot, msg, action = '') {
 
     let data = []
     let data_shops = []
+    if (!globalBuffer[chatId]?.selectedCustomers) globalBuffer[chatId].selectedCustomers = []
 
     if (!globalBuffer[chatId]?.selectionFlag) {
       data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
