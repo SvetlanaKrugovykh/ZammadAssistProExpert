@@ -36,7 +36,10 @@ module.exports.createListOfCustomers = async function (bot, msg, action = '') {
   try {
     const chatId = msg.chat.id
     const selectedSubdivisions = globalBuffer[chatId]?.selectedSubdivisions
-    if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) return
+    if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) {
+      await bot.sendMessage(chatId, 'Оберіть спочатку підрозділ')
+      return
+    }
     const modifiedSubdivisions = selectedSubdivisions.map(subdivision => subdivision.replace('63_', ''))
 
     let data = []
