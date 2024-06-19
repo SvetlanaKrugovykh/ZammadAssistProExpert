@@ -165,6 +165,7 @@ async function handler(bot, msg, webAppUrl) {
       await checkReadyForReport(bot, msg)
       break
     case '19_1':
+      globalBuffer[chatId].selectionSubdivisionFlag = false
       await chooseSubdivisionsFromList(bot, msg)
       break
     case '19_4':

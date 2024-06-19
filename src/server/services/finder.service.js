@@ -37,7 +37,7 @@ module.exports.createListOfCustomers = async function (bot, msg, action = '') {
     const chatId = msg.chat.id
     const selectedSubdivisions = globalBuffer[chatId]?.selectedSubdivisions
     if (!Array.isArray(selectedSubdivisions) || selectedSubdivisions.length === 0) {
-      await bot.sendMessage(chatId, 'Оберіть спочатку підрозділ')
+      await bot.sendMessage(chatId, 'Отримувачів не обрано.')
       return
     }
     const modifiedSubdivisions = selectedSubdivisions.map(subdivision => subdivision.replace('63_', ''))
@@ -46,10 +46,14 @@ module.exports.createListOfCustomers = async function (bot, msg, action = '') {
     let data_shops = []
     if (!globalBuffer[chatId]?.selectedCustomers) globalBuffer[chatId].selectedCustomers = []
 
-    if (!globalBuffer[chatId]?.selectionFlag) {
+    if (!globalBuffer[chatId]?.selectionSubdivisionFlag) {
       data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
       if (selectedSubdivisions.includes("63_28"))
         data_shops = await execPgQuery(`SELECT * FROM users WHERE email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
+    }
+
+    if (action === 'selection') {
+      globalBuffer[chatId].selectionSubdivisionFlag = true
     }
 
     let combinedData = data.concat(data_shops)
