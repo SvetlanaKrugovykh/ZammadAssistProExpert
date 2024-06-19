@@ -88,6 +88,12 @@ async function handler(bot, msg, webAppUrl) {
       await reports(bot, msg)
       break
     case '2_7':
+      selectedByUser[chatId] = {}
+      globalBuffer[chatId].selectedCustomers = []
+      globalBuffer[chatId].selectedSubdivisions = []
+      globalBuffer[chatId].ticketAttachmentFileNames = []
+      globalBuffer[chatId].selectionSubdivisionFlag = false
+      globalBuffer[chatId].selectionFlag = false
       await msgSenderMenu(bot, msg)
       break
     case '3_1':

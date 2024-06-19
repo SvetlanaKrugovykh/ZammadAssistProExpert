@@ -91,6 +91,8 @@ bot.on('callback_query', async (callbackQuery) => {
       }
       if (globalBuffer[chatId]?.selectAction === 'finalize') {
         console.log('finalize', selectedCustomer)
+        globalBuffer[chatId].selectionFlag = true
+        globalBuffer[chatId].selectionSubdivisionFlag = true
         title = 'Видалено:'
         const index = selectedCustomers.indexOf(selectedCustomer);
         if (index !== -1) {
