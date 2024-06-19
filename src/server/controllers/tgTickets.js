@@ -123,6 +123,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     const ticketID = selectedByUser.updatedTicketId
     const ticketData = await getTicketData(ticketID)
     const { customer_id, owner_id } = ticketData
+    const ticketNumber = ticketData.number
     const timestamp = fDateTime('uk-UA', new Date())
     let comment = ''
     const user_data = await findUserById(owner_id)
@@ -168,7 +169,7 @@ async function ticketUpdates(bot, msg, selectedByUser) {
       ticket_update_data.message_out = selectedByUser.ticketBody
       ticket_update_data.urls_out = selectedByUser?.ticketAttachmentFileNames || []
       await userReplyRecord(ticket_update_data)
-      await sendReplyToCustomer(customer_id, ticketID, ticket_update_data)
+      await sendReplyToCustomer(customer_data, ticketID, ticketNumber, ticket_update_data)
     }
 
     selectedByUser.ticketAttachmentFileNames = []

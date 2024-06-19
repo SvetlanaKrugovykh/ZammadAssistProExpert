@@ -187,16 +187,18 @@ module.exports.getNewRecord = async function (ticket_id, callFeebBack = false) {
   }
 }
 
-module.exports.sendReplyToCustomer = async function (customer_id, ticketID, ticket_update_data) {
+module.exports.sendReplyToCustomer = async function (customer_data, ticketID, ticketNumber, ticket_update_data) {
   const { message_out, urls_out } = ticket_update_data
   try {
+    const { firstname, lastname } = customer_data
+    console.log('⚠️sendReplyToCustomer', firstname, lastname, ticketID, ticketNumber, message_out, urls_out)
     const ticketData = await getTicketData(ticketID)
     const { title, owner_id } = ticketData
     const user = await findUserById(owner_id)
     if (user) {
       const chatId = Number(user.login)
       if (chatId > 0) {
-        await bot.sendMessage(chatId, `⚠️ Увага! Вам надійшла відповідь користувача за заявкою № ${ticketID} на тему ${title} Відповідь: <b>${message_out}</b> ⚠️`, { parse_mode: 'HTML' })
+        await bot.sendMessage(chatId, `⚠️ Увага! Вам надійшла відповідь користувача ${firstname} ${lastname} за заявкою № ${ticketID}(${ticketNumber}) на тему ${title} Відповідь: <b>${message_out}</b> ⚠️`, { parse_mode: 'HTML' })
         await getAndSendAttachmentToPerformer(chatId, ticketID, urls_out)
       }
       return true
