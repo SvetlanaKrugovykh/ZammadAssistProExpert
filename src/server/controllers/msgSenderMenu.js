@@ -101,7 +101,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
     for (const selectedCustomer of globalBuffer[chatId].selectedCustomers) {
       const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
       console.log(user)
-      if (user) {
+      if (user && Number(user.login) > 0) {
         await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
         if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
           for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
@@ -109,6 +109,8 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
             await bot.sendDocument(user.login, fileFullName, { filename: attachmentFileName, caption: attachmentFileName })
           }
         }
+      } else {
+        await bot.sendMessage(chatId, `Користувача з  ${user?.login} не зареєстровано в системі. Повідомлення не відправлене`)
       }
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
