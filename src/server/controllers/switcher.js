@@ -5,7 +5,7 @@ const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistrati
 const { askForPicture, askForAttachment } = require('../services/attachment.service')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
-const { reports, getReport, getNetReport } = require('./reportsMenu')
+const { reports, getReport, getNetReport, everyDayOrWeek } = require('./reportsMenu')
 const { msgSenderMenu, chooseSubdivisionsFromList, messageCreateScene, messageSender } = require('./msgSenderMenu')
 const { ticketApprove, ticketReturn } = require('../modules/notifications')
 const { users } = require('../users/users.model')
@@ -194,11 +194,17 @@ async function handler(bot, msg, webAppUrl) {
       await getReport(bot, msg)
       break
     case '9_4':
-      await getNetReport(bot, msg)
+      await everyDayOrWeek(bot, msg)
       break
     case 'any_period':
       await chooseData(bot, msg, 'початкову')
       await chooseData(bot, msg, 'кінцеву')
+      break
+    case '11_1':
+      await getNetReport(bot, msg, 'day')
+      break
+    case '11_2':
+      await getNetReport(bot, msg, 'week')
       break
     case '19_2':
       await createListOfCustomers(bot, msg, 'selection')

@@ -42,7 +42,7 @@ async function getGroupsFilter(chatId) {
   }
 }
 
-async function createNetReportHtml(bot, chatId, data, period) {
+async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const content = []
@@ -56,8 +56,8 @@ async function createNetReportHtml(bot, chatId, data, period) {
         <tr>
           <th>№ ТП</th>
           <th>Адреса</th>
-          <th>Дата</th>
-          <th>Недоступність в годиннах на дату</th>
+          <th>${dayOrWeek === 'week' ? 'Тиждень' : 'Дата'}</th>
+          <th>Недоступність в годиннах на ${dayOrWeek === 'week' ? 'тиждень' : 'дату'}</th>
         </tr>
     `, style: 'defaultStyle', fontSize: '14px'
     });
@@ -72,12 +72,15 @@ async function createNetReportHtml(bot, chatId, data, period) {
         }
       }
 
+      const startDate = moment(item.start_of_close_at);
+      const endDate = dayOrWeek === 'week' ? startDate.clone().endOf('week').format('DD-MM-YYYY') : '';
+
       content.push({
         text: `
         <tr>
           <td>${item.title}</td>
           <td>${address}</td>
-          <td>${item.start_of_close_at}</td>
+          <td>${dayOrWeek === 'week' ? `${startDate.format('DD-MM-YYYY')} - ${endDate}` : startDate.format('DD-MM-YYYY')}</td>
           <td>${Number(item.total_interval).toFixed(1)}</td>
         </tr>
       `, style: 'defaultStyle', fontSize: '14px'
@@ -340,7 +343,15 @@ function definePeriod(periodName, msg) {
   return period
 }
 
-module.exports.createNetReport = async function (bot, msg) {
+function getWeekStartDate(dateString) {
+  const date = new Date(dateString);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  const weekStartDate = new Date(date.setDate(diff));
+  return weekStartDate.toISOString().split('T')[0];
+}
+
+module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
   try {
     const periodName = globalBuffer[msg.chat.id].selectedPeriod.periodName
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
@@ -422,11 +433,13 @@ module.exports.createNetReport = async function (bot, msg) {
     }))
 
     const groupedData = preparedData.reduce((acc, item) => {
-      const key = item.title + item.start_of_close_at
+      const key = dayOrWeek === 'week'
+        ? item.title + getWeekStartDate(item.start_of_close_at)
+        : item.title + item.start_of_close_at
       if (!acc[key]) {
         acc[key] = {
           title: item.title,
-          start_of_close_at: item.start_of_close_at,
+          start_of_close_at: dayOrWeek === 'week' ? getWeekStartDate(item.start_of_close_at) : item.start_of_close_at,
           total_interval: 0
         };
       }
@@ -451,14 +464,14 @@ module.exports.createNetReport = async function (bot, msg) {
       return 0
     })
 
-    await createNetReportHtml(bot, msg.chat.id, sortedData, period)
+    await createNetReportHtml(bot, msg.chat.id, sortedData, period, dayOrWeek)
     globalBuffer[msg.chat.id] = {}
 
     if (fs.existsSync(filePath)) {
       try {
         await bot.sendDocument(msg.chat.id, fs.createReadStream(filePath), {
           caption: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`,
-          contentType: 'application/octet-stream',
+          contentType: 'text/html',
         })
       } catch (error) {
         console.error('Error sending document:', error)

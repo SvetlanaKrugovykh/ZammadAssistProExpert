@@ -165,6 +165,16 @@ const buttonsConfig = {
     ]
   },
 
+  choiceTypeOfPeriodInReport: {
+    title: 'Оберіть, будь ласка, тривалість сумування періодів простою:',
+    options: [{ resize_keyboard: true }],
+    buttons: [
+      [{ text: '🌙 Щоденний звіт', callback_data: '11_1' }],
+      [{ text: '🌕 Щотижневий звіт', callback_data: '11_2' }],
+      [{ text: '↩️', callback_data: '3_3' }]
+    ]
+  },
+
 }
 
 module.exports = { buttonsConfig }

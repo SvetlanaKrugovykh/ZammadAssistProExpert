@@ -16,6 +16,16 @@ module.exports.reports = async function (bot, msg) {
   })
 }
 
+module.exports.everyDayOrWeek = async function (bot, msg) {
+  await bot.sendMessage(msg.chat.id, buttonsConfig.choiceTypeOfPeriodInReport.title, {
+    reply_markup: {
+      keyboard: buttonsConfig.choiceTypeOfPeriodInReport.buttons,
+      resize_keyboard: true
+    }
+  })
+}
+
+
 module.exports.getReport = async function (bot, msg) {
 
   const checkChoices = await checkSelectedGroupsAndPeriod(bot, msg, true)
@@ -25,13 +35,13 @@ module.exports.getReport = async function (bot, msg) {
   }
 }
 
-module.exports.getNetReport = async function (bot, msg) {
+module.exports.getNetReport = async function (bot, msg, dayOrWeek = 'day') {
 
   if (globalBuffer[msg.chat.id]?.selectedPeriod === undefined) {
     await bot.sendMessage(msg.chat.id, 'Ви не обрали період')
     return
   }
-  await createNetReport(bot, msg)
+  await createNetReport(bot, msg, dayOrWeek)
   globalBuffer[msg.chat.id] = {}
 }
 
