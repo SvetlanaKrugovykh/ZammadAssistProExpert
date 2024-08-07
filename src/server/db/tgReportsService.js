@@ -55,14 +55,14 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
 
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
-    );
+    )
 
     if (dayOrWeek === 'week') {
-      const adjustedStart = moment(period.start).startOf('isoWeek');
-      const adjustedEnd = moment(period.end).endOf('isoWeek');
+      const adjustedStart = moment(period.start).startOf('isoWeek').add(1, 'week');
+      const adjustedEnd = moment(period.end).endOf('isoWeek').subtract(1, 'week');
 
       const weeks = [];
-      let current = adjustedStart.clone()
+      let current = adjustedStart.clone();
 
       while (current.isBefore(adjustedEnd)) {
         weeks.push({
@@ -75,15 +75,29 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
       let headerRow = `
 <table>
   <tr>
-    <th style="width: 5ch; text-align: center;">№ ТП</th>
-    <th style="width: 200px; text-align: center;">Адреса</th>`;
+    <th style="width: 5ch; text-align: left;">№ ТП</th>
+    <th style="width: 200px; text-align: left;">Адреса</th>`;
       weeks.forEach((week, index) => {
         headerRow += `<th style="width: 13ch; word-wrap: break-word; text-align: center;">Тиждень ${index + 1}<br>з ${week.start.format('DD-MM-YYYY')}<br>по ${week.end.format('DD-MM-YYYY')}</th>`;
       });
       headerRow += `<th style="width: 13ch; text-align: center;">Всього</th></tr>`;
       content.push({ text: headerRow, style: 'defaultStyle', fontSize: '14px' });
 
-      data.forEach(item => {
+      const aggregatedData = data.reduce((acc, item) => {
+        if (!acc[item.title]) {
+          acc[item.title] = { title: item.title, totalHours: 0, weeklyHours: Array(weeks.length).fill(0) };
+        }
+        const itemData = acc[item.title];
+        weeks.forEach((week, index) => {
+          if (moment(item.start_of_close_at).isBetween(week.start, week.end, null, '[]')) {
+            itemData.weeklyHours[index] += Number(item.total_interval);
+            itemData.totalHours += Number(item.total_interval);
+          }
+        });
+        return acc;
+      }, {});
+
+      Object.values(aggregatedData).forEach(item => {
         let address = 'Address not found';
         if (Array.isArray(sklepy)) {
           const sklepItem = sklepy.find(sklep => sklep.sklep === item.title);
@@ -93,23 +107,16 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
         }
 
         let row = `<tr>
-    <td style="text-align: left;">${item.title}</td>
-    <td style="text-align: left;">${address}</td>`
-        let totalHours = 0;
-
-        weeks.forEach(week => {
-          const weekHours = data
-            .filter(d => d.title === item.title && moment(d.start_of_close_at).isBetween(week.start, week.end, null, '[]'))
-            .reduce((sum, d) => sum + Number(d.total_interval), 0);
+      <td style="text-align: left;">${item.title}</td>
+      <td style="text-align: left;">${address}</td>`;
+        item.weeklyHours.forEach(weekHours => {
           row += `<td style="width: 13ch; text-align: center;">${weekHours.toFixed(1)}</td>`;
-          totalHours += weekHours;
         });
-
-        row += `<td style="width: 13ch; text-align: center;">${totalHours.toFixed(1)}</td></tr>`;
+        row += `<td style="width: 13ch; text-align: center;">${item.totalHours.toFixed(1)}</td></tr>`;
         content.push({ text: row, style: 'defaultStyle', fontSize: '14px' });
       });
 
-      content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' })
+      content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' });
     } else {
       // Original day-based table
       content.push({
