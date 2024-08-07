@@ -44,64 +44,117 @@ async function getGroupsFilter(chatId) {
 
 async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
   try {
-    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
-    const content = []
+    const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/';
+    const content = [];
     moment.updateLocale('uk', {
       week: {
         dow: 1,
         doy: 7
       }
-    })
+    });
 
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
-    )
+    );
 
-    content.push({
-      text: `
-      <table>
-        <tr>
-          <th>№ ТП</th>
-          <th>Адреса</th>
-          <th>${dayOrWeek === 'week' ? 'Тиждень' : 'Дата'}</th>
-          <th>Недоступність в годиннах на ${dayOrWeek === 'week' ? 'тиждень' : 'дату'}</th>
-        </tr>
-    `, style: 'defaultStyle', fontSize: '14px'
-    });
+    if (dayOrWeek === 'week') {
+      const adjustedStart = moment(period.start).startOf('isoWeek');
+      const adjustedEnd = moment(period.end).endOf('isoWeek');
 
-    data.forEach(item => {
-      let address = 'Address not found';
+      const weeks = [];
+      let current = adjustedStart.clone()
 
-      if (Array.isArray(sklepy)) {
-        const sklepItem = sklepy.find(sklep => sklep.sklep === item.title);
-        if (sklepItem) {
-          address = sklepItem.adress;
-        }
+      while (current.isBefore(adjustedEnd)) {
+        weeks.push({
+          start: current.clone(),
+          end: current.clone().endOf('week')
+        });
+        current.add(1, 'week');
       }
 
-      const startDate = moment(item.start_of_close_at);
-      const endDate = dayOrWeek === 'week' ? startDate.clone().endOf('week').format('DD-MM-YYYY') : '';
+      let headerRow = `
+<table>
+  <tr>
+    <th style="width: 5ch; text-align: center;">№ ТП</th>
+    <th style="width: 200px; text-align: center;">Адреса</th>`;
+      weeks.forEach((week, index) => {
+        headerRow += `<th style="width: 13ch; word-wrap: break-word; text-align: center;">Тиждень ${index + 1}<br>з ${week.start.format('DD-MM-YYYY')}<br>по ${week.end.format('DD-MM-YYYY')}</th>`;
+      });
+      headerRow += `<th style="width: 13ch; text-align: center;">Всього</th></tr>`;
+      content.push({ text: headerRow, style: 'defaultStyle', fontSize: '14px' });
 
+      data.forEach(item => {
+        let address = 'Address not found';
+        if (Array.isArray(sklepy)) {
+          const sklepItem = sklepy.find(sklep => sklep.sklep === item.title);
+          if (sklepItem) {
+            address = sklepItem.adress;
+          }
+        }
+
+        let row = `<tr>
+    <td style="text-align: left;">${item.title}</td>
+    <td style="text-align: left;">${address}</td>`
+        let totalHours = 0;
+
+        weeks.forEach(week => {
+          const weekHours = data
+            .filter(d => d.title === item.title && moment(d.start_of_close_at).isBetween(week.start, week.end, null, '[]'))
+            .reduce((sum, d) => sum + Number(d.total_interval), 0);
+          row += `<td style="width: 13ch; text-align: center;">${weekHours.toFixed(1)}</td>`;
+          totalHours += weekHours;
+        });
+
+        row += `<td style="width: 13ch; text-align: center;">${totalHours.toFixed(1)}</td></tr>`;
+        content.push({ text: row, style: 'defaultStyle', fontSize: '14px' });
+      });
+
+      content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' })
+    } else {
+      // Original day-based table
       content.push({
         text: `
-        <tr>
-          <td>${item.title}</td>
-          <td>${address}</td>
-          <td>${dayOrWeek === 'week' ? `${startDate.format('DD-MM-YYYY')} - ${endDate}` : startDate.format('DD-MM-YYYY')}</td>
-          <td>${Number(item.total_interval).toFixed(1)}</td>
-        </tr>
+        <table>
+          <tr>
+            <th>№ ТП</th>
+            <th>Адреса</th>
+            <th>Дата</th>
+            <th>Недоступність в годиннах на дату</th>
+          </tr>
       `, style: 'defaultStyle', fontSize: '14px'
       });
-    });
 
-    content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' });
+      data.forEach(item => {
+        let address = 'Address not found';
+        if (Array.isArray(sklepy)) {
+          const sklepItem = sklepy.find(sklep => sklep.sklep === item.title);
+          if (sklepItem) {
+            address = sklepItem.adress;
+          }
+        }
 
-    const htmlContent = createHtmlContent(content)
-    await writeHtmlToFile(htmlContent, `${REPORTS_CATALOG}${chatId}.html`)
-    return true
+        const startDate = moment(item.start_of_close_at);
+        content.push({
+          text: `
+          <tr>
+            <td>${item.title}</td>
+            <td>${address}</td>
+            <td>${startDate.format('DD-MM-YYYY')}</td>
+            <td>${Number(item.total_interval).toFixed(1)}</td>
+          </tr>
+        `, style: 'defaultStyle', fontSize: '14px'
+        });
+      });
+
+      content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' });
+    }
+
+    const htmlContent = createHtmlContent(content);
+    await writeHtmlToFile(htmlContent, `${REPORTS_CATALOG}${chatId}.html`);
+    return true;
   } catch (error) {
-    console.error('Error in function createNetReportHtml:', error)
-    return null
+    console.error('Error in function createNetReportHtml:', error);
+    return null;
   }
 }
 
