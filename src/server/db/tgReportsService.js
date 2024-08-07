@@ -46,6 +46,13 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const content = []
+    moment.updateLocale('uk', {
+      week: {
+        dow: 1,
+        doy: 7
+      }
+    })
+
     content.push(
       { text: `Звіт за період: ${moment(period.start).format('DD-MM-YYYY')} - ${moment(period.end).format('DD-MM-YYYY')}`, style: 'header', fontSize: '18px' },
     )
