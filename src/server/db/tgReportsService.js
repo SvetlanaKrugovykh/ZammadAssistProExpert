@@ -58,23 +58,24 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
     )
 
     if (dayOrWeek === 'week') {
-      const adjustedStart = moment(period.start).startOf('isoWeek').add(1, 'week');
-      const adjustedEnd = moment(period.end).endOf('isoWeek').subtract(1, 'week');
+      const adjustedStart = moment(period.start);
+      const adjustedEnd = moment(period.end);
 
       const weeks = [];
       let current = adjustedStart.clone();
 
-      while (current.isBefore(adjustedEnd)) {
+      while (current.isBefore(adjustedEnd) || current.isSame(adjustedEnd, 'day')) {
+        const weekEnd = current.clone().endOf('isoWeek');
         weeks.push({
           start: current.clone(),
-          end: current.clone().endOf('week')
+          end: weekEnd.isAfter(adjustedEnd) ? adjustedEnd.clone() : weekEnd
         });
-        current.add(1, 'week');
+        current.add(1, 'week').startOf('isoWeek');
       }
 
       let headerRow = `
 <table>
-  <tr>
+  <tr>  
     <th style="width: 5ch; text-align: left;">№ ТП</th>
     <th style="width: 200px; text-align: left;">Адреса</th>`;
       weeks.forEach((week, index) => {
