@@ -6,6 +6,26 @@ const { globalBuffer } = require('../globalBuffer')
 const { _dayStart, _dayEnd } = require('../services/various')
 const { sklepy } = require('../data/sklepy')
 
+let firstCall = true
+
+function getWeekStartDate(dateString, dayStart, dayEnd) {
+  const date = new Date(dateString)
+  if (firstCall) {
+    firstCall = false
+    return dayStart.toISOString().split('T')[0]
+  }
+
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+  const weekStartDate = new Date(date.setDate(diff))
+
+  if (weekStartDate > dayEnd) {
+    return dayEnd.toISOString().split('T')[0]
+  }
+
+  return weekStartDate.toISOString().split('T')[0]
+}
+
 module.exports.isUsersHaveReportsRole = async function (chatId) {
   try {
     const data = await execPgQuery('SELECT user_id, login FROM roles_users JOIN users ON roles_users.user_id = users.id WHERE users.login = $1 AND role_id=5', [chatId.toString()])
@@ -42,7 +62,7 @@ async function getGroupsFilter(chatId) {
   }
 }
 
-async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
+async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStart, dayEnd) {
   try {
     const REPORTS_CATALOG = process.env.REPORTS_CATALOG || 'reports/'
     const content = []
@@ -58,27 +78,28 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
     )
 
     if (dayOrWeek === 'week') {
-      const adjustedStart = moment.utc(period.start).subtract(1, 'day')
-      const adjustedEnd = moment.utc(period.end)
+      const adjustedStart = moment(dayStart)
+      const adjustedEnd = moment(dayEnd)
 
       const weeks = []
       let current = adjustedStart.clone()
-
-      weeks.push({
-        start: current.clone(),
-        end: current.clone().endOf('isoWeek').isAfter(adjustedEnd) ? adjustedEnd.clone() : current.clone().endOf('isoWeek')
-      })
-
-      current.add(1, 'week').startOf('isoWeek')
+      firstCall = true
 
       while (current.isBefore(adjustedEnd) || current.isSame(adjustedEnd, 'day')) {
-        const weekEnd = current.clone().endOf('isoWeek')
+        const weekStart = current.clone().startOf('isoWeek')
+        const weekEnd = weekStart.clone().endOf('isoWeek').isAfter(adjustedEnd) ? adjustedEnd.clone() : weekStart.clone().endOf('isoWeek')
+
         weeks.push({
-          start: current.clone(),
-          end: weekEnd.isAfter(adjustedEnd) ? adjustedEnd.clone() : weekEnd
-        })
-        current.add(1, 'week').startOf('isoWeek')
+          start: weekStart,
+          end: weekEnd
+        });
+
+        current = weekEnd.add(1, 'day').startOf('day');
       }
+
+      weeks.forEach(week => {
+        console.log(`Week: ${week.start.format('DD-MM-YYYY')} - ${week.end.format('DD-MM-YYYY')}`)
+      })
 
       let headerRow = `
 <table>
@@ -86,7 +107,7 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek) {
     <th style="width: 5ch; text-align: left;">№ ТП</th>
     <th style="width: 200px; text-align: left;">Адреса</th>`
       weeks.forEach((week, index) => {
-        headerRow += `<th style="width: 13ch; word-wrap: break-word; text-align: center;">Тиждень ${index + 1}<br>з ${week.start.format('DD-MM-YYYY')}<br>по ${week.end.format('DD-MM-YYYY')}</th>`;
+        headerRow += `<th style="width: 13ch; word-wrap: break-word; text-align: center;">Тиждень ${index + 1}<br>з ${week.start.format('DD-MM-YYYY')}<br>по ${week.end.clone().subtract(1, 'day').format('DD-MM-YYYY')}</th>`
       })
       headerRow += `<th style="width: 13ch; text-align: center;">Всього</th></tr>`
       content.push({ text: headerRow, style: 'defaultStyle', fontSize: '14px' })
@@ -421,14 +442,6 @@ function definePeriod(periodName, msg) {
   return period
 }
 
-function getWeekStartDate(dateString) {
-  const date = new Date(dateString);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  const weekStartDate = new Date(date.setDate(diff));
-  return weekStartDate.toISOString().split('T')[0];
-}
-
 module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
   try {
     const periodName = globalBuffer[msg.chat.id].selectedPeriod.periodName
@@ -512,12 +525,12 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
 
     const groupedData = preparedData.reduce((acc, item) => {
       const key = dayOrWeek === 'week'
-        ? item.title + getWeekStartDate(item.start_of_close_at)
+        ? item.title + getWeekStartDate(item.start_of_close_at, dayStart, dayEnd)
         : item.title + item.start_of_close_at
       if (!acc[key]) {
         acc[key] = {
           title: item.title,
-          start_of_close_at: dayOrWeek === 'week' ? getWeekStartDate(item.start_of_close_at) : item.start_of_close_at,
+          start_of_close_at: dayOrWeek === 'week' ? getWeekStartDate(item.start_of_close_at, dayStart, dayEnd) : item.start_of_close_at,
           total_interval: 0
         };
       }
@@ -542,7 +555,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
       return 0
     })
 
-    await createNetReportHtml(bot, msg.chat.id, sortedData, period, dayOrWeek)
+    await createNetReportHtml(bot, msg.chat.id, sortedData, period, dayOrWeek, dayStart, dayEnd)
     globalBuffer[msg.chat.id] = {}
 
     if (fs.existsSync(filePath)) {
