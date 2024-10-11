@@ -16,10 +16,26 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
     const DELTA = (DELTA_RUBY_TIME_ZONE_MINUTES + INTERVAL_MINUTES + DELTA_SUMMER_TIME) * 60000
     const nowMinusInterval = new Date(Date.now() - DELTA)
+
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1`
       + ` AND (EXTRACT(HOUR FROM updated_at) <> ${exceptHour}) `
       + `LIMIT 50`
+
+    if (process.env.AUTO_LOG_LEVEL === '1') {
+      console.log("=== Start analyzing checkAndReplaceTicketsStatuses time settings ===")
+      console.log("Current Time (Date.now()):", new Date(Date.now()).toLocaleString())
+      console.log("Time Minus Interval (nowMinusInterval):", nowMinusInterval.toLocaleString())
+      console.log("Except Hour (exceptHour):", new Date(exceptHour).toLocaleString())
+      const logQuery = `SELECT id, number, title, created_at, updated_at
+                          FROM tickets
+                          WHERE state_id = 4 AND pending_time IS NULL
+                          ORDER BY updated_at DESC
+                          LIMIT 5`
+      const logData = await execPgQuery(logQuery, [], false, true)
+      console.log('logData', logData)
+      console.log("=== Finish analyzing checkAndReplaceTicketsStatuses time settings ===")
+    }
 
     if (process.env.DEBUG_LEVEL === '7') {
       console.log('checkAndReplaceTicketsStatuses query', query)
