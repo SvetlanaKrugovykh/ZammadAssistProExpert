@@ -13,14 +13,16 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
     const DELTA_SUMMER_TIME = Number(process.env.DELTA_SUMMER_TIME) || 0
+    const ANOTHER_DELTA = 60000 * 60 * (Number(process.env.ANOTHER_DELTA) || 2)
 
     const DELTA = (DELTA_RUBY_TIME_ZONE_MINUTES + INTERVAL_MINUTES + DELTA_SUMMER_TIME) * 60000
-    const nowMinusInterval = new Date(Date.now() - DELTA)
+    const nowMinusInterval = new Date(Date.now() - DELTA + ANOTHER_DELTA)
 
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
     const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1`
       + ` AND (EXTRACT(HOUR FROM updated_at) <> ${exceptHour}) `
       + `LIMIT 50`
+    const data = await execPgQuery(query, [nowMinusInterval], false, true)
 
     if (process.env.AUTO_LOG_LEVEL === '1') {
       console.log("=== Start analyzing checkAndReplaceTicketsStatuses time settings ===")
@@ -34,6 +36,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
                           LIMIT 5`
       const logData = await execPgQuery(logQuery, [], false, true)
       console.log('logData', logData)
+      console.log('tickets', data)
       console.log("=== Finish analyzing checkAndReplaceTicketsStatuses time settings ===")
     }
 
@@ -42,8 +45,6 @@ async function checkAndReplaceTicketsStatuses(bot) {
       console.log('checkAndReplaceTicketsStatuses INTERVAL_MINUTES', INTERVAL_MINUTES)
       console.log('checkAndReplaceTicketsStatuses start', new Date())
     }
-    const data = await execPgQuery(query, [nowMinusInterval], false, true)
-    if (process.env.DEBUG_LEVEL === '7') console.log('tickets', data)
     if (!data) return null
     const customerData = {}
     for (const ticket of data) {
