@@ -3,7 +3,7 @@ const { buttonsConfig, standardStartButtons } = require('../modules/keyboard')
 const { inputLineScene } = require('../controllers/inputLine')
 const axios = require('axios')
 const { getTickets } = require('../db/ticketsDbService')
-const { findUserById } = require('../db/tgUsersService')
+const { findUserById, findUserByEmail } = require('../db/tgUsersService')
 const https = require('https')
 const { fDateTime } = require('../services/various')
 const { userReplyRecord, sendReplyToCustomer } = require('../services/interConnect.service')
@@ -71,18 +71,40 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
 
 async function ticketRegistration(bot, msg, selectedByUser) {
   try {
-    if (!selectedByUser?.ticketTitle || selectedByUser?.ticketTitle.includes('🔵 Ввести зміст (такий')) {
+    if (!selectedByUser?.ticketTitle || selectedByUser?.ticketTitle.includes('🟣 Ввести змістовну тему')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнена тема заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🟣 Ввести змістовну тему')) {
+    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести зміст (такий')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнен зміст заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    const user = await findUserById(msg.chat.id)
+    let user = null
+    let owner = null
+
+
+    if (selectedByUser?.ticketBody.includes('@lotok.in.ua') || selectedByUser?.ticketBody.includes('@ito.in.ua')) {
+      const emailMatch = selectedByUser.ticketBody.match(/\b[A-Za-z0-9._%+-]+@lotok\.in\.ua\b/)
+        || selectedByUser.ticketBody.match(/\b[A-Za-z0-9._%+-]+@ito\.in\.ua\b/)
+      if (emailMatch) {
+        const email = emailMatch[0]
+        try {
+          user = await findUserByEmail(email)
+          owner = await findUserById(msg.chat.id)
+        } catch (err) {
+          console.error('Email не знайдено в базі', email)
+          user = await findUserById(msg.chat.id)
+        }
+      } else {
+        console.error('Email не знайдено в змісті')
+        user = await findUserById(msg.chat.id)
+      }
+    } else {
+      user = await findUserById(msg.chat.id)
+    }
     const subject = selectedByUser.ticketTitle
     const body = selectedByUser.ticketBody
-    const ticket = await create_ticket(user, subject, body)
+    const ticket = await create_ticket(user, subject, body, owner)
     if (ticket === null) {
       await bot.sendMessage(msg.chat.id, 'Під час реєстрації заявки виникла помилка. Операцію скасовано\n', { parse_mode: 'HTML' })
       return null
@@ -180,14 +202,16 @@ async function ticketUpdates(bot, msg, selectedByUser) {
 }
 
 
-async function create_ticket(user, subject, body) {
+async function create_ticket(user, subject, body, owner = null) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let customer_id = user['id']
+  let owner_id = owner?.id || user['id']
   if (process.env.ZAMMAD_USER_TEST_MODE === 'true') customer_id = Number(process.env.ZAMMAD_USER_TEST_ID)
   const data = {
     'title': subject,
     'group_id': 1,
     'customer_id': customer_id,
+    'owner_id': owner_id,
     'article': {
       'subject': subject,
       'body': body,

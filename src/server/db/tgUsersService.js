@@ -154,4 +154,4 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
   }
 }
 
-module.exports = { findUserById, findOwnerById, createOrUpdateUserIntoDb, userVerification }
+module.exports = { findUserById, findOwnerById, findUserByEmail, createOrUpdateUserIntoDb, userVerification }
