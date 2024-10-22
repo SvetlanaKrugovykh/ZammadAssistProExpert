@@ -49,6 +49,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       try {
         const ticketID = ticket.id
         const customer_id = ticket.customer_id
+        const ticketNumber = ticket?.number
         console.log(`checkAndReplaceTicketsStatuses ticketID: ${ticketID} customer_id: ${customer_id}`)
         const ticketSubj = await getTicketData(ticketID, 'title')
         if (process.env.DEBUG_LEVEL === '7') console.log('ticketSubj', ticketSubj)
@@ -58,7 +59,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
           console.log(`last article into the same period - Заявка №${ticketID}`)
           continue
         }
-        const ticketSubject = `Заявка №${ticketID} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at, true, true)} виконана.\n` +
+        const ticketSubject = `Заявка id=${ticketID}/№_${ticketNumber} на тему ${ticketSubj} від ${fDateTime('uk-UA', ticket.created_at, true, true)} виконана.\n` +
           `Вам необхідно затвердити виконання заявки або надіслати на доопрацювання.\n` +
           `Наразі відсутності відповіді, заявка буде автоматично завершена ` +
           `через ${TICKET_AUTO_CLOSE_DAYS} дні`
