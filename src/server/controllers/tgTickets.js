@@ -221,7 +221,15 @@ async function create_ticket(user, subject, body, owner = null) {
     }
   }
 
-  if (owner_id !== null) data.owner_id = owner_id
+  if (owner_id !== null) {
+    try {
+      const checked_owner = await findUserById(owner_id)
+      if (checked_owner !== null) data.owner_id = owner_id
+    } catch (error) {
+      console.error(`Error finding user by ID ${owner_id}:`, error)
+    }
+  }
+
   console.log('Data to be sent:', JSON.stringify(data, null, 2))
 
   const httpsAgent = new https.Agent({ rejectUnauthorized: false })
