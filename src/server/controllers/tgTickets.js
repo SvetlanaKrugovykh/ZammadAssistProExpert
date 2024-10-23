@@ -206,12 +206,13 @@ async function create_ticket(user, subject, body, owner = null) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   let customer_id = user['id']
   let owner_id = owner?.id || user['id']
+  console.log(`create_ticket customer_id: ${customer_id} owner_id: ${owner_id}`)
   if (process.env.ZAMMAD_USER_TEST_MODE === 'true') customer_id = Number(process.env.ZAMMAD_USER_TEST_ID)
   const data = {
     'title': subject,
     'group_id': 1,
     'customer_id': customer_id,
-    'owner_id': owner_id,
+    // 'owner_id': owner_id,
     'article': {
       'subject': subject,
       'body': body,
