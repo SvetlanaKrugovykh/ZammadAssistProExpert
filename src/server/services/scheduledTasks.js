@@ -14,13 +14,22 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
     const DELTA = ((hoursToAdd * 60) + INTERVAL_MINUTES) * 60000
-    const nowMinusInterval = new Date(Date.now() - DELTA)
+    const nowMinusInterval = new Date(Date.now() - DELTA - (INTERVAL_MINUTES * 60000) - 30 * 60 * 1000)
 
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
-    const query = `SELECT * FROM tickets WHERE state_id = 4 AND pending_time IS NULL AND updated_at > $1`
+    const THIRTY_MINUTES_AGO = new Date(Date.now() - DELTA - 30 * 60 * 1000)
+
+    console.log('nowMinusInterval', nowMinusInterval)
+    console.log('THIRTY_MINUTES_AGO', THIRTY_MINUTES_AGO)
+
+    const query = `SELECT * FROM tickets 
+          WHERE state_id = 4 
+          AND pending_time IS NULL 
+          AND updated_at > $1
+          AND updated_at < $2`
       + ` AND (EXTRACT(HOUR FROM updated_at) <> ${exceptHour}) `
       + `LIMIT 50`
-    const data = await execPgQuery(query, [nowMinusInterval], false, true)
+    const data = await execPgQuery(query, [nowMinusInterval, THIRTY_MINUTES_AGO], false, true)
 
     if (process.env.AUTO_LOG_LEVEL === '1') {
       console.log("=== Start analyzing checkAndReplaceTicketsStatuses time settings ===")
