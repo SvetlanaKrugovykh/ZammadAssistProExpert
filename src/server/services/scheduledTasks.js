@@ -22,14 +22,32 @@ async function checkAndReplaceTicketsStatuses(bot) {
     console.log('nowMinusInterval', nowMinusInterval)
     console.log('THIRTY_MINUTES_AGO', THIRTY_MINUTES_AGO)
 
-    const query = `SELECT * FROM tickets 
-          WHERE state_id = 4 
-          AND pending_time IS NULL 
-          AND updated_at > $1
-          AND updated_at < $2`
-      + ` AND (EXTRACT(HOUR FROM updated_at) <> ${exceptHour}) `
-      + `LIMIT 50`
+    const query = `
+      SELECT t.* 
+      FROM tickets t
+      LEFT JOIN ticket_notifications tn
+      ON t.id = tn.ticket_id AND tn.notification_date = CURRENT_DATE
+      WHERE t.state_id = 4 
+        AND t.pending_time IS NULL 
+        AND t.updated_at > $1
+        AND t.updated_at < $2
+        AND tn.id IS NULL
+        AND (EXTRACT(HOUR FROM t.updated_at) <> ${exceptHour})
+      LIMIT 50
+    `
     const data = await execPgQuery(query, [nowMinusInterval, THIRTY_MINUTES_AGO], false, true)
+
+    if (data && data.length > 0) {
+      const insertQuery = `
+        INSERT INTO ticket_notifications (ticket_id, notification_date)
+        VALUES ($1, $2)
+      `
+      const currentDate = new Date().toISOString().split('T')[0]
+
+      for (const ticket of data) {
+        await execPgQuery(insertQuery, [ticket.id, currentDate], false, true)
+      }
+    }
 
     if (process.env.AUTO_LOG_LEVEL === '1') {
       console.log("=== Start analyzing checkAndReplaceTicketsStatuses time settings ===")

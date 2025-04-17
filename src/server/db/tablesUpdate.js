@@ -13,7 +13,7 @@ const pool = new Pool({
   port: process.env.ZAMMAD_DB_PORT,
 })
 
-const tableNames = ['ticket_updates', 'subdivisions'];
+const tableNames = ['ticket_updates', 'subdivisions', 'ticket_notifications']
 
 const tableQueries = {
   'ticket_updates': `
@@ -37,21 +37,28 @@ const tableQueries = {
       subdivision_name VARCHAR,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`
+    )`,
+  'ticket_notifications': `
+    CREATE TABLE ticket_notifications (
+      id SERIAL PRIMARY KEY,
+      ticket_id INT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+      notification_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`
 }
 
 
 module.exports.updateTables = function () {
   const promises = tableNames.map(tableName => new Promise((resolve, reject) => {
     pool.query(
-      `SELECT EXISTS (
-        SELECT FROM information_schema.tables
+      `SELECT EXISTS(
+    SELECT FROM information_schema.tables
         WHERE table_name = $1
       )`,
       [tableName],
       (err, res) => {
         if (err) {
-          console.error(`Error checking if table ${tableName} exists:`, err)
+          console.error(`Error checking if table ${tableName} exists: `, err)
           reject(err)
           return
         }
@@ -83,7 +90,7 @@ function createTable(tableName) {
 
     pool.query(query, (err, res) => {
       if (err) {
-        console.error(`Error creating table ${tableName}:`, err)
+        console.error(`Error creating table ${tableName}: `, err)
         reject(err)
       } else {
         console.log(`Table ${tableName} created successfully.`)
