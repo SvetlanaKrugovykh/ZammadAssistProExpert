@@ -21,7 +21,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     const nowMinusInterval = new Date(startOfDay)
 
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
-    const THIRTY_MINUTES_AGO = new Date(Date.now() - DELTA - 30 * 60 * 1000 - TIMEZONE_OFFSET)
+    const THIRTY_MINUTES_AGO = new Date(Date.now() - DELTA - 30 * 60 * 1000 + TIMEZONE_OFFSET)
 
     console.log('nowMinusInterval', nowMinusInterval)
     console.log('THIRTY_MINUTES_AGO', THIRTY_MINUTES_AGO)
