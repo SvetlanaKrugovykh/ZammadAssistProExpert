@@ -16,6 +16,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
 
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
     const DELTA = ((hoursToAdd * 60) + INTERVAL_MINUTES) * 60000
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0))
     const nowMinusInterval = new Date(startOfDay)
 
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
