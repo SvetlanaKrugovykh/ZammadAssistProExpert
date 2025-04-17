@@ -41,18 +41,6 @@ async function checkAndReplaceTicketsStatuses(bot) {
     `
     const data = await execPgQuery(query, [nowMinusInterval, THIRTY_MINUTES_AGO], false, true)
 
-    if (data && data.length > 0) {
-      const insertQuery = `
-        INSERT INTO ticket_notifications (ticket_id, notification_date)
-        VALUES ($1, $2)
-      `
-      const currentDate = new Date().toISOString().split('T')[0]
-
-      for (const ticket of data) {
-        await execPgQuery(insertQuery, [ticket.id, currentDate], false, true)
-      }
-    }
-
     if (process.env.AUTO_LOG_LEVEL === '1') {
       console.log("=== Start analyzing checkAndReplaceTicketsStatuses time settings ===")
       console.log("Current Time (Date.now()):", new Date(Date.now()).toLocaleString())
@@ -102,6 +90,10 @@ async function checkAndReplaceTicketsStatuses(bot) {
             subjects: [],
           }
         }
+        const insertQuery = `INSERT INTO ticket_notifications (ticket_id, notification_date) VALUES ($1, $2)`
+        const currentDate = new Date().toISOString().split('T')[0]
+        await execPgQuery(insertQuery, [ticket.id, currentDate], false, true)
+
         customerData[customer_id].subjects.push(ticketSubject)
         customerData[customer_id].tickets.push(ticket)
       } catch (error) {
