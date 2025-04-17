@@ -12,7 +12,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
-    const TIMEZONE_OFFSET = 3 * 60 * 60 * 1000  // 2 hours in milliseconds at summer time
+    const TIMEZONE_OFFSET = 2 * 60 * 60 * 1000  // 2 hours in milliseconds at summer time
 
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
     const DELTA = ((hoursToAdd * 60) + INTERVAL_MINUTES) * 60000
