@@ -12,7 +12,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     let INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_DB) || 11
     if (process.env.ZAMMAD_USER_TEST_MODE === 'true') INTERVAL_MINUTES = Number(process.env.CLOSED_TICKET_SCAN_INTERVAL_MINUTES_FOR_TEST) || 10
 
-    const TIMEZONE_OFFSET = 2 * 60 * 60 * 1000  // 2 hours in milliseconds at summer time
+    const TIMEZONE_OFFSET = 3 * 60 * 60 * 1000  // 2 hours in milliseconds at summer time
 
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
     const DELTA = ((hoursToAdd * 60) + INTERVAL_MINUTES) * 60000
@@ -21,7 +21,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
     const nowMinusInterval = new Date(startOfDay)
 
     const exceptHour = Number(process.env.EXCEPT_HOUR) || 4
-    const THIRTY_MINUTES_AGO = new Date(Date.now() - DELTA - 30 * 60 * 1000 + TIMEZONE_OFFSET)
+    const THIRTY_MINUTES_AGO = new Date(Date.now() - DELTA - 30 * 60 * 1000 - TIMEZONE_OFFSET)
 
     console.log('nowMinusInterval', nowMinusInterval)
     console.log('THIRTY_MINUTES_AGO', THIRTY_MINUTES_AGO)
@@ -34,7 +34,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       WHERE t.state_id = 4 
         AND t.pending_time IS NULL 
         AND t.updated_at > $1
-        AND t.updated_at < $2
+        AND t.updated_at > $2
         AND tn.id IS NULL
         AND (EXTRACT(HOUR FROM t.updated_at) <> ${exceptHour})
       LIMIT 50
