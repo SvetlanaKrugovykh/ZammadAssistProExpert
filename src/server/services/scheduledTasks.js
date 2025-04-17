@@ -34,7 +34,7 @@ async function checkAndReplaceTicketsStatuses(bot) {
       WHERE t.state_id = 4 
         AND t.pending_time IS NULL 
         AND t.updated_at > $1
-        AND t.updated_at > $2
+        AND t.updated_at < $2
         AND tn.id IS NULL
         AND (EXTRACT(HOUR FROM t.updated_at) <> ${exceptHour})
       LIMIT 50
