@@ -1,12 +1,12 @@
 const { checkUserByTelegramId } = require('../services/users-api')
 const { createTicket } = require('../services/tickets-api')
 
-async function checkUser(req, res) {
+async function checkUser(request, reply) {
   try {
-    const { telegram_id } = req.body
+    const { telegram_id } = request.body
 
     if (!telegram_id) {
-      return res.status(400).json({
+      return reply.code(400).send({
         success: false,
         message: 'telegram_id is required'
       })
@@ -14,7 +14,7 @@ async function checkUser(req, res) {
 
     const result = await checkUserByTelegramId(telegram_id)
 
-    return res.json({
+    return reply.send({
       success: true,
       exists: result.exists,
       user: result.user
@@ -22,14 +22,14 @@ async function checkUser(req, res) {
 
   } catch (error) {
     console.error('Error in checkUser controller:', error)
-    return res.status(500).json({
+    return reply.code(500).send({
       success: false,
       message: 'Internal server error'
     })
   }
 }
 
-async function createNewTicket(req, res) {
+async function createNewTicket(request, reply) {
   try {
     const {
       title,
@@ -41,10 +41,10 @@ async function createNewTicket(req, res) {
       owner_id,
       article_type,
       internal
-    } = req.body
+    } = request.body
 
     if (!title || !body || !customer_id) {
-      return res.status(400).json({
+      return reply.code(400).send({
         success: false,
         message: 'title, body, and customer_id are required'
       })
@@ -64,14 +64,14 @@ async function createNewTicket(req, res) {
 
     const ticket = await createTicket(ticketData)
 
-    return res.json({
+    return reply.send({
       success: true,
       ticket: ticket
     })
 
   } catch (error) {
     console.error('Error in createNewTicket controller:', error)
-    return res.status(500).json({
+    return reply.code(500).send({
       success: false,
       message: 'Internal server error',
       error: error.message
