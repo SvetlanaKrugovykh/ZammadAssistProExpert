@@ -47,6 +47,7 @@ app.register(require('@fastify/cors'), {})
 interConnectApp.register(require('@fastify/cors'), { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] })
 interConnectApp.register(require('./routes/interConnect.route'), { prefix: '/inter-connect' })
 interConnectApp.register(require('./routes/subdivisions.route'), { prefix: '/assist-api' })
+interConnectApp.register(require('./routes/api-route'), { prefix: '/api' })
 
 bot.on('callback_query', async (callbackQuery) => {
   try {
