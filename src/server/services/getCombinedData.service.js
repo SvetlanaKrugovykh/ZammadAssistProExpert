@@ -7,9 +7,9 @@ module.exports.getCombinedData = async function (chatId, modifiedSubdivisions, s
   if (!globalBuffer[chatId]?.selectedCustomers) globalBuffer[chatId].selectedCustomers = []
 
   if (!globalBuffer[chatId]?.selectionSubdivisionFlag) {
-    data = await execPgQuery(`SELECT * FROM users WHERE departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
+    data = await execPgQuery(`SELECT * FROM users WHERE active=true AND departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
     if (selectedSubdivisions.includes("63_28"))
-      data_shops = await execPgQuery(`SELECT * FROM users WHERE email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
+      data_shops = await execPgQuery(`SELECT * FROM users WHERE active=true AND email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
   }
 
   if (action === 'selection') {
@@ -27,7 +27,7 @@ module.exports.getCombinedData = async function (chatId, modifiedSubdivisions, s
     }
     if (Array.isArray(globalBuffer[chatId]?.selectedCustomers) && globalBuffer[chatId]?.selectedCustomers.length > 0) {
       const addedCustomersIds = globalBuffer[chatId].selectedCustomers.map(customer => customer.replace('73_', ''))
-      addedCustomers = await execPgQuery(`SELECT * FROM users WHERE id = ANY($1)`, [addedCustomersIds], false, true) || []
+      addedCustomers = await execPgQuery(`SELECT * FROM users WHERE active=true AND id = ANY($1)`, [addedCustomersIds], false, true) || []
     }
     combinedData = combinedData.concat(addedCustomers)
   }

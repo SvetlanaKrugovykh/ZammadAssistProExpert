@@ -14,10 +14,10 @@ async function findUserById(ID) {
       return null
     }
     if (ID.length < 7) {
-      data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
       console.log(`findUserById: ${data?.id}`)
     } else {
-      data = await execPgQuery('SELECT * FROM users WHERE login = $1', [cleanedId])
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [cleanedId])
       console.log(`findUserByLogin: ${data?.login}`)
     }
     if (!data || data.length === 0) return null
@@ -34,7 +34,7 @@ async function findOwnerById(owner_id) {
     if (!/^\d{1,12}$/.test(owner_id)) return null
     let data = null
     let cleanedId = owner_id.replace(/\D/g, '')
-    data = await execPgQuery('SELECT * FROM users WHERE id = $1', [cleanedId])
+    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -46,7 +46,7 @@ async function findOwnerById(owner_id) {
 async function findUserByEmail(email) {
   try {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-    const data = await execPgQuery('SELECT * FROM users WHERE email = $1', [email.toLowerCase()])
+    const data = await execPgQuery('SELECT * FROM users WHERE active=true AND email = $1', [email.toLowerCase()])
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)

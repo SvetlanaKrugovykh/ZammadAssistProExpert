@@ -5,7 +5,7 @@ async function checkUserByTelegramId(telegramId) {
     const query = `
       SELECT id, login, firstname, lastname, email, active, verified
       FROM users 
-      WHERE login = $1 AND active = true AND verified = true
+      WHERE active = true AND login = $1 AND verified = true
     `
 
     const result = await execPgQuery(query, [telegramId], false, true)

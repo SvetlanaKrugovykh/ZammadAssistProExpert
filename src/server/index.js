@@ -105,7 +105,7 @@ bot.on('callback_query', async (callbackQuery) => {
       globalBuffer[chatId].selectedCustomers = selectedCustomers
       globalBuffer[chatId].selectedCustomers = [...new Set(globalBuffer[chatId].selectedCustomers)]
       console.log(`1_selectedCustomers for  ${chatId} is ${globalBuffer[chatId]?.selectedCustomers}`)
-      const Customers = await execPgQuery(`SELECT * FROM users WHERE id=$1`, [Number(selectedCustomer.replace('73_', ''))], false, true)
+      const Customers = await execPgQuery(`SELECT * FROM users WHERE active=true AND id=$1`, [Number(selectedCustomer.replace('73_', ''))], false, true)
       const Customer = Customers.find(g => g.id === Number(selectedCustomer.replace('73_', '')))
       console.log(`[${chatId}-${messageId}]. ${title} ${selectedCustomer}`)
       let CustomerName = Customer ? Customer.firstname + ' ' + Customer.lastname : id

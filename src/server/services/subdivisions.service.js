@@ -32,7 +32,7 @@ module.exports.AssignSubdivisions = async function (body) {
     const { users_array } = body
     for (const user_ of users_array) {
       console.log(user_);
-      const data = await execPgQuery(`SELECT * FROM users WHERE id=$1 LIMIT 1`, [user_.id], false)
+      const data = await execPgQuery(`SELECT * FROM users WHERE active=true AND id=$1 LIMIT 1`, [user_.id], false)
       let query = '', values = []
       if (data?.id) {
         query = `UPDATE users SET id=$1, departments=$2 WHERE id=$1`
