@@ -103,6 +103,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
     let totalUsers = globalBuffer[chatId].selectedCustomers.length
 
     await bot.sendMessage(chatId, `🚀 Початок розсилки для ${totalUsers} користувачів...`)
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Delay after start message
 
     for (let i = 0; i < globalBuffer[chatId].selectedCustomers.length; i++) {
       const selectedCustomer = globalBuffer[chatId].selectedCustomers[i]
@@ -110,10 +111,19 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
 
       console.log(`Обробка користувача ${i + 1}/${totalUsers}:`, user)
 
+      // Format user info for display
+      const userInfo = user ?
+        `${user.firstname || 'N/A'} ${user.lastname || 'N/A'} (${user.email || 'no email'})` :
+        'Невідомий користувач'
+
       if (user && user.login && String(user.login).trim() !== '' && !isNaN(user.login)) {
         try {
           await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
           console.log(`✅ Повідомлення відправлено користувачу: ${user.login}`)
+
+          // Send success notification to sender
+          await bot.sendMessage(chatId, `✅ Відправлено: ${userInfo}`)
+          await new Promise(resolve => setTimeout(resolve, 500)) // Delay after success notification
 
           if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
             for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
@@ -129,22 +139,45 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
           successCount++
         } catch (sendError) {
           console.error(`❌ Помилка відправки користувачу ${user.login}:`, sendError.message)
+
+          // Send error notification to sender with reason
+          const errorReason = sendError.message.includes('blocked') ? 'заблокував бота' :
+            sendError.message.includes('not found') ? 'не знайдений' :
+              sendError.message.includes('forbidden') ? 'немає доступу' :
+                'технічна помилка'
+
+          await bot.sendMessage(chatId, `❌ Не відправлено: ${userInfo} - ${errorReason}`)
+          await new Promise(resolve => setTimeout(resolve, 500)) // Delay after error notification
+
           errorCount++
         }
       } else {
         console.log(`⚠️ Користувач не валідний:`, user)
+
+        // Send invalid user notification to sender
+        const invalidReason = !user ? 'користувач не існує' :
+          !user.login ? 'відсутній Telegram ID' :
+            'некоректний Telegram ID'
+
+        await bot.sendMessage(chatId, `⚠️ Пропущено: ${userInfo} - ${invalidReason}`)
+        await new Promise(resolve => setTimeout(resolve, 500)) // Delay after invalid user notification
+
         errorCount++
       }
 
+      // Main delay between users
       if (i < globalBuffer[chatId].selectedCustomers.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
 
+      // Intermediate reporting every 10 users
       if ((i + 1) % 10 === 0) {
         await bot.sendMessage(chatId, `📊 Прогрес: ${i + 1}/${totalUsers} (Успішно: ${successCount}, Помилок: ${errorCount})`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Delay after progress report
       }
     }
 
+    // Clean up files
     if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
       for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
         try {
@@ -156,6 +189,8 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       }
     }
 
+    // Final statistics
+    await new Promise(resolve => setTimeout(resolve, 1500)) // Delay before final statistics
     await bot.sendMessage(chatId,
       `✅ Розсилка завершена!\n\n` +
       `📊 Статистика:\n` +
@@ -165,6 +200,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
       { parse_mode: 'HTML' }
     )
 
+    // Clean up buffer
     globalBuffer[chatId].selectedCustomers = []
     globalBuffer[chatId].selectedSubdivisions = []
     globalBuffer[chatId].ticketAttachmentFileNames = []
