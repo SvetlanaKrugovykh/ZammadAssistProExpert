@@ -98,38 +98,81 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
     const dirPath = process.env.DOWNLOAD_APP_PATH
     globalBuffer[chatId].msgSent = false
 
-    for (const selectedCustomer of globalBuffer[chatId].selectedCustomers) {
+    let successCount = 0
+    let errorCount = 0
+    let totalUsers = globalBuffer[chatId].selectedCustomers.length
+
+    await bot.sendMessage(chatId, `🚀 Початок розсилки для ${totalUsers} користувачів...`)
+
+    for (let i = 0; i < globalBuffer[chatId].selectedCustomers.length; i++) {
+      const selectedCustomer = globalBuffer[chatId].selectedCustomers[i]
       const user = await findUserById(Number(selectedCustomer.replace('73_', '')))
-      console.log(user)
-      if (user && Number(user.login) > 0) {
-        await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
-        if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
-          for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
-            const fileFullName = `${dirPath}${attachmentFileName}`
-            await bot.sendDocument(user.login, fileFullName, { filename: attachmentFileName, caption: attachmentFileName })
+
+      console.log(`Обробка користувача ${i + 1}/${totalUsers}:`, user)
+
+      if (user && user.login && String(user.login).trim() !== '' && !isNaN(user.login)) {
+        try {
+          await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
+          console.log(`✅ Повідомлення відправлено користувачу: ${user.login}`)
+
+          if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
+            for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
+              const fileFullName = `${dirPath}${attachmentFileName}`
+              await bot.sendDocument(user.login, fileFullName, {
+                filename: attachmentFileName,
+                caption: attachmentFileName
+              })
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
           }
+
+          successCount++
+        } catch (sendError) {
+          console.error(`❌ Помилка відправки користувачу ${user.login}:`, sendError.message)
+          errorCount++
         }
       } else {
-        await bot.sendMessage(chatId, `Користувача з  ${user?.login} не зареєстровано в системі. Повідомлення не відправлене`)
+        console.log(`⚠️ Користувач не валідний:`, user)
+        errorCount++
       }
-      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      if (i < globalBuffer[chatId].selectedCustomers.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+
+      if ((i + 1) % 10 === 0) {
+        await bot.sendMessage(chatId, `📊 Прогрес: ${i + 1}/${totalUsers} (Успішно: ${successCount}, Помилок: ${errorCount})`)
+      }
     }
 
     if (Array.isArray(selectedByUser?.ticketAttachmentFileNames)) {
       for (const attachmentFileName of selectedByUser.ticketAttachmentFileNames) {
-        const fileFullName = `${dirPath}${attachmentFileName}`
-        fs.unlinkSync(fileFullName)
+        try {
+          const fileFullName = `${dirPath}${attachmentFileName}`
+          fs.unlinkSync(fileFullName)
+        } catch (fileError) {
+          console.error('File deletion error:', fileError.message)
+        }
       }
     }
 
-    await bot.sendMessage(chatId, 'Повідомлення відправлено', { parse_mode: 'HTML' })
+    await bot.sendMessage(chatId,
+      `✅ Розсилка завершена!\n\n` +
+      `📊 Статистика:\n` +
+      `👥 Всього користувачів: ${totalUsers}\n` +
+      `✅ Успішно відправлено: ${successCount}\n` +
+      `❌ Помилок: ${errorCount}`,
+      { parse_mode: 'HTML' }
+    )
+
     globalBuffer[chatId].selectedCustomers = []
     globalBuffer[chatId].selectedSubdivisions = []
     globalBuffer[chatId].ticketAttachmentFileNames = []
     globalBuffer[chatId].msgSent = true
 
   } catch (err) {
-    console.log(err)
+    console.error('Критична помилка в messageSender:', err)
+    await bot.sendMessage(chatId, 'Виникла критична помилка під час розсилки. Перевірте логи.')
   }
 }
 
