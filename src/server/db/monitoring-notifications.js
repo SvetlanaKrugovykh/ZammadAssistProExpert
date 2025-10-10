@@ -277,8 +277,8 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
     if (!result || result.length === 0) {
       return {
         storeNumber,
-        status: 'stable',
-        message: `📶 Інтернет стабільний (перевірено за останні ${Math.round(lookbackDeltaSeconds / 60)} хв.)`,
+        status: 'online',
+        message: `📶 Інтернет доступний`,
         lastUpdate: null,
         ticketId: null
       }
