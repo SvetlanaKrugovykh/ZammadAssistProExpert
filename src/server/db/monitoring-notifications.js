@@ -122,7 +122,7 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
       WHERE created_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds'
         AND created_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds'
         AND group_id = $1 
-        AND title LIKE $2 
+        AND title ILIKE $2 
       ORDER BY created_at DESC
     `
 
@@ -262,7 +262,7 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
       FROM tickets 
       WHERE group_id = $1 
         AND title LIKE $2 
-        AND title LIKE $3
+        AND title ILIKE $3
         AND created_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds'
       ORDER BY created_at DESC 
       LIMIT 1

@@ -133,7 +133,8 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
       Object.values(aggregatedData).forEach(item => {
         let address = 'Address not found'
         if (Array.isArray(sklepy)) {
-          const sklepItem = sklepy.find(sklep => sklep.sklep === item.title)
+          // Case-insensitive search for store
+          const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === item.title.toLowerCase())
           if (sklepItem) {
             address = sklepItem.adress
           }
@@ -166,7 +167,8 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
       data.forEach(item => {
         let address = 'Address not found'
         if (Array.isArray(sklepy)) {
-          const sklepItem = sklepy.find(sklep => sklep.sklep === item.title)
+          // Case-insensitive search for store
+          const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === item.title.toLowerCase())
           if (sklepItem) {
             address = sklepItem.adress
           }
@@ -518,7 +520,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
     }
 
     const preparedData = data.map(item => ({
-      title: item.title.replace('Недоступний Інтернет на хосте ', '').toLowerCase(),
+      title: item.title.replace('Недоступний Інтернет на хосте ', ''),
       start_of_close_at: item.start_of_close_at.toISOString().split('T')[0],
       interval: Number(item.interval)
     }))
