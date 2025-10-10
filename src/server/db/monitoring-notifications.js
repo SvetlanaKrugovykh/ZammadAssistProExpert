@@ -171,7 +171,7 @@ async function sendNotification(telegramId, message, ticketData) {
 async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds, monitoringType = 'INTERNET') {
   try {
     console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago`)
-    
+
     const config = MONITORING_TYPES[monitoringType]
     const tickets = await getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType)
 
@@ -278,7 +278,7 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
       return {
         storeNumber,
         status: 'stable',
-        message: `📶 Інтернет стабільний (перевірено за останні ${Math.round(lookbackDeltaSeconds/60)} хв.)`,
+        message: `📶 Інтернет стабільний (перевірено за останні ${Math.round(lookbackDeltaSeconds / 60)} хв.)`,
         lastUpdate: null,
         ticketId: null
       }
@@ -345,7 +345,7 @@ function getMonitoringStats() {
 async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
   console.log(`Starting monitoring check for last ${checkIntervalMinutes} minutes (${deltaSeconds} seconds)`)
-  
+
   return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
 }
 
