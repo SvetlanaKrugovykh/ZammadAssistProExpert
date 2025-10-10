@@ -99,37 +99,34 @@ async function getUserByStoreNumber(storeNumber) {
 }
 
 /**
- * Get monitoring tickets from database
- * @param {Date} startTime - Start time for query
- * @param {Date} endTime - End time for query
+ * Get monitoring tickets from database using time deltas
+ * @param {number} startDeltaSeconds - Seconds to subtract from current time for start (e.g., 300 for 5 minutes ago)
+ * @param {number} endDeltaSeconds - Seconds to subtract from current time for end (e.g., 0 for now)
  * @param {string} monitoringType - Type from MONITORING_TYPES
  * @returns {Array} - Array of tickets
  */
-async function getMonitoringTickets(startTime, endTime, monitoringType) {
+async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType) {
   try {
     const config = MONITORING_TYPES[monitoringType]
     if (!config) {
       throw new Error(`Unknown monitoring type: ${monitoringType}`)
     }
 
-    const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
-
+    // Use pure database NOW() without any timezone adjustments
     const query = `
       SELECT id, title, created_at, close_at, state_id,
         DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-        (NOW() + INTERVAL '${hoursToAdd} hours') as current_time_adjusted, 
-        ROUND((EXTRACT(EPOCH FROM ((NOW() + INTERVAL '${hoursToAdd} hours') - created_at))/3600)::numeric, 1) as duration_hours
+        NOW() as current_time_db, 
+        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
-      WHERE created_at >= $1 
-        AND created_at <= $2 
-        AND group_id = $3 
-        AND title LIKE $4 
+      WHERE created_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds'
+        AND created_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds'
+        AND group_id = $1 
+        AND title LIKE $2 
       ORDER BY created_at DESC
     `
 
     const result = await execPgQuery(query, [
-      startTime.toISOString(),
-      endTime.toISOString(),
       config.group_id,
       config.title_pattern
     ], false, true)
@@ -165,22 +162,25 @@ async function sendNotification(telegramId, message, ticketData) {
 }
 
 /**
- * Process monitoring tickets and send notifications
- * @param {Date} startTime - Start time for query
- * @param {Date} endTime - End time for query
+ * Process monitoring tickets and send notifications using time deltas
+ * @param {number} startDeltaSeconds - Seconds to subtract from current time for start
+ * @param {number} endDeltaSeconds - Seconds to subtract from current time for end  
  * @param {string} monitoringType - Type from MONITORING_TYPES
  * @returns {Object} - Processing results
  */
-async function processMonitoringNotifications(startTime, endTime, monitoringType = 'INTERNET') {
+async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds, monitoringType = 'INTERNET') {
   try {
+    console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago`)
+    
     const config = MONITORING_TYPES[monitoringType]
-    const tickets = await getMonitoringTickets(startTime, endTime, monitoringType)
+    const tickets = await getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType)
 
     const results = {
       processed: 0,
       sent: 0,
       skipped: 0,
-      errors: 0
+      errors: 0,
+      timeRange: `${startDeltaSeconds}s to ${endDeltaSeconds}s ago`
     }
 
     for (const ticket of tickets) {
@@ -202,6 +202,7 @@ async function processMonitoringNotifications(startTime, endTime, monitoringType
 
       // Check if notification already sent
       if (wasNotificationSent(user.login, ticket.id)) {
+        console.log(`Notification already sent for ticket ${ticket.id} to ${user.login}`)
         results.skipped++
         continue
       }
@@ -236,7 +237,7 @@ async function processMonitoringNotifications(startTime, endTime, monitoringType
     return results
   } catch (error) {
     console.error('Error processing monitoring notifications:', error)
-    return { processed: 0, sent: 0, skipped: 0, errors: 1 }
+    return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
   }
 }
 
@@ -245,18 +246,24 @@ async function processMonitoringNotifications(startTime, endTime, monitoringType
  * @param {string} storeNumber - Store number like "321"
  * @returns {Object} - Status information
  */
-async function checkStoreInternetStatus(storeNumber) {
+/**
+ * Check internet status for specific store using database-relative time
+ * @param {string} storeNumber - Store number (e.g., '001', '125')
+ * @param {number} lookbackDeltaSeconds - Seconds to look back for recent tickets (default: 1 hour)
+ */
+async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600) {
   try {
     const config = MONITORING_TYPES.INTERNET
-    const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 5
 
+    // Query uses database NOW() for consistency
     const query = `
       SELECT id, title, created_at, close_at, state_id, 
-        ROUND((EXTRACT(EPOCH FROM ((NOW() + INTERVAL '${hoursToAdd} hours') - created_at))/3600)::numeric, 1) as duration_hours
+        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
       WHERE group_id = $1 
         AND title LIKE $2 
         AND title LIKE $3
+        AND created_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds'
       ORDER BY created_at DESC 
       LIMIT 1
     `
@@ -270,9 +277,10 @@ async function checkStoreInternetStatus(storeNumber) {
     if (!result || result.length === 0) {
       return {
         storeNumber,
-        status: 'unknown',
-        message: 'Немає інформації про статус інтернету',
-        lastUpdate: null
+        status: 'stable',
+        message: `📶 Інтернет стабільний (перевірено за останні ${Math.round(lookbackDeltaSeconds/60)} хв.)`,
+        lastUpdate: null,
+        ticketId: null
       }
     }
 
@@ -281,10 +289,10 @@ async function checkStoreInternetStatus(storeNumber) {
 
     return {
       storeNumber,
-      status: isResolved ? 'online' : 'offline',
+      status: isResolved ? 'restored' : 'down',
       message: isResolved ?
-        `✅ Інтернет доступний (відновлено ${ticket.duration_hours || 0} год. тому)` :
-        `❌ Інтернет недоступний (${ticket.duration_hours || 0} год.)`,
+        `✅ Інтернет відновлено (тривалість збою: ${ticket.duration_hours || 0} год.)` :
+        `🔴 Інтернет недоступний (${ticket.duration_hours || 0} год.)`,
       lastUpdate: ticket.created_at,
       ticketId: ticket.id
     }
@@ -294,7 +302,8 @@ async function checkStoreInternetStatus(storeNumber) {
       storeNumber,
       status: 'error',
       message: 'Помилка перевірки статусу',
-      lastUpdate: null
+      lastUpdate: null,
+      ticketId: null
     }
   }
 }
@@ -328,11 +337,27 @@ function getMonitoringStats() {
   }
 }
 
+/**
+ * Start monitoring notifications for recent time period
+ * @param {number} checkIntervalMinutes - How many minutes back to check (default: 5)
+ * @param {string} monitoringType - Type from MONITORING_TYPES (default: 'INTERNET')
+ */
+async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = 'INTERNET') {
+  const deltaSeconds = checkIntervalMinutes * 60
+  console.log(`Starting monitoring check for last ${checkIntervalMinutes} minutes (${deltaSeconds} seconds)`)
+  
+  return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
+}
+
 module.exports = {
   processMonitoringNotifications,
+  getMonitoringTickets,
   checkStoreInternetStatus,
+  startMonitoringCheck,
   cleanupOldNotifications,
   getMonitoringStats,
+  extractStoreNumber,
+  getUserByStoreNumber,
   MONITORING_TYPES,
   TICKET_STATES
 }
