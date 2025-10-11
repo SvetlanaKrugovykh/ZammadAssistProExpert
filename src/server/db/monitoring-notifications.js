@@ -345,9 +345,9 @@ function getMonitoringStats() {
 async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
   console.log(`🔍 Checking ${monitoringType} for last ${checkIntervalMinutes} min (${deltaSeconds}s)`)
-  
+
   return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
-}module.exports = {
+} module.exports = {
   processMonitoringNotifications,
   getMonitoringTickets,
   checkStoreInternetStatus,
