@@ -1,4 +1,5 @@
 require('dotenv').config()
+require('./scheduledJobs/jobsController.js')
 const { app, assistApiServer, interConnectApp } = require('./index')
 const HOST = process.env.HOST || '127.0.0.1'
 const HOST_FOR_CONNECT = process.env.HOST_FOR_CONNECT || '127.0.0.1'

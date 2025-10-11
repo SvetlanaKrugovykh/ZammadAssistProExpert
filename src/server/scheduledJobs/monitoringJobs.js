@@ -12,18 +12,6 @@ module.exports.checkInternetOutages = async function checkInternetOutages() {
   }
 }
 
-// Check every 10 minutes for video server issues
-module.exports.checkVideoServerIssues = async function checkVideoServerIssues() {
-  try {
-    console.log('Scheduled check: Video server issues')
-    const results = await monitoringService.startMonitoringCheck(10, 'VIDEO')
-    console.log('Video server check results:', results)
-    return results
-  } catch (error) {
-    console.error('Error in scheduled video check:', error)
-  }
-}
-
 // Daily cleanup of old notifications
 module.exports.dailyCleanup = async function dailyCleanup() {
   try {
@@ -36,24 +24,5 @@ module.exports.dailyCleanup = async function dailyCleanup() {
   }
 }
 
-// Hourly status summary for critical stores
-module.exports.hourlySummary = async function hourlySummary() {
-  try {
-    const criticalStores = ['001', '002', '125', '150'] // Add your critical stores
-    const deltaSeconds = 3600 // 1 hour
 
-    console.log('Hourly summary for critical stores:')
-    const summaryResults = []
-
-    for (const storeNumber of criticalStores) {
-      const status = await monitoringService.checkStoreInternetStatus(storeNumber, deltaSeconds)
-      summaryResults.push(status)
-      console.log(`Store ${storeNumber}: ${status.status} - ${status.message}`)
-    }
-
-    return summaryResults
-  } catch (error) {
-    console.error('Error in hourly summary:', error)
-  }
-}
 
