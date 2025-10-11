@@ -8,6 +8,16 @@ const { sklepy } = require('../data/sklepy')
 
 let firstCall = true
 
+/**
+ * Extract store number from ticket title
+ * @param {string} title - Ticket title like "Недоступний Інтернет на хосте m321"
+ * @returns {string|null} - Store number like "m321" or null if not found
+ */
+function extractStoreFromTitle(title) {
+  const match = title.match(/\bm(\d+)\b/i)
+  return match ? `m${match[1]}` : null
+}
+
 function getWeekStartDate(dateString, dayStart, dayEnd) {
   const date = new Date(dateString)
   if (firstCall) {
@@ -133,10 +143,13 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
       Object.values(aggregatedData).forEach(item => {
         let address = 'Address not found'
         if (Array.isArray(sklepy)) {
-          // Case-insensitive search for store
-          const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === item.title.toLowerCase())
-          if (sklepItem) {
-            address = sklepItem.adress
+          // Extract store number from title and search in sklepy
+          const storeNumber = extractStoreFromTitle(item.title)
+          if (storeNumber) {
+            const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === storeNumber.toLowerCase())
+            if (sklepItem) {
+              address = sklepItem.adress
+            }
           }
         }
 
@@ -167,10 +180,13 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
       data.forEach(item => {
         let address = 'Address not found'
         if (Array.isArray(sklepy)) {
-          // Case-insensitive search for store
-          const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === item.title.toLowerCase())
-          if (sklepItem) {
-            address = sklepItem.adress
+          // Extract store number from title and search in sklepy
+          const storeNumber = extractStoreFromTitle(item.title)
+          if (storeNumber) {
+            const sklepItem = sklepy.find(sklep => sklep.sklep.toLowerCase() === storeNumber.toLowerCase())
+            if (sklepItem) {
+              address = sklepItem.adress
+            }
           }
         }
 
