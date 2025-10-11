@@ -93,7 +93,7 @@ async function getUserByStoreNumber(storeNumber) {
     const result = await execPgQuery(query, [email], false, true)
     return result && result.length > 0 ? result[0] : null
   } catch (error) {
-    console.error('Error getting user by store number:', error)
+    console.error(`❌ Error getting user for store ${storeNumber}: ${error.message || 'Unknown error'}`)
     return null
   }
 }
@@ -133,7 +133,7 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
 
     return result || []
   } catch (error) {
-    console.error('Error getting monitoring tickets:', error)
+    console.error(`❌ Error getting ${monitoringType} tickets: ${error.message || 'Unknown error'}`)
     return []
   }
 }
@@ -148,15 +148,15 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
 async function sendNotification(telegramId, message, ticketData) {
   try {
     if (!telegramId || !bot) {
-      console.error('Missing telegram ID or bot instance')
+      console.error('❌ Missing telegram ID or bot instance')
       return false
     }
 
     await bot.sendMessage(telegramId, message, { parse_mode: 'HTML' })
-    console.log(`✅ Notification sent to ${telegramId}: ${message}`)
+    console.log(`✅ Notification sent to ${telegramId}`)
     return true
   } catch (error) {
-    console.error(`❌ Failed to send notification to ${telegramId}:`, error.message)
+    console.error(`❌ Failed to send to ${telegramId}: ${error.message || 'Unknown error'}`)
     return false
   }
 }
@@ -236,7 +236,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
     console.log(`Monitoring notifications processed:`, results)
     return results
   } catch (error) {
-    console.error('Error processing monitoring notifications:', error)
+    console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
   }
 }
@@ -297,7 +297,7 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
       ticketId: ticket.id
     }
   } catch (error) {
-    console.error('Error checking store internet status:', error)
+    console.error(`❌ Error checking store ${storeNumber} status: ${error.message || 'Unknown error'}`)
     return {
       storeNumber,
       status: 'error',
@@ -318,9 +318,9 @@ function cleanupOldNotifications(daysToKeep = 1) {
     monitoringNotifications.sentNotifications.clear()
     monitoringNotifications.lastCleanup = Date.now()
 
-    console.log('Cleaned up old monitoring notifications')
+    console.log('✅ Cleaned up old monitoring notifications')
   } catch (error) {
-    console.error('Error cleaning up notifications:', error)
+    console.error(`❌ Error cleaning notifications: ${error.message || 'Unknown error'}`)
   }
 }
 
@@ -344,12 +344,10 @@ function getMonitoringStats() {
  */
 async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
-  console.log(`Starting monitoring check for last ${checkIntervalMinutes} minutes (${deltaSeconds} seconds)`)
-
+  console.log(`🔍 Checking ${monitoringType} for last ${checkIntervalMinutes} min (${deltaSeconds}s)`)
+  
   return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
-}
-
-module.exports = {
+}module.exports = {
   processMonitoringNotifications,
   getMonitoringTickets,
   checkStoreInternetStatus,
