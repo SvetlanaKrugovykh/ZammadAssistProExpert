@@ -153,7 +153,7 @@ async function sendNotification(telegramId, message, ticketData) {
     }
 
     await bot.sendMessage(telegramId, message, { parse_mode: 'HTML' })
-    console.log(`✅ Notification sent to ${telegramId}`)
+    console.log(`✅ Notification sent to ${telegramId} ${message}`)
     return true
   } catch (error) {
     console.error(`❌ Failed to send to ${telegramId}: ${error.message || 'Unknown error'}`)
