@@ -22,7 +22,6 @@ function isInternetRelatedTicket(ticketData) {
 
 async function checkAlreadyRegistered(ticketData, customer_id) {
   try {
-    // If ticket is not about internet issues, allow creation
     if (!isInternetRelatedTicket(ticketData)) {
       return false
     }

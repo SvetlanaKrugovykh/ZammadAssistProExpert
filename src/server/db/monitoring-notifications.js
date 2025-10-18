@@ -247,20 +247,26 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
           `📋 Ticket ID: ${ticket.id}`
       }
 
-      // Send notification
+      // Send notification with detailed logging
+      console.log(`Attempting to send notification to ${user.login} for store ${storeNumber}, ticket ${ticket.id}`)
       const sent = await sendNotification(user.login, message, ticket)
       if (sent) {
         markNotificationSent(user.login, ticket.id)
         results.sent++
+        console.log(`✅ Successfully sent and marked notification for ${user.login}`)
       } else {
         results.errors++
+        console.error(`❌ Failed to send notification to ${user.login} for ticket ${ticket.id}`)
       }
 
-      // Small delay between notifications
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // 2 second delay between notifications to avoid Telegram rate limits
+      await new Promise(resolve => setTimeout(resolve, 2000))
     }
 
-    console.log(`Monitoring notifications processed:`, results)
+    // Only log if there was some activity
+    if (results.processed > 0 || results.errors > 0) {
+      console.log(`Monitoring notifications processed:`, results)
+    }
     return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
@@ -282,7 +288,6 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
   try {
     const config = MONITORING_TYPES.INTERNET
 
-    // Query uses database NOW() for consistency
     const query = `
       SELECT id, title, created_at, close_at, state_id, 
         ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
@@ -313,6 +318,18 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
 
     const ticket = result[0]
     const isResolved = ticket.state_id === TICKET_STATES.PROBLEM_RESOLVED
+    const durationMinutes = (ticket.duration_hours || 0) * 60
+
+    // If internet was down for less than 2 minutes, consider it online
+    if (!isResolved && durationMinutes < 2) {
+      return {
+        storeNumber,
+        status: 'online',
+        message: `📶 Інтернет доступний`,
+        lastUpdate: null,
+        ticketId: null
+      }
+    }
 
     return {
       storeNumber,
