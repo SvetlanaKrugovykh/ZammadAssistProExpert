@@ -119,7 +119,5 @@ async function createNewTicket(request, reply) {
 
 module.exports = {
   checkUser,
-  createNewTicket,
-  checkAlreadyRegistered,
-  checkInsufficientInfo
+  createNewTicket
 }
