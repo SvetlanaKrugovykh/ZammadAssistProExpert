@@ -1,11 +1,50 @@
 const { checkUserByTelegramId } = require('../services/users-api')
 const { createTicket } = require('../services/tickets-api')
+const { checkStoreInternetStatus, getStoreNumberByCustomerID } = require('../db/monitoring-notifications')
+
+/**
+ * Check if ticket is related to internet issues
+ * @param {Object} ticketData - Ticket data with title and body
+ * @returns {boolean} - true if ticket is about internet issues
+ */
+function isInternetRelatedTicket(ticketData) {
+  const { title, body } = ticketData
+  const text = `${title || ''} ${body || ''}`.toLowerCase()
+
+  const internetKeywords = [
+    'internet', 'intenet', 'intrenet', 'interent',
+    'интернет', 'интернет', 'інтернет',
+    'інтернет', 'інтернэт',
+  ]
+
+  return internetKeywords.some(keyword => text.includes(keyword))
+}
 
 async function checkAlreadyRegistered(ticketData, customer_id) {
-  // Logic for checking if such ticket already exists will be here
-  // Return false for development for now
-  // TODO: Implement duplicate check by customer_id, title or other criteria
-  return false
+  try {
+    // If ticket is not about internet issues, allow creation
+    if (!isInternetRelatedTicket(ticketData)) {
+      return false
+    }
+
+    const storeNumber = await getStoreNumberByCustomerID(customer_id)
+    if (!storeNumber) {
+      return false
+    }
+
+    const lookbackDeltaSeconds = 18 * 3600 // 18 hours
+
+    const internetStatus = await checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds)
+
+    if (internetStatus && internetStatus.status === 'down') {
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error in checkAlreadyRegistered:', error)
+    return false
+  }
 }
 
 async function checkInsufficientInfo(ticketData) {

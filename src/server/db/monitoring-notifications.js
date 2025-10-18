@@ -99,6 +99,33 @@ async function getUserByStoreNumber(storeNumber) {
 }
 
 /**
+ * Get store number by customer ID (login from users table)
+ * @param {number} customer_id - Customer ID (equals to user login)
+ * @returns {string|null} - Store number like "321" or null if not found
+ */
+async function getStoreNumberByCustomerID(customer_id) {
+  try {
+    const query = `
+      SELECT email 
+      FROM users 
+      WHERE login = $1 AND active = true
+    `
+
+    const result = await execPgQuery(query, [customer_id], false, true)
+    if (!result || result.length === 0) {
+      return null
+    }
+
+    const email = result[0].email
+    const match = email.match(/lotok(\d+)\.uprav@lotok\.in\.ua/)
+    return match ? match[1] : null
+  } catch (error) {
+    console.error(`❌ Error getting store number for customer_id ${customer_id}: ${error.message || 'Unknown error'}`)
+    return null
+  }
+}
+
+/**
  * Get monitoring tickets from database using time deltas
  * @param {number} startDeltaSeconds - Seconds to subtract from current time for start (e.g., 300 for 5 minutes ago)
  * @param {number} endDeltaSeconds - Seconds to subtract from current time for end (e.g., 0 for now)
@@ -356,6 +383,7 @@ async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = '
   getMonitoringStats,
   extractStoreNumber,
   getUserByStoreNumber,
+  getStoreNumberByCustomerID,
   MONITORING_TYPES,
   TICKET_STATES
 }
