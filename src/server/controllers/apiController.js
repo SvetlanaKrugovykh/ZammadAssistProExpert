@@ -1,7 +1,7 @@
 const { checkUserByTelegramId } = require('../services/users-api')
 const { createTicket } = require('../services/tickets-api')
 
-async function checkAlreadyRegistered(ticketData) {
+async function checkAlreadyRegistered(ticketData, customer_id) {
   // Logic for checking if such ticket already exists will be here
   // Return false for development for now
   // TODO: Implement duplicate check by customer_id, title or other criteria
@@ -80,7 +80,7 @@ async function createNewTicket(request, reply) {
       internal
     }
 
-    const isAlreadyRegistered = await checkAlreadyRegistered(ticketData)
+    const isAlreadyRegistered = await checkAlreadyRegistered(ticketData, customer_id)
     if (isAlreadyRegistered) {
       return reply.send({
         success: true,
