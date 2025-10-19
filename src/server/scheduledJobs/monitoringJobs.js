@@ -3,9 +3,12 @@ const monitoringService = require('../db/monitoring-notifications')
 // Check every 5 minutes for new internet outages
 module.exports.checkInternetOutages = async function checkInternetOutages() {
   try {
-    console.log('Scheduled check: Internet outages')
     const results = await monitoringService.startMonitoringCheck(5, 'INTERNET')
-    console.log('Internet check results:', results)
+    // Only log if there was some activity
+    if (results.processed > 0 || results.errors > 0) {
+      console.log('Scheduled check: Internet outages')
+      console.log('Internet check results:', results)
+    }
     return results
   } catch (error) {
     console.error('Error in scheduled internet check:', error)
