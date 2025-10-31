@@ -296,17 +296,21 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
         ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
       WHERE group_id = $1 
-        AND title LIKE $2 
+        AND title ILIKE $2
         AND title ILIKE $3
-        AND created_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds'
-      ORDER BY created_at DESC 
+        AND (
+          created_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds'
+          OR (close_at IS NOT NULL AND close_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds' AND state_id = 4)
+        )
+      ORDER BY 
+        COALESCE(close_at, created_at) DESC 
       LIMIT 1
     `
 
     const result = await execPgQuery(query, [
       config.group_id,
       config.title_pattern,
-      `%m${storeNumber}%`
+      `%M${storeNumber}%`
     ], false, true)
 
     if (!result || result.length === 0) {
