@@ -125,7 +125,7 @@ async function handler(bot, msg, webAppUrl) {
       if (selected_) {
         selectedByUser[chatId].ticketAttachmentFileNames = Array.from(new Set([
           ...(selectedByUser[chatId].ticketAttachmentFileNames || []),
-          ...selected_.ticketAttachmentFileNames
+          ...(selected_?.ticketAttachmentFileNames || [])
         ]))
       }
       break
