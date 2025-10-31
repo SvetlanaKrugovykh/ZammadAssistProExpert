@@ -10,7 +10,7 @@ const monitoringNotifications = {
 // Configuration for different monitoring types
 const MONITORING_TYPES = {
   INTERNET: {
-    title_pattern: 'Недоступний Інтернет%',
+    title_pattern: 'Недоступний Інтернет%M%',
     group_id: 7,
     messages: {
       down: '🔴 Недоступний Інтернет в магазині',
@@ -146,8 +146,11 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
         NOW() as current_time_db, 
         ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
-      WHERE created_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds'
-        AND created_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds'
+      WHERE (
+          (created_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds' AND created_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds')
+        OR
+          (close_at IS NOT NULL AND close_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds' AND close_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds' AND state_id = 4)
+      )
         AND group_id = $1 
         AND title ILIKE $2 
       ORDER BY created_at DESC
@@ -386,7 +389,7 @@ function getMonitoringStats() {
  * @param {number} checkIntervalMinutes - How many minutes back to check (default: 5)
  * @param {string} monitoringType - Type from MONITORING_TYPES (default: 'INTERNET')
  */
-async function startMonitoringCheck(checkIntervalMinutes = 5, monitoringType = 'INTERNET') {
+async function startMonitoringCheck(checkIntervalMinutes = 15, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
   console.log(`🔍 Checking ${monitoringType} for last ${checkIntervalMinutes} min (${deltaSeconds}s)`)
 
