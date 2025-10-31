@@ -492,7 +492,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
        WHERE DATE_TRUNC('day', close_at)>=$1 AND DATE_TRUNC('day', close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
        AND DATE_TRUNC('day', created_at) = DATE_TRUNC('day', close_at)
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
 
     const dataOpenForCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
@@ -502,7 +502,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
        WHERE DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day',created_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
        AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
 
     const dataCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
        DATE_TRUNC('day', close_at) as start_of_day_created_at, 
@@ -512,7 +512,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
        WHERE DATE_TRUNC('day',close_at)>=$1 AND DATE_TRUNC('day',close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
        AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
 
     const result = await execPgQuery(`SELECT NOW() as current_timestamp;`, [])
     console.log(result.current_timestamp)
@@ -526,7 +526,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
        AND DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day', created_at)<=$2 
        AND state_id <> 4 AND group_id = 7 AND title ILIKE $3 
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%'], false, true) || []
+      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
 
     const data = [...dataOpen, ...dataCloseDayInDay, ...dataOpenForCloseAnotherDay, ...dataCloseAnotherDay]
     if (data === null) {
