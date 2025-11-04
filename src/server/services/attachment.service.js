@@ -10,20 +10,49 @@ module.exports.askForAttachment = async function (bot, msg, selectedByUser) {
     await bot.sendMessage(msg.chat.id, 'Будь ласка, відправте файл:')
 
     const attachmentMsg = await new Promise((resolve, reject) => {
-      bot.once('document', resolve)
-      bot.once('photo', resolve)
-      bot.once('text', () => reject(new Error('Invalid input')))
+      const timeout = setTimeout(() => {
+        bot.removeListener('document', handleDocument)
+        bot.removeListener('photo', handlePhoto)
+        bot.removeListener('text', handleText)
+        reject(new Error('Timeout waiting for attachment'))
+      }, 60000) // 60 seconds timeout
+
+      const handleDocument = (docMsg) => {
+        clearTimeout(timeout)
+        bot.removeListener('photo', handlePhoto)
+        bot.removeListener('text', handleText)
+        resolve(docMsg)
+      }
+
+      const handlePhoto = (photoMsg) => {
+        clearTimeout(timeout)
+        bot.removeListener('document', handleDocument)
+        bot.removeListener('text', handleText)
+        resolve(photoMsg)
+      }
+
+      const handleText = (textMsg) => {
+        clearTimeout(timeout)
+        bot.removeListener('document', handleDocument)
+        bot.removeListener('photo', handlePhoto)
+        resolve(null)
+      }
+
+      bot.once('document', handleDocument)
+      bot.once('photo', handlePhoto)
+      bot.once('text', handleText)
     })
 
-    const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
-    if (selectedByUser_ === null) {
-      return selectedByUser
-    } else {
-      return selectedByUser_
+    if (!attachmentMsg) {
+      console.log('User sent text instead of attachment, skipping')
+      return null
     }
+
+    const selectedByUser_ = await addTicketAttachment(bot, attachmentMsg, selectedByUser)
+    return selectedByUser_
   } catch (err) {
-    console.error(err)
-    return selectedByUser
+    console.error('Error in askForAttachment:', err)
+    return null
   }
 }
 
@@ -37,21 +66,33 @@ module.exports.askForPicture = async function (bot, msg, selectedByUser) {
     await checkDirPath(dirPath)
 
     const pictureMsg = await new Promise((resolve, reject) => {
-      bot.once('photo', (photoMsg) => {
-        if (photoMsg && photoMsg.photo) {
+      const timeout = setTimeout(() => {
+        bot.removeListener('photo', handlePhoto)
+        reject(new Error('Timeout waiting for photo'))
+      }, 60000) // 60 seconds timeout
+
+      const handlePhoto = (photoMsg) => {
+        clearTimeout(timeout)
+        if (photoMsg?.photo && Array.isArray(photoMsg.photo) && photoMsg.photo.length > 0) {
           resolve(photoMsg)
         } else {
           reject(new Error('No photo found in message'))
         }
-      })
+      }
+
+      bot.once('photo', handlePhoto)
     })
 
-    if (!pictureMsg.photo || pictureMsg.photo.length === 0) {
+    if (!pictureMsg?.photo || !Array.isArray(pictureMsg.photo) || pictureMsg.photo.length === 0) {
       console.log('No photo found in message')
       return null
     }
 
-    const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1].file_id
+    const pictureFileId = pictureMsg.photo[pictureMsg.photo.length - 1]?.file_id
+    if (!pictureFileId) {
+      console.log('No file_id found in photo')
+      return null
+    }
     const pictureFileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
     const pictureFilePath = path.join(dirPath, pictureFileName).replace(/\/\//g, '/')
 
@@ -93,13 +134,18 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     console.log(`addTicketAttachment started: ${msg?.document?.file_name}`)
 
     let fileId, fileName
-    if (msg && msg.document) {
+    if (msg?.document?.file_id) {
       fileId = msg.document.file_id
       fileName = msg.document.file_name
       const fileExtension = path.extname(fileName) || '.unknown'
       fileName = `file_${msg.chat.id.toString()}_${Date.now()}${fileExtension}`
-    } else if (msg && msg.photo) {
-      fileId = msg.photo[msg.photo.length - 1].file_id
+    } else if (msg?.photo && Array.isArray(msg.photo) && msg.photo.length > 0) {
+      const lastPhoto = msg.photo[msg.photo.length - 1]
+      if (!lastPhoto?.file_id) {
+        console.log('No file_id found in photo array')
+        return null
+      }
+      fileId = lastPhoto.file_id
       fileName = `photo_${msg.chat.id.toString()}_${Date.now()}.jpg`
     } else {
       console.log('Invalid file attachment input')
@@ -121,7 +167,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
       })
     })
 
-    const fileNames = selectedByUser.ticketAttachmentFileNames || []
+    const fileNames = selectedByUser?.ticketAttachmentFileNames || []
     const newSelectedByUser = { ...selectedByUser, ticketAttachmentFileNames: [...fileNames, fileName] }
     console.log(`addTicketAttachment fileNames: +${fileName} `, fileNames)
 
@@ -129,7 +175,7 @@ async function addTicketAttachment(bot, msg, selectedByUser) {
     return newSelectedByUser
   } catch (err) {
     console.error('Error adding ticket attachment:', err)
-    return selectedByUser
+    return null
   }
 }
 
