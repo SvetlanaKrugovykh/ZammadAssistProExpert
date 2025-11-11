@@ -213,6 +213,33 @@ function formatDateWithTimezone(date) {
 }
 
 /**
+ * Format duration from hours to readable format
+ * @param {number} durationHours - Duration in hours (can be decimal)
+ * @returns {string} - Formatted duration like "4г 25хв" or "45хв"
+ */
+function formatDuration(durationHours) {
+  try {
+    const totalMinutes = Math.round(durationHours * 60)
+    
+    if (totalMinutes < 60) {
+      return `${totalMinutes}хв`
+    }
+    
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    
+    if (minutes === 0) {
+      return `${hours}г`
+    }
+    
+    return `${hours}г ${minutes}хв`
+  } catch (error) {
+    console.error(`❌ Error formatting duration: ${error.message}`)
+    return `${Math.round(durationHours || 0)}г`
+  }
+}
+
+/**
  * Send notification to user
  * @param {string} telegramId - Telegram user ID
  * @param {string} message - Message to send
@@ -333,7 +360,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (ticket.state_id === TICKET_STATES.PROBLEM_RESOLVED) {
         const duration = ticket.duration_hours || 0
         message = `${config.messages.up} ${storeNumber}\n` +
-          `⏰ Тривалість: ${duration} год.\n` +
+          `⏰ Тривалість: ${formatDuration(duration)}\n` +
           `🕐 Відновлено: ${formatDateWithTimezone(ticket.close_at)}`
       } else {
         message = `${config.messages.down} ${storeNumber}\n` +
@@ -434,8 +461,8 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
       storeNumber,
       status: isResolved ? 'restored' : 'down',
       message: isResolved ?
-        `✅ Інтернет відновлено (тривалість збою: ${ticket.duration_hours || 0} год.)` :
-        `🔴 Інтернет недоступний (${ticket.duration_hours || 0} год.)`,
+        `✅ Інтернет відновлено (тривалість збою: ${formatDuration(ticket.duration_hours || 0)})` :
+        `🔴 Інтернет недоступний (${formatDuration(ticket.duration_hours || 0)})`,
       lastUpdate: ticket.created_at,
       ticketId: ticket.id
     }
@@ -494,7 +521,9 @@ async function startMonitoringCheck(checkIntervalMinutes = 15, monitoringType = 
     console.error(`❌ Error in startMonitoringCheck: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
   }
-} module.exports = {
+}
+
+module.exports = {
   processMonitoringNotifications,
   getMonitoringTickets,
   checkStoreInternetStatus,
@@ -504,6 +533,8 @@ async function startMonitoringCheck(checkIntervalMinutes = 15, monitoringType = 
   extractStoreNumber,
   getUserByStoreNumber,
   getStoreNumberByCustomerID,
+  formatDuration,
+  formatDateWithTimezone,
   MONITORING_TYPES,
   TICKET_STATES
 }
