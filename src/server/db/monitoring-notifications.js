@@ -196,6 +196,23 @@ async function sendDebugNotification(debugMessage, originalTelegramId, wasSucces
 }
 
 /**
+ * Apply timezone offset to date for display
+ * @param {Date|string} date - Date to adjust
+ * @returns {string} - Formatted date string with timezone offset applied
+ */
+function formatDateWithTimezone(date) {
+  try {
+    const dateObj = new Date(date)
+    const offsetMinutes = parseInt(process.env.TIMEZONE_OFFSET_MINUTES) || 0
+    const adjustedDate = new Date(dateObj.getTime() + (offsetMinutes * 60 * 1000))
+    return adjustedDate.toLocaleString('uk-UA')
+  } catch (error) {
+    console.error(`❌ Error formatting date with timezone: ${error.message}`)
+    return new Date(date).toLocaleString('uk-UA')
+  }
+}
+
+/**
  * Send notification to user
  * @param {string} telegramId - Telegram user ID
  * @param {string} message - Message to send
@@ -317,10 +334,10 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
         const duration = ticket.duration_hours || 0
         message = `${config.messages.up} ${storeNumber}\n` +
           `⏰ Тривалість: ${duration} год.\n` +
-          `🕐 Відновлено: ${new Date(ticket.close_at).toLocaleString('uk-UA')}`
+          `🕐 Відновлено: ${formatDateWithTimezone(ticket.close_at)}`
       } else {
         message = `${config.messages.down} ${storeNumber}\n` +
-          `🕐 Початок: ${new Date(ticket.created_at).toLocaleString('uk-UA')}\n` +
+          `🕐 Початок: ${formatDateWithTimezone(ticket.created_at)}\n` +
           `📋 Ticket ID: ${ticket.id}`
       }
 
