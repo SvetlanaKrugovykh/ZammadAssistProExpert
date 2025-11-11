@@ -470,9 +470,13 @@ function getMonitoringStats() {
  */
 async function startMonitoringCheck(checkIntervalMinutes = 15, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
-  console.log(`🔍 Checking ${monitoringType} for last ${checkIntervalMinutes} min (${deltaSeconds}s)`)
-
-  return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
+  
+  try {
+    return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
+  } catch (error) {
+    console.error(`❌ Error in startMonitoringCheck: ${error.message || 'Unknown error'}`)
+    return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
+  }
 } module.exports = {
   processMonitoringNotifications,
   getMonitoringTickets,
