@@ -236,7 +236,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
   try {
     const config = MONITORING_TYPES[monitoringType]
     const tickets = await getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType)
-    
+
     // Only log if there are tickets to process
     if (tickets.length > 0) {
       console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago, found ${tickets.length} tickets`)
@@ -247,17 +247,17 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
     const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
     if (debugTelegramEnabled && debugTelegramId && bot && tickets.length > 0) {
       try {
-        await bot.sendMessage(debugTelegramId, 
+        await bot.sendMessage(debugTelegramId,
           `🐛 DEBUG: MONITORING START\n` +
           `Type: ${monitoringType}\n` +
           `Period: ${startDeltaSeconds}s to ${endDeltaSeconds}s ago\n` +
           `Found tickets: ${tickets.length}\n` +
-          `Time: ${new Date().toLocaleString('uk-UA')}`, 
+          `Time: ${new Date().toLocaleString('uk-UA')}`,
           { parse_mode: 'HTML' })
       } catch (err) {
         console.error('Failed to send debug start notification:', err.message)
       }
-    }    const results = {
+    } const results = {
       processed: 0,
       sent: 0,
       skipped: 0,
@@ -372,18 +372,18 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
     // Send debug summary only if there was actual activity
     if (debugTelegramEnabled && debugTelegramId && bot && (results.sent > 0 || results.errors > 0)) {
       try {
-        await bot.sendMessage(debugTelegramId, 
+        await bot.sendMessage(debugTelegramId,
           `🐛 DEBUG: MONITORING SUMMARY\n` +
           `Processed: ${results.processed}\n` +
           `Sent: ${results.sent}\n` +
           `Skipped: ${results.skipped}\n` +
           `Errors: ${results.errors}\n` +
-          `Range: ${results.timeRange}`, 
+          `Range: ${results.timeRange}`,
           { parse_mode: 'HTML' })
       } catch (err) {
         console.error('Failed to send debug summary:', err.message)
       }
-    }    return results
+    } return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
