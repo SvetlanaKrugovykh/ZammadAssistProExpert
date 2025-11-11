@@ -389,7 +389,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       console.log(`Monitoring notifications processed:`, results)
     }
 
-    // Skip debug summary (no spam) return results
+    return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
