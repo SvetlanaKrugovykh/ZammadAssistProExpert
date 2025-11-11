@@ -242,22 +242,11 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago, found ${tickets.length} tickets`)
     }
 
-    // Send debug notification about process start only if there are tickets
+    // Debug variables for later use
     const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
     const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-    if (debugTelegramEnabled && debugTelegramId && bot && tickets.length > 0) {
-      try {
-        await bot.sendMessage(debugTelegramId,
-          `🐛 DEBUG: MONITORING START\n` +
-          `Type: ${monitoringType}\n` +
-          `Period: ${startDeltaSeconds}s to ${endDeltaSeconds}s ago\n` +
-          `Found tickets: ${tickets.length}\n` +
-          `Time: ${new Date().toLocaleString('uk-UA')}`,
-          { parse_mode: 'HTML' })
-      } catch (err) {
-        console.error('Failed to send debug start notification:', err.message)
-      }
-    } const results = {
+
+    const results = {
       processed: 0,
       sent: 0,
       skipped: 0,
@@ -316,20 +305,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (wasNotificationSent(user.login, ticket.id)) {
         console.log(`Notification already sent for ticket ${ticket.id} to ${user.login}`)
 
-        // Send debug notification about skipped
-        if (debugTelegramEnabled && debugTelegramId && bot) {
-          try {
-            await bot.sendMessage(debugTelegramId,
-              `🐛 DEBUG: SKIPPED (already sent)\n` +
-              `Store: ${storeNumber}\n` +
-              `Ticket ID: ${ticket.id}\n` +
-              `User: ${user.login}\n` +
-              `Title: ${ticket.title}`,
-              { parse_mode: 'HTML' })
-          } catch (err) {
-            console.error('Failed to send debug skip notification:', err.message)
-          }
-        }
+        // Skip debug notification for already sent tickets (no spam)
 
         results.skipped++
         continue
@@ -369,21 +345,7 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       console.log(`Monitoring notifications processed:`, results)
     }
 
-    // Send debug summary only if there was actual activity
-    if (debugTelegramEnabled && debugTelegramId && bot && (results.sent > 0 || results.errors > 0)) {
-      try {
-        await bot.sendMessage(debugTelegramId,
-          `🐛 DEBUG: MONITORING SUMMARY\n` +
-          `Processed: ${results.processed}\n` +
-          `Sent: ${results.sent}\n` +
-          `Skipped: ${results.skipped}\n` +
-          `Errors: ${results.errors}\n` +
-          `Range: ${results.timeRange}`,
-          { parse_mode: 'HTML' })
-      } catch (err) {
-        console.error('Failed to send debug summary:', err.message)
-      }
-    } return results
+    // Skip debug summary (no spam) return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
