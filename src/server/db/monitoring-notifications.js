@@ -234,29 +234,30 @@ async function sendNotification(telegramId, message, ticketData) {
  */
 async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds, monitoringType = 'INTERNET') {
   try {
-    console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago`)
-
     const config = MONITORING_TYPES[monitoringType]
     const tickets = await getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType)
+    
+    // Only log if there are tickets to process
+    if (tickets.length > 0) {
+      console.log(`Processing ${monitoringType} notifications: looking ${startDeltaSeconds}s to ${endDeltaSeconds}s ago, found ${tickets.length} tickets`)
+    }
 
-    // Send debug notification about process start
+    // Send debug notification about process start only if there are tickets
     const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
     const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-    if (debugTelegramEnabled && debugTelegramId && bot) {
+    if (debugTelegramEnabled && debugTelegramId && bot && tickets.length > 0) {
       try {
-        await bot.sendMessage(debugTelegramId,
+        await bot.sendMessage(debugTelegramId, 
           `🐛 DEBUG: MONITORING START\n` +
           `Type: ${monitoringType}\n` +
           `Period: ${startDeltaSeconds}s to ${endDeltaSeconds}s ago\n` +
           `Found tickets: ${tickets.length}\n` +
-          `Time: ${new Date().toLocaleString('uk-UA')}`,
+          `Time: ${new Date().toLocaleString('uk-UA')}`, 
           { parse_mode: 'HTML' })
       } catch (err) {
         console.error('Failed to send debug start notification:', err.message)
       }
-    }
-
-    const results = {
+    }    const results = {
       processed: 0,
       sent: 0,
       skipped: 0,
@@ -271,8 +272,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (!storeNumber) {
         console.warn(`Cannot extract store number from title: ${ticket.title}`)
 
-  // Send debug notification about parsing error
-  if (debugTelegramEnabled && debugTelegramId && bot) {
+        // Send debug notification about parsing error
+        if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: PARSE ERROR\n` +
@@ -293,8 +294,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (!user || !user.login) {
         console.warn(`User not found for store ${storeNumber}`)
 
-  // Send debug notification about user not found
-  if (debugTelegramEnabled && debugTelegramId && bot) {
+        // Send debug notification about user not found
+        if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: USER NOT FOUND\n` +
@@ -315,8 +316,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (wasNotificationSent(user.login, ticket.id)) {
         console.log(`Notification already sent for ticket ${ticket.id} to ${user.login}`)
 
-  // Send debug notification about skipped
-  if (debugTelegramEnabled && debugTelegramId && bot) {
+        // Send debug notification about skipped
+        if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: SKIPPED (already sent)\n` +
@@ -363,28 +364,26 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
 
-    // Only log if there was some activity
-    if (results.processed > 0 || results.errors > 0) {
+    // Only log if notifications were sent or there were errors
+    if (results.sent > 0 || results.errors > 0) {
       console.log(`Monitoring notifications processed:`, results)
     }
 
-  // Send debug summary
-  if (debugTelegramEnabled && debugTelegramId && bot && (results.processed > 0 || results.errors > 0)) {
+    // Send debug summary only if there was actual activity
+    if (debugTelegramEnabled && debugTelegramId && bot && (results.sent > 0 || results.errors > 0)) {
       try {
-        await bot.sendMessage(debugTelegramId,
+        await bot.sendMessage(debugTelegramId, 
           `🐛 DEBUG: MONITORING SUMMARY\n` +
           `Processed: ${results.processed}\n` +
           `Sent: ${results.sent}\n` +
           `Skipped: ${results.skipped}\n` +
           `Errors: ${results.errors}\n` +
-          `Range: ${results.timeRange}`,
+          `Range: ${results.timeRange}`, 
           { parse_mode: 'HTML' })
       } catch (err) {
         console.error('Failed to send debug summary:', err.message)
       }
-    }
-
-    return results
+    }    return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
     return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
