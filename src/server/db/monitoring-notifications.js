@@ -470,7 +470,7 @@ function getMonitoringStats() {
  */
 async function startMonitoringCheck(checkIntervalMinutes = 15, monitoringType = 'INTERNET') {
   const deltaSeconds = checkIntervalMinutes * 60
-  
+
   try {
     return await processMonitoringNotifications(deltaSeconds, 0, monitoringType)
   } catch (error) {

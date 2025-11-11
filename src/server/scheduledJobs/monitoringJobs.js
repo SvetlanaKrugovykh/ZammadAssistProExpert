@@ -4,13 +4,13 @@ const monitoringService = require('../db/monitoring-notifications')
 module.exports.checkInternetOutages = async function checkInternetOutages() {
   try {
     const results = await monitoringService.startMonitoringCheck(15, 'INTERNET')
-    
+
     // Safety check - ensure results is a valid object
     if (!results || typeof results !== 'object') {
       console.warn('Invalid results from startMonitoringCheck:', results)
       return { processed: 0, sent: 0, skipped: 0, errors: 1, timeRange: 'error' }
     }
-    
+
     // Only log if there was some activity
     if (results.processed > 0 || results.errors > 0) {
       console.log('Scheduled check: Internet outages')
