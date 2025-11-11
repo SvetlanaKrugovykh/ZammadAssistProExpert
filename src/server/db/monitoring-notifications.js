@@ -169,6 +169,33 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
 }
 
 /**
+ * Send debug notification to admin
+ * @param {string} debugMessage - Debug message to send
+ * @param {string} originalTelegramId - Original recipient ID
+ * @param {boolean} wasSuccessful - Whether original send was successful
+ */
+async function sendDebugNotification(debugMessage, originalTelegramId, wasSuccessful) {
+  const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+  const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+  
+  if (!debugTelegramEnabled || !debugTelegramId || !bot) {
+    return
+  }
+
+  try {
+    // Add 2 second delay to avoid Telegram rate limits for debug messages
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    const status = wasSuccessful ? '✅ SENT' : '❌ FAILED'
+    const fullDebugMessage = `🐛 DEBUG MONITORING:\n${status} to ${originalTelegramId}\n\n${debugMessage}`
+    
+    await bot.sendMessage(debugTelegramId, fullDebugMessage, { parse_mode: 'HTML' })
+  } catch (error) {
+    console.error(`❌ Failed to send debug notification: ${error.message}`)
+  }
+}
+
+/**
  * Send notification to user
  * @param {string} telegramId - Telegram user ID
  * @param {string} message - Message to send
@@ -179,14 +206,21 @@ async function sendNotification(telegramId, message, ticketData) {
   try {
     if (!telegramId || !bot) {
       console.error('❌ Missing telegram ID or bot instance')
+      await sendDebugNotification(message, telegramId || 'UNKNOWN', false)
       return false
     }
 
     await bot.sendMessage(telegramId, message, { parse_mode: 'HTML' })
-    console.log(`✅ Notification sent to ${telegramId} ${message}`)
+    console.log(`✅ Notification sent to ${telegramId}`)
+    
+    // Send debug copy
+    await sendDebugNotification(message, telegramId, true)
     return true
   } catch (error) {
     console.error(`❌ Failed to send to ${telegramId}: ${error.message || 'Unknown error'}`)
+    
+    // Send debug notification about failure
+    await sendDebugNotification(message, telegramId, false)
     return false
   }
 }
@@ -205,6 +239,23 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
     const config = MONITORING_TYPES[monitoringType]
     const tickets = await getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitoringType)
 
+    // Send debug notification about process start
+    const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+    const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+    if (debugTelegramEnabled && debugTelegramId && bot) {
+      try {
+        await bot.sendMessage(debugTelegramId, 
+          `🐛 DEBUG: MONITORING START\n` +
+          `Type: ${monitoringType}\n` +
+          `Period: ${startDeltaSeconds}s to ${endDeltaSeconds}s ago\n` +
+          `Found tickets: ${tickets.length}\n` +
+          `Time: ${new Date().toLocaleString('uk-UA')}`, 
+          { parse_mode: 'HTML' })
+      } catch (err) {
+        console.error('Failed to send debug start notification:', err.message)
+      }
+    }
+
     const results = {
       processed: 0,
       sent: 0,
@@ -219,6 +270,23 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       const storeNumber = extractStoreNumber(ticket.title)
       if (!storeNumber) {
         console.warn(`Cannot extract store number from title: ${ticket.title}`)
+        
+        // Send debug notification about parsing error
+        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+        if (debugTelegramEnabled && debugTelegramId && bot) {
+          try {
+            await bot.sendMessage(debugTelegramId, 
+              `🐛 DEBUG: PARSE ERROR\n` +
+              `Cannot extract store number\n` +
+              `Ticket ID: ${ticket.id}\n` +
+              `Title: ${ticket.title}`, 
+              { parse_mode: 'HTML' })
+          } catch (err) {
+            console.error('Failed to send debug parse error:', err.message)
+          }
+        }
+        
         results.errors++
         continue
       }
@@ -226,6 +294,23 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       const user = await getUserByStoreNumber(storeNumber)
       if (!user || !user.login) {
         console.warn(`User not found for store ${storeNumber}`)
+        
+        // Send debug notification about user not found
+        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+        if (debugTelegramEnabled && debugTelegramId && bot) {
+          try {
+            await bot.sendMessage(debugTelegramId, 
+              `🐛 DEBUG: USER NOT FOUND\n` +
+              `Store: ${storeNumber}\n` +
+              `Ticket ID: ${ticket.id}\n` +
+              `Expected email: lotok${storeNumber.padStart(3, '0')}.uprav@lotok.in.ua`, 
+              { parse_mode: 'HTML' })
+          } catch (err) {
+            console.error('Failed to send debug user error:', err.message)
+          }
+        }
+        
         results.errors++
         continue
       }
@@ -233,6 +318,24 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       // Check if notification already sent
       if (wasNotificationSent(user.login, ticket.id)) {
         console.log(`Notification already sent for ticket ${ticket.id} to ${user.login}`)
+        
+        // Send debug notification about skipped
+        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+        if (debugTelegramEnabled && debugTelegramId && bot) {
+          try {
+            await bot.sendMessage(debugTelegramId, 
+              `🐛 DEBUG: SKIPPED (already sent)\n` +
+              `Store: ${storeNumber}\n` +
+              `Ticket ID: ${ticket.id}\n` +
+              `User: ${user.login}\n` +
+              `Title: ${ticket.title}`, 
+              { parse_mode: 'HTML' })
+          } catch (err) {
+            console.error('Failed to send debug skip notification:', err.message)
+          }
+        }
+        
         results.skipped++
         continue
       }
@@ -270,6 +373,25 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
     if (results.processed > 0 || results.errors > 0) {
       console.log(`Monitoring notifications processed:`, results)
     }
+
+    // Send debug summary
+    const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
+    const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
+    if (debugTelegramEnabled && debugTelegramId && bot && (results.processed > 0 || results.errors > 0)) {
+      try {
+        await bot.sendMessage(debugTelegramId, 
+          `🐛 DEBUG: MONITORING SUMMARY\n` +
+          `Processed: ${results.processed}\n` +
+          `Sent: ${results.sent}\n` +
+          `Skipped: ${results.skipped}\n` +
+          `Errors: ${results.errors}\n` +
+          `Range: ${results.timeRange}`, 
+          { parse_mode: 'HTML' })
+      } catch (err) {
+        console.error('Failed to send debug summary:', err.message)
+      }
+    }
+
     return results
   } catch (error) {
     console.error(`❌ Error processing ${monitoringType} notifications: ${error.message || 'Unknown error'}`)
