@@ -271,10 +271,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (!storeNumber) {
         console.warn(`Cannot extract store number from title: ${ticket.title}`)
 
-        // Send debug notification about parsing error
-        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
-        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-        if (debugTelegramEnabled && debugTelegramId && bot) {
+  // Send debug notification about parsing error
+  if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: PARSE ERROR\n` +
@@ -295,10 +293,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (!user || !user.login) {
         console.warn(`User not found for store ${storeNumber}`)
 
-        // Send debug notification about user not found
-        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
-        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-        if (debugTelegramEnabled && debugTelegramId && bot) {
+  // Send debug notification about user not found
+  if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: USER NOT FOUND\n` +
@@ -319,10 +315,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       if (wasNotificationSent(user.login, ticket.id)) {
         console.log(`Notification already sent for ticket ${ticket.id} to ${user.login}`)
 
-        // Send debug notification about skipped
-        const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
-        const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-        if (debugTelegramEnabled && debugTelegramId && bot) {
+  // Send debug notification about skipped
+  if (debugTelegramEnabled && debugTelegramId && bot) {
           try {
             await bot.sendMessage(debugTelegramId,
               `🐛 DEBUG: SKIPPED (already sent)\n` +
@@ -374,10 +368,8 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       console.log(`Monitoring notifications processed:`, results)
     }
 
-    // Send debug summary
-    const debugTelegramEnabled = process.env.DEBUG_TELEGRAM === 'true'
-    const debugTelegramId = process.env.DEBUG_TELEGRAM_ID
-    if (debugTelegramEnabled && debugTelegramId && bot && (results.processed > 0 || results.errors > 0)) {
+  // Send debug summary
+  if (debugTelegramEnabled && debugTelegramId && bot && (results.processed > 0 || results.errors > 0)) {
       try {
         await bot.sendMessage(debugTelegramId,
           `🐛 DEBUG: MONITORING SUMMARY\n` +
