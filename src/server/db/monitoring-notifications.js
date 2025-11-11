@@ -220,18 +220,18 @@ function formatDateWithTimezone(date) {
 function formatDuration(durationHours) {
   try {
     const totalMinutes = Math.round(durationHours * 60)
-    
+
     if (totalMinutes < 60) {
       return `${totalMinutes}хв`
     }
-    
+
     const hours = Math.floor(totalMinutes / 60)
     const minutes = totalMinutes % 60
-    
+
     if (minutes === 0) {
       return `${hours}г`
     }
-    
+
     return `${hours}г ${minutes}хв`
   } catch (error) {
     console.error(`❌ Error formatting duration: ${error.message}`)
