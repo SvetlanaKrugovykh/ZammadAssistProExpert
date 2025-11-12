@@ -15,23 +15,23 @@ const tests = require('./testMonitoringQueries')
 
 async function main() {
   const testName = process.argv[2] || 'all'
-  
+
   console.log(`🧪 Running test: ${testName}\n`)
-  
+
   try {
     switch (testName.toLowerCase()) {
       case 'timezone':
         await tests.testTimeZoneAnalysis()
         break
-        
+
       case 'intervals':
         await tests.testIntervalQueries()
         break
-        
+
       case 'tickets':
         await tests.testSpecificTickets()
         break
-        
+
       case 'all':
       default:
         await tests.runAllTests()

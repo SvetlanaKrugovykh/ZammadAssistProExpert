@@ -8,7 +8,7 @@ const { execPgQuery } = require('../db/common')
 
 async function testTimeZoneAnalysis() {
   console.log('🕰️  === TIMEZONE ANALYSIS ===')
-  
+
   try {
     // 1. Check database timezone and current time
     const timeQuery = `
@@ -19,7 +19,7 @@ async function testTimeZoneAnalysis() {
         pg_typeof(NOW()) as db_now_type,
         CURRENT_SETTING('timezone') as db_timezone_name
     `
-    
+
     const timeResult = await execPgQuery(timeQuery, [], false, true)
     if (timeResult && timeResult[0]) {
       const tr = timeResult[0]
@@ -37,7 +37,7 @@ async function testTimeZoneAnalysis() {
     console.log(`   JS Date: ${jsNow.toISOString()}`)
     console.log(`   JS Local: ${jsNow.toString()}`)
     console.log(`   JS Offset: ${jsNow.getTimezoneOffset()} minutes`)
-    
+
     console.log('')
 
   } catch (error) {
@@ -47,7 +47,7 @@ async function testTimeZoneAnalysis() {
 
 async function testIntervalQueries() {
   console.log('📋 === INTERVAL QUERY TESTING ===')
-  
+
   const testIntervals = [
     { name: 'Last 1 hour', seconds: 3600 },
     { name: 'Last 6 hours', seconds: 21600 },
@@ -56,7 +56,7 @@ async function testIntervalQueries() {
 
   for (const interval of testIntervals) {
     console.log(`\n🔍 Testing: ${interval.name} (${interval.seconds} seconds)`)
-    
+
     try {
       // Test the actual query with debug info
       const debugQuery = `
@@ -92,11 +92,11 @@ async function testIntervalQueries() {
       // Test using the actual function
       const tickets = await monitoringService.getMonitoringTickets(interval.seconds, 0, 'INTERNET')
       console.log(`   🔧 Function returned: ${tickets.length} tickets`)
-      
+
       if (tickets.length > 0) {
         console.log(`   📝 Sample tickets:`)
         tickets.slice(0, 3).forEach((ticket, i) => {
-          console.log(`      ${i+1}. ID:${ticket.id} State:${ticket.state_id} Created:${ticket.created_at} Duration:${ticket.duration_hours}h`)
+          console.log(`      ${i + 1}. ID:${ticket.id} State:${ticket.state_id} Created:${ticket.created_at} Duration:${ticket.duration_hours}h`)
         })
       }
 
@@ -108,7 +108,7 @@ async function testIntervalQueries() {
 
 async function testSpecificTickets() {
   console.log('\n🎯 === RECENT TICKETS ANALYSIS ===')
-  
+
   try {
     // Get some recent tickets to analyze
     const recentQuery = `
@@ -134,8 +134,8 @@ async function testSpecificTickets() {
       tickets.forEach((ticket, i) => {
         const storeMatch = ticket.title.match(/\bm(\d+)\b/i)
         const store = storeMatch ? storeMatch[1] : 'unknown'
-        
-        console.log(`   ${i+1}. Store: ${store} | ID: ${ticket.id} | State: ${ticket.state_id}`)
+
+        console.log(`   ${i + 1}. Store: ${store} | ID: ${ticket.id} | State: ${ticket.state_id}`)
         console.log(`      Created: ${ticket.created_at} (${Math.round(ticket.minutes_ago)} min ago)`)
         if (ticket.close_at) {
           console.log(`      Closed: ${ticket.close_at} (Duration: ${Math.round(ticket.actual_duration_minutes || 0)} min)`)
@@ -154,15 +154,15 @@ async function testSpecificTickets() {
 
 async function runAllTests() {
   console.log('🚀 Starting monitoring queries test...\n')
-  
+
   await testTimeZoneAnalysis()
   await testIntervalQueries()
   await testSpecificTickets()
-  
+
   console.log('\n✅ Test completed!')
   console.log('\n💡 Key points to check:')
   console.log('   1. Are DB and JS times in sync?')
-  console.log('   2. Do INTERVAL calculations match expectations?') 
+  console.log('   2. Do INTERVAL calculations match expectations?')
   console.log('   3. Are ticket timestamps in expected timezone?')
   console.log('   4. Does duration calculation look correct?')
 }
