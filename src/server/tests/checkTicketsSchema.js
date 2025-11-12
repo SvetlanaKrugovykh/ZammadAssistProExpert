@@ -6,7 +6,7 @@ const { execPgQuery } = require('../db/common')
 
 async function checkTicketsSchema() {
   console.log('🔍 Checking tickets table schema...\n')
-  
+
   try {
     // Check column types in tickets table
     const schemaQuery = `
@@ -20,7 +20,7 @@ async function checkTicketsSchema() {
         AND column_name IN ('created_at', 'close_at', 'updated_at')
       ORDER BY column_name
     `
-    
+
     const schema = await execPgQuery(schemaQuery, [], false, true)
     if (schema && schema.length > 0) {
       console.log('📊 Tickets table timestamp columns:')

@@ -7,7 +7,7 @@ const { execPgQuery } = require('../db/common')
 
 async function testUTCFix() {
   console.log('🧪 Testing UTC timezone fix...\n')
-  
+
   try {
     // Compare old vs new timezone calculations
     const testQuery = `
