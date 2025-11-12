@@ -7,7 +7,7 @@ const { execPgQuery } = require('../db/common')
 
 async function testTimezoneIssues() {
   console.log('🔬 === COMPREHENSIVE TIMEZONE ANALYSIS ===\n')
-  
+
   try {
     // 1. Test different timestamp functions and their types
     const timestampTestQuery = `
@@ -26,7 +26,7 @@ async function testTimezoneIssues() {
         CURRENT_TIMESTAMP as time_value,
         pg_typeof(CURRENT_TIMESTAMP) as data_type
     `
-    
+
     const timestampResult = await execPgQuery(timestampTestQuery, [], false, true)
     if (timestampResult) {
       console.log('⏰ Timestamp functions comparison:')
@@ -84,12 +84,12 @@ async function testTimezoneIssues() {
       console.log(`   Pure EPOCH approach: ${t.duration_epoch_approach}h`)
       console.log(`   Raw epochs: NOW=${t.now_epoch}, LOCAL=${t.local_epoch}, CREATED=${t.created_epoch}`)
       console.log(`   Seconds diff: NOW=${t.seconds_diff_now}s, LOCAL=${t.seconds_diff_local}s`)
-      
+
       // Convert to minutes for better understanding
       const minutesNow = Math.round(t.seconds_diff_now / 60)
       const minutesLocal = Math.round(t.seconds_diff_local / 60)
       console.log(`   In minutes: NOW=${minutesNow}min, LOCAL=${minutesLocal}min`)
-      
+
       if (Math.abs(minutesNow - minutesLocal) > 60) {
         console.log(`   ⚠️  WARNING: ${Math.abs(minutesNow - minutesLocal)} minutes difference between approaches!`)
       }
@@ -130,8 +130,8 @@ async function testTimezoneIssues() {
       zeroResult.forEach((ticket, i) => {
         const storeMatch = ticket.title.match(/\\bm(\\d+)\\b/i)
         const store = storeMatch ? storeMatch[1] : 'unknown'
-        
-        console.log(`   ${i+1}. Store ${store} (ID: ${ticket.id})`)
+
+        console.log(`   ${i + 1}. Store ${store} (ID: ${ticket.id})`)
         console.log(`      Created: ${ticket.created_at}`)
         console.log(`      Closed: ${ticket.close_at}`)
         console.log(`      Current duration calc: ${ticket.current_duration}h`)
@@ -151,7 +151,7 @@ async function testTimezoneIssues() {
 
 async function runComprehensiveTest() {
   await testTimezoneIssues()
-  
+
   console.log('💡 RECOMMENDATIONS based on analysis:')
   console.log('   1. Check which duration calculation gives most realistic results')
   console.log('   2. Look for tickets showing 0хв when they shouldnt')
