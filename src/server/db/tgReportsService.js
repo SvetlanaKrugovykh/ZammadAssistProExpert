@@ -16,11 +16,11 @@ let firstCall = true
 function formatHoursUkrainian(hours) {
   const wholeHours = Math.floor(hours)
   const minutes = Math.round((hours - wholeHours) * 60)
-  
+
   if (wholeHours === 0 && minutes === 0) {
     return '0хв'
   }
-  
+
   let result = ''
   if (wholeHours > 0) {
     result += `${wholeHours}г`
@@ -28,7 +28,7 @@ function formatHoursUkrainian(hours) {
   if (minutes > 0) {
     result += `${wholeHours > 0 ? ' ' : ''}${minutes}хв`
   }
-  
+
   return result
 }
 
