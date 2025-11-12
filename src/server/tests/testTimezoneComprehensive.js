@@ -52,14 +52,14 @@ async function testTimezoneIssues() {
       SELECT 
         id, title, created_at, created_at_type,
         
-        -- Current approach (might be wrong)
-        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_now_approach,
+        -- Current approach (might be wrong) - using ::numeric cast
+        ((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric) as duration_now_approach,
         
         -- LOCALTIMESTAMP approach
-        ROUND((EXTRACT(EPOCH FROM (LOCALTIMESTAMP - created_at))/3600)::numeric, 1) as duration_localtimestamp_approach,
+        ((EXTRACT(EPOCH FROM (LOCALTIMESTAMP - created_at))/3600)::numeric) as duration_localtimestamp_approach,
         
-        -- Pure EPOCH approach
-        ROUND((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600, 1) as duration_epoch_approach,
+        -- Pure EPOCH approach  
+        ((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600) as duration_epoch_approach,
         
         -- Show the raw values for debugging
         EXTRACT(EPOCH FROM NOW()) as now_epoch,
@@ -100,18 +100,18 @@ async function testTimezoneIssues() {
     const zeroTestQuery = `
       SELECT 
         id, title, created_at, close_at, state_id,
-        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as current_duration,
-        ROUND((EXTRACT(EPOCH FROM (LOCALTIMESTAMP - created_at))/3600)::numeric, 1) as local_duration,
+        ((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric) as current_duration,
+        ((EXTRACT(EPOCH FROM (LOCALTIMESTAMP - created_at))/3600)::numeric) as local_duration,
         
         CASE 
           WHEN close_at IS NOT NULL THEN 
-            ROUND((EXTRACT(EPOCH FROM close_at) - EXTRACT(EPOCH FROM created_at))/3600, 1)
+            ((EXTRACT(EPOCH FROM close_at) - EXTRACT(EPOCH FROM created_at))/3600)
           ELSE NULL 
         END as actual_outage_duration,
         
         -- Check if this would trigger 0хв issue
         CASE 
-          WHEN ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) = 0 THEN 'YES'
+          WHEN ((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric) < 0.1 THEN 'YES'
           ELSE 'NO'
         END as would_show_zero
         
