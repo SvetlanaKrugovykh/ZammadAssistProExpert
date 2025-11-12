@@ -359,6 +359,15 @@ async function processMonitoringNotifications(startDeltaSeconds, endDeltaSeconds
       let message
       if (ticket.state_id === TICKET_STATES.PROBLEM_RESOLVED) {
         const duration = ticket.duration_hours || 0
+        const durationMinutes = Math.round(duration * 60)
+        
+        // Skip notifications for outages shorter than 2 minutes
+        if (durationMinutes < 2) {
+          console.log(`Skipping notification for ${storeNumber}: outage too short (${durationMinutes} minutes)`)
+          results.skipped++
+          continue
+        }
+        
         message = `${config.messages.up} ${storeNumber}\n` +
           `⏰ Тривалість: ${formatDuration(duration)}\n` +
           `🕐 Відновлено: ${formatDateWithTimezone(ticket.close_at)}`
