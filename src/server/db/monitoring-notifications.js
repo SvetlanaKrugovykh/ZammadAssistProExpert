@@ -139,17 +139,21 @@ async function getMonitoringTickets(startDeltaSeconds, endDeltaSeconds, monitori
       throw new Error(`Unknown monitoring type: ${monitoringType}`)
     }
 
-    // Use pure database NOW() without any timezone adjustments
+    // Use pure EPOCH approach to avoid timezone mixing issues
     const query = `
       SELECT id, title, created_at, close_at, state_id,
         DATE_TRUNC('day', created_at) as start_of_day_created_at, 
         NOW() as current_time_db, 
-        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
+        ROUND(((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
       WHERE (
-          (created_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds' AND created_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds')
+          (EXTRACT(EPOCH FROM created_at) >= EXTRACT(EPOCH FROM NOW()) - ${startDeltaSeconds} 
+           AND EXTRACT(EPOCH FROM created_at) <= EXTRACT(EPOCH FROM NOW()) - ${endDeltaSeconds})
         OR
-          (close_at IS NOT NULL AND close_at >= NOW() - INTERVAL '${startDeltaSeconds} seconds' AND close_at <= NOW() - INTERVAL '${endDeltaSeconds} seconds' AND state_id = 4)
+          (close_at IS NOT NULL 
+           AND EXTRACT(EPOCH FROM close_at) >= EXTRACT(EPOCH FROM NOW()) - ${startDeltaSeconds} 
+           AND EXTRACT(EPOCH FROM close_at) <= EXTRACT(EPOCH FROM NOW()) - ${endDeltaSeconds} 
+           AND state_id = 4)
       )
         AND group_id = $1 
         AND title ILIKE $2 
@@ -421,14 +425,16 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
 
     const query = `
       SELECT id, title, created_at, close_at, state_id, 
-        ROUND((EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::numeric, 1) as duration_hours
+        ROUND(((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
       WHERE group_id = $1 
         AND title ILIKE $2
         AND title ILIKE $3
         AND (
-          created_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds'
-          OR (close_at IS NOT NULL AND close_at >= NOW() - INTERVAL '${lookbackDeltaSeconds} seconds' AND state_id = 4)
+          EXTRACT(EPOCH FROM created_at) >= EXTRACT(EPOCH FROM NOW()) - ${lookbackDeltaSeconds}
+          OR (close_at IS NOT NULL 
+              AND EXTRACT(EPOCH FROM close_at) >= EXTRACT(EPOCH FROM NOW()) - ${lookbackDeltaSeconds} 
+              AND state_id = 4)
         )
       ORDER BY 
         COALESCE(close_at, created_at) DESC 
