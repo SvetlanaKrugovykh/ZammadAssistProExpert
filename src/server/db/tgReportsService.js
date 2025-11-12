@@ -9,6 +9,30 @@ const { sklepy } = require('../data/sklepy')
 let firstCall = true
 
 /**
+ * Format hours to Ukrainian format (e.g., 3.9 -> "3г 54хв")
+ * @param {number} hours - Hours as decimal number
+ * @returns {string} - Formatted string like "3г 54хв"
+ */
+function formatHoursUkrainian(hours) {
+  const wholeHours = Math.floor(hours)
+  const minutes = Math.round((hours - wholeHours) * 60)
+  
+  if (wholeHours === 0 && minutes === 0) {
+    return '0хв'
+  }
+  
+  let result = ''
+  if (wholeHours > 0) {
+    result += `${wholeHours}г`
+  }
+  if (minutes > 0) {
+    result += `${wholeHours > 0 ? ' ' : ''}${minutes}хв`
+  }
+  
+  return result
+}
+
+/**
  * Extract store number from ticket title
  * @param {string} title - Ticket title like "Недоступний Інтернет на хосте m321"
  * @returns {string|null} - Store number like "m321" or null if not found
@@ -157,9 +181,9 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
     <td style="text-align: left;">${item.title}</td>
     <td style="text-align: left;">${address}</td>`
         item.weeklyHours.forEach((weekHours, index) => {
-          row += `<td style="width: 13ch; text-align: center;">${weekHours.toFixed(1)}</td>`
+          row += `<td style="width: 13ch; text-align: center;">${formatHoursUkrainian(weekHours)}</td>`
         })
-        row += `<td style="width: 13ch; text-align: center">${item.totalHours.toFixed(1)}</td></tr>`
+        row += `<td style="width: 13ch; text-align: center">${formatHoursUkrainian(item.totalHours)}</td></tr>`
         content.push({ text: row, style: 'defaultStyle', fontSize: '14px' })
       })
       content.push({ text: '</table>', style: 'defaultStyle', fontSize: '14px' })
@@ -197,7 +221,7 @@ async function createNetReportHtml(bot, chatId, data, period, dayOrWeek, dayStar
             <td>${item.title}</td>
             <td>${address}</td>
             <td>${startDate.format('DD-MM-YYYY')}</td>
-            <td>${Number(item.total_interval).toFixed(1)}</td>
+            <td>${formatHoursUkrainian(Number(item.total_interval))}</td>
           </tr>
         `, style: 'defaultStyle', fontSize: '14px'
         })
