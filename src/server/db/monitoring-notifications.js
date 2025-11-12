@@ -424,7 +424,9 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
     const config = MONITORING_TYPES.INTERNET
 
     const query = `
-      SELECT id, title, created_at, close_at, state_id, 
+      SELECT id, title, created_at, close_at, state_id,
+        DATE_TRUNC('day', created_at) as start_of_day_created_at, 
+        NOW() as current_time_db, 
         ROUND(((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as duration_hours
       FROM tickets 
       WHERE group_id = $1 
@@ -437,7 +439,7 @@ async function checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds = 3600
               AND state_id = 4)
         )
       ORDER BY 
-        COALESCE(close_at, created_at) DESC 
+        COALESCE(EXTRACT(EPOCH FROM close_at), EXTRACT(EPOCH FROM created_at)) DESC 
       LIMIT 1
     `
 

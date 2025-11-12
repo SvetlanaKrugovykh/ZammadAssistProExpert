@@ -355,7 +355,6 @@ function createHtmlContent(content) {
 async function writeHtmlToFile(htmlContent, filePath) {
   try {
     await util.promisify(fs.writeFile)(filePath, htmlContent, 'utf-8')
-    console.log(`HTML successfully written to ${filePath}`)
   } catch (error) {
     console.error('Error writing HTML to file:', error)
   }
@@ -376,8 +375,6 @@ module.exports.createReport = async function (bot, msg) {
 
     const dayStart = _dayStart(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0))
     const dayEnd = _dayEnd(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999))
-    console.log('report dayStart:', dayStart)
-    console.log('report dayEnd:', dayEnd)
     const dataOpen = await execPgQuery(`SELECT group_id, 2 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id < 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const dataClose = await execPgQuery(`SELECT group_id, 4 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id = 4 GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
     const dataOther = await execPgQuery(`SELECT group_id, 5 as state_id, COUNT(*) as quantity FROM tickets WHERE created_at>=$1 AND created_at<$2 AND state_id > 4  GROUP BY group_id ORDER BY group_id;`, [dayStart, dayEnd], false, true) || []
@@ -474,59 +471,68 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
     if (period.end > currentDate) period.end = currentDate
 
     const hoursToAdd = Number(process.env.HOURS_TO_ADD) || 0
-    console.log('hoursToAdd:', hoursToAdd)
 
     const dayStart = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate(), 0, 0, 0)
     dayStart.setHours(dayStart.getHours() + hoursToAdd);
     const dayEnd = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate(), 23, 59, 59, 999)
     dayEnd.setHours(dayEnd.getHours() + hoursToAdd);
 
-    console.log('Net report dayStart:', dayStart)
-    console.log('Net report dayEnd:', dayEnd)
+    // Use pure date comparison without time offset issues
+    const startDateStr = moment(period.start).format('YYYY-MM-DD')
+    const endDateStr = moment(period.end).format('YYYY-MM-DD')
 
     const dataCloseDayInDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
-       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       DATE_TRUNC('day', close_at) as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM (close_at - created_at))/3600)::numeric, 1) as interval
+       DATE(created_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_day_created_at, 
+       DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
+       ROUND(((EXTRACT(EPOCH FROM close_at) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as interval
        FROM tickets 
-       WHERE DATE_TRUNC('day', close_at)>=$1 AND DATE_TRUNC('day', close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
-       AND DATE_TRUNC('day', created_at) = DATE_TRUNC('day', close_at)
+       WHERE DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') >= $1::date 
+       AND DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') <= $2::date 
+       AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
+       AND DATE(created_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') = DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours')
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
+      [startDateStr, endDateStr, 'Недоступний Інтернет%M%'], false, true) || []
 
     const dataOpenForCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
-       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       DATE_TRUNC('day', created_at) as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM ((DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second') - created_at))/3600)::numeric, 1) as interval       
+       DATE(created_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_day_created_at, 
+       DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
+       ROUND(((EXTRACT(EPOCH FROM (DATE_TRUNC('day', created_at) + INTERVAL '1 day' - INTERVAL '1 second')) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as interval       
        FROM tickets 
-       WHERE DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day',created_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
-       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
+       WHERE DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') >= $1::date 
+       AND DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') <= $2::date 
+       AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
+       AND DATE(created_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') <> DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours')
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
+      [startDateStr, endDateStr, 'Недоступний Інтернет%M%'], false, true) || []
 
     const dataCloseAnotherDay = await execPgQuery(`SELECT id, title, created_at, close_at, 
-       DATE_TRUNC('day', close_at) as start_of_day_created_at, 
-       DATE_TRUNC('day', close_at) as start_of_close_at, 
-       ROUND(EXTRACT(EPOCH FROM (close_at - DATE_TRUNC('day', close_at))/3600)::numeric, 1) as interval
+       DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_day_created_at, 
+       DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
+       ROUND(((EXTRACT(EPOCH FROM close_at) - EXTRACT(EPOCH FROM DATE_TRUNC('day', close_at)))/3600)::numeric, 1) as interval
        FROM tickets 
-       WHERE DATE_TRUNC('day',close_at)>=$1 AND DATE_TRUNC('day',close_at)<=$2 AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
-       AND DATE_TRUNC('day', created_at) <> DATE_TRUNC('day', close_at)
+       WHERE DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') >= $1::date 
+       AND DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') <= $2::date 
+       AND state_id = 4 AND group_id = 7 AND title ILIKE $3 
+       AND DATE(created_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours') <> DATE(close_at AT TIME ZONE 'UTC' + INTERVAL '${hoursToAdd} hours')
        ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
+      [startDateStr, endDateStr, 'Недоступний Інтернет%M%'], false, true) || []
 
-    const result = await execPgQuery(`SELECT NOW() as current_timestamp;`, [])
-    console.log(result.current_timestamp)
+    // Include open tickets only if the report period includes today
+    const today = new Date()
+    const reportIncludesToday = (period.start <= today && period.end >= today)
 
-    const dataOpen = await execPgQuery(`SELECT id, title, created_at, close_at, 
-       DATE_TRUNC('day', created_at) as start_of_day_created_at, 
-       (NOW() + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
-       ROUND((EXTRACT(EPOCH FROM ((NOW() + INTERVAL '${hoursToAdd} hours') - created_at))/3600)::numeric, 1) as interval
-       FROM tickets 
-       WHERE DATE_TRUNC('day', created_at) = CURRENT_DATE 
-       AND DATE_TRUNC('day',created_at)>=$1 AND DATE_TRUNC('day', created_at)<=$2 
-       AND state_id <> 4 AND group_id = 7 AND title ILIKE $3 
-       ORDER BY created_at;`,
-      [dayStart, dayEnd, 'Недоступний Інтернет%M%'], false, true) || []
+    let dataOpen = []
+    if (reportIncludesToday) {
+      dataOpen = await execPgQuery(`SELECT id, title, created_at, close_at, 
+         DATE(NOW() + INTERVAL '${hoursToAdd} hours') as start_of_day_created_at, 
+         DATE(NOW() + INTERVAL '${hoursToAdd} hours') as start_of_close_at, 
+         ROUND(((EXTRACT(EPOCH FROM (NOW() + INTERVAL '${hoursToAdd} hours')) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as interval
+         FROM tickets 
+         WHERE DATE(NOW() + INTERVAL '${hoursToAdd} hours') >= $1::date AND DATE(NOW() + INTERVAL '${hoursToAdd} hours') <= $2::date 
+         AND state_id <> 4 AND group_id = 7 AND title ILIKE $3 
+         ORDER BY created_at;`,
+        [startDateStr, endDateStr, 'Недоступний Інтернет%M%'], false, true) || []
+    }
 
     const data = [...dataOpen, ...dataCloseDayInDay, ...dataOpenForCloseAnotherDay, ...dataCloseAnotherDay]
     if (data === null) {
@@ -537,7 +543,7 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
 
     const preparedData = data.map(item => ({
       title: item.title.replace('Недоступний Інтернет на хосте ', ''),
-      start_of_close_at: item.start_of_close_at.toISOString().split('T')[0],
+      start_of_close_at: typeof item.start_of_close_at === 'string' ? item.start_of_close_at : moment(item.start_of_close_at).format('YYYY-MM-DD'),
       interval: Number(item.interval)
     }))
 
@@ -549,14 +555,16 @@ module.exports.createNetReport = async function (bot, msg, dayOrWeek) {
         acc[key] = {
           title: item.title,
           start_of_close_at: dayOrWeek === 'week' ? getWeekStartDate(item.start_of_close_at, dayStart, dayEnd) : item.start_of_close_at,
-          total_interval: 0
+          total_interval: 0,
+          count: 0
         };
       }
       acc[key].total_interval += item.interval;
+      acc[key].count += 1;
       return acc
     }, {})
 
-    const resultData = Object.values(groupedData);
+    const resultData = Object.values(groupedData).filter(item => item.total_interval > 0);
     const sortedData = resultData.sort((a, b) => {
       if (a.title < b.title) {
         return -1
