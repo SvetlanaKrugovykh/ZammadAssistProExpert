@@ -53,6 +53,7 @@ async function testOpenInternetCases() {
       console.log(`   Created: ${new Date(ticket.created_at).toLocaleString('uk-UA')}`)
       console.log(`   Duration: ${ticket.duration_hours || 0}h`)
       console.log(`   State ID: ${ticket.state_id}`)
+      console.log(`   Close At: ${ticket.close_at ? new Date(ticket.close_at).toLocaleString('uk-UA') : 'NULL'}`)
       console.log('')
     })
 
@@ -71,26 +72,55 @@ async function testOpenInternetCases() {
       }
 
       console.log(`🔍 Case ${i + 1}: Checking status for store ${storeNumber}...`)
-
+      
+      // Debug: Run the same query that checkStoreInternetStatus uses
+      const debugQuery = `
+        SELECT id, title, created_at, close_at, state_id,
+          DATE_TRUNC('day', created_at) as start_of_day_created_at, 
+          NOW() as current_time_db, 
+          ROUND(((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at))/3600)::numeric, 1) as duration_hours
+        FROM tickets 
+        WHERE group_id = $1 
+          AND title ILIKE $2
+          AND title ILIKE $3
+          AND (
+            EXTRACT(EPOCH FROM created_at) >= EXTRACT(EPOCH FROM NOW()) - ${lookbackDeltaSeconds}
+            OR (close_at IS NOT NULL 
+                AND EXTRACT(EPOCH FROM close_at) >= EXTRACT(EPOCH FROM NOW()) - ${lookbackDeltaSeconds} 
+                AND state_id = 4)
+          )
+        ORDER BY 
+          COALESCE(EXTRACT(EPOCH FROM close_at), EXTRACT(EPOCH FROM created_at)) DESC 
+        LIMIT 1
+      `
+      
       try {
+        const debugResult = await execPgQuery(debugQuery, [7, 'Недоступний Інтернет%M%', `%M${storeNumber}%`], false, true)
+        console.log(`🔬 DEBUG: Query found ${debugResult ? debugResult.length : 0} tickets for store ${storeNumber}`)
+        if (debugResult && debugResult.length > 0) {
+          const debugTicket = debugResult[0]
+          console.log(`   Debug Ticket ID: ${debugTicket.id}`)
+          console.log(`   Debug State: ${debugTicket.state_id}`)
+          console.log(`   Debug Close At: ${debugTicket.close_at ? new Date(debugTicket.close_at).toLocaleString('uk-UA') : 'NULL'}`)
+        }
+        
         const status = await checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds)
-
+        
         console.log(`📊 Store ${storeNumber} status result:`)
         console.log(`   Status: ${status.status}`)
         console.log(`   Message: ${status.message}`)
         console.log(`   Last Update: ${status.lastUpdate ? new Date(status.lastUpdate).toLocaleString('uk-UA') : 'N/A'}`)
         console.log(`   Ticket ID: ${status.ticketId || 'N/A'}`)
-
+        
         // Compare with original ticket
         if (status.ticketId && status.ticketId !== ticket.id) {
           console.log(`⚠️  WARNING: Status check returned different ticket ID (${status.ticketId} vs ${ticket.id})`)
         }
-
+        
         if (status.status === 'online' && ticket.state_id !== 4) {
           console.log(`⚠️  WARNING: Store shows online but ticket ${ticket.id} is still open (state: ${ticket.state_id})`)
-        }
-
-      } catch (error) {
+          console.log(`   🔍 This might indicate an issue with the checkStoreInternetStatus query logic`)
+        }      } catch (error) {
         console.log(`❌ Error checking store ${storeNumber}: ${error.message}`)
       }
 
