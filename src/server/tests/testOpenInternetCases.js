@@ -72,7 +72,7 @@ async function testOpenInternetCases() {
       }
 
       console.log(`🔍 Case ${i + 1}: Checking status for store ${storeNumber}...`)
-      
+
       // Debug: Run the same query that checkStoreInternetStatus uses
       const debugQuery = `
         SELECT id, title, created_at, close_at, state_id,
@@ -93,7 +93,7 @@ async function testOpenInternetCases() {
           COALESCE(EXTRACT(EPOCH FROM close_at), EXTRACT(EPOCH FROM created_at)) DESC 
         LIMIT 1
       `
-      
+
       try {
         const debugResult = await execPgQuery(debugQuery, [7, 'Недоступний Інтернет%M%', `%M${storeNumber}%`], false, true)
         console.log(`🔬 DEBUG: Query found ${debugResult ? debugResult.length : 0} tickets for store ${storeNumber}`)
@@ -103,24 +103,25 @@ async function testOpenInternetCases() {
           console.log(`   Debug State: ${debugTicket.state_id}`)
           console.log(`   Debug Close At: ${debugTicket.close_at ? new Date(debugTicket.close_at).toLocaleString('uk-UA') : 'NULL'}`)
         }
-        
+
         const status = await checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds)
-        
+
         console.log(`📊 Store ${storeNumber} status result:`)
         console.log(`   Status: ${status.status}`)
         console.log(`   Message: ${status.message}`)
         console.log(`   Last Update: ${status.lastUpdate ? new Date(status.lastUpdate).toLocaleString('uk-UA') : 'N/A'}`)
         console.log(`   Ticket ID: ${status.ticketId || 'N/A'}`)
-        
+
         // Compare with original ticket
         if (status.ticketId && status.ticketId !== ticket.id) {
           console.log(`⚠️  WARNING: Status check returned different ticket ID (${status.ticketId} vs ${ticket.id})`)
         }
-        
+
         if (status.status === 'online' && ticket.state_id !== 4) {
           console.log(`⚠️  WARNING: Store shows online but ticket ${ticket.id} is still open (state: ${ticket.state_id})`)
           console.log(`   🔍 This might indicate an issue with the checkStoreInternetStatus query logic`)
-        }      } catch (error) {
+        }
+      } catch (error) {
         console.log(`❌ Error checking store ${storeNumber}: ${error.message}`)
       }
 
