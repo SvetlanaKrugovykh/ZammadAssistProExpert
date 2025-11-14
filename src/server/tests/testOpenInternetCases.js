@@ -12,9 +12,9 @@ async function testOpenInternetCases() {
   try {
     // Get lookbackDeltaSeconds from command line arguments
     const lookbackDeltaSeconds = process.argv[2] ? parseInt(process.argv[2]) : 86400 // Default 24 hours
-    
-    console.log(`🔍 Testing open internet cases with lookback: ${lookbackDeltaSeconds} seconds (${Math.round(lookbackDeltaSeconds/3600)} hours)`)
-    console.log('=' .repeat(80))
+
+    console.log(`🔍 Testing open internet cases with lookback: ${lookbackDeltaSeconds} seconds (${Math.round(lookbackDeltaSeconds / 3600)} hours)`)
+    console.log('='.repeat(80))
 
     // 1) Get all open internet cases
     const query = `
@@ -56,7 +56,7 @@ async function testOpenInternetCases() {
       console.log('')
     })
 
-    console.log('=' .repeat(80))
+    console.log('='.repeat(80))
     console.log('📋 Step 2: Checking store internet status for each case...')
     console.log('-'.repeat(80))
 
@@ -64,42 +64,42 @@ async function testOpenInternetCases() {
     for (let i = 0; i < openCases.length; i++) {
       const ticket = openCases[i]
       const storeNumber = extractStoreNumber(ticket.title)
-      
+
       if (!storeNumber) {
         console.log(`❌ Case ${i + 1}: Cannot extract store number from "${ticket.title}"`)
         continue
       }
 
       console.log(`🔍 Case ${i + 1}: Checking status for store ${storeNumber}...`)
-      
+
       try {
         const status = await checkStoreInternetStatus(storeNumber, lookbackDeltaSeconds)
-        
+
         console.log(`📊 Store ${storeNumber} status result:`)
         console.log(`   Status: ${status.status}`)
         console.log(`   Message: ${status.message}`)
         console.log(`   Last Update: ${status.lastUpdate ? new Date(status.lastUpdate).toLocaleString('uk-UA') : 'N/A'}`)
         console.log(`   Ticket ID: ${status.ticketId || 'N/A'}`)
-        
+
         // Compare with original ticket
         if (status.ticketId && status.ticketId !== ticket.id) {
           console.log(`⚠️  WARNING: Status check returned different ticket ID (${status.ticketId} vs ${ticket.id})`)
         }
-        
+
         if (status.status === 'online' && ticket.state_id !== 4) {
           console.log(`⚠️  WARNING: Store shows online but ticket ${ticket.id} is still open (state: ${ticket.state_id})`)
         }
-        
+
       } catch (error) {
         console.log(`❌ Error checking store ${storeNumber}: ${error.message}`)
       }
-      
+
       console.log('')
     }
 
-    console.log('=' .repeat(80))
+    console.log('='.repeat(80))
     console.log('✅ Test completed')
-    
+
   } catch (error) {
     console.error('❌ Test failed:', error.message)
     console.error(error.stack)
