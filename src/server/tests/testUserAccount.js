@@ -11,21 +11,21 @@ async function testUserAccount() {
   try {
     // Get userId from command line arguments or use default
     const userId = process.argv[2] || '701079281'
-    
+
     console.log(`🔍 Testing user account: ${userId}`)
     console.log('='.repeat(80))
 
     // 1) Direct database query to check user existence
     console.log('📋 Step 1: Direct database check...')
-    
+
     // Check by login (for long IDs like Telegram chat IDs)
     const userByLogin = await execPgQuery(
-      'SELECT id, login, email, firstname, lastname, active, created_at, updated_at FROM users WHERE login = $1', 
-      [userId], 
-      false, 
+      'SELECT id, login, email, firstname, lastname, active, created_at, updated_at FROM users WHERE login = $1',
+      [userId],
+      false,
       true
     )
-    
+
     console.log(`📊 User by login (${userId}):`)
     if (userByLogin && userByLogin.length > 0) {
       userByLogin.forEach((user, index) => {
@@ -43,12 +43,12 @@ async function testUserAccount() {
     }    // Check by ID (for short numeric IDs)
     if (userId.length < 7) {
       const userById = await execPgQuery(
-        'SELECT id, login, email, firstname, lastname, active, created_at, updated_at FROM users WHERE id = $1', 
-        [parseInt(userId)], 
-        false, 
+        'SELECT id, login, email, firstname, lastname, active, created_at, updated_at FROM users WHERE id = $1',
+        [parseInt(userId)],
+        false,
         true
       )
-      
+
       console.log(`📊 User by ID (${userId}):`)
       if (userById && userById.length > 0) {
         userById.forEach((user, index) => {
@@ -68,11 +68,11 @@ async function testUserAccount() {
 
     // 2) Test using the application's findUserById function
     console.log('📋 Step 2: Testing application findUserById function...')
-    
+
     try {
       const appUser = await findUserById(userId)
       console.log(`📊 Application findUserById result:`)
-      
+
       if (appUser && Array.isArray(appUser) && appUser.length > 0) {
         const user = appUser[0]
         console.log(`   ✅ User found:`)
@@ -93,30 +93,30 @@ async function testUserAccount() {
 
     // 3) Check for similar users (in case of typos)
     console.log('📋 Step 3: Looking for similar users...')
-    
+
     const similarUsers = await execPgQuery(
       `SELECT id, login, email, firstname, lastname, active 
        FROM users 
        WHERE login LIKE $1 OR email LIKE $2 
        ORDER BY updated_at DESC 
-       LIMIT 10`, 
-      [`%${userId}%`, `%${userId}%`], 
-      false, 
+       LIMIT 10`,
+      [`%${userId}%`, `%${userId}%`],
+      false,
       true
     )
-    
+
     // Also search by email pattern like 's.kr%go%' 
     const emailPatternUsers = await execPgQuery(
       `SELECT id, login, email, firstname, lastname, active, created_at
        FROM users 
        WHERE email LIKE '%s.kr%go%' OR email LIKE '%krugovykh%'
        ORDER BY updated_at DESC 
-       LIMIT 5`, 
-      [], 
-      false, 
+       LIMIT 5`,
+      [],
+      false,
       true
     )
-    
+
     if (similarUsers && similarUsers.length > 0) {
       console.log(`📊 Found ${similarUsers.length} similar user(s):`)
       similarUsers.forEach((user, index) => {
@@ -130,7 +130,7 @@ async function testUserAccount() {
 
     // 4) Recommendations
     console.log('📋 Step 4: Recommendations...')
-    
+
     if (!userByLogin || userByLogin.length === 0) {
       console.log('🔧 RECOMMENDATION: User account needs to be created')
       console.log('   Options:')
@@ -153,7 +153,7 @@ async function testUserAccount() {
     }
 
     console.log('✅ Test completed')
-    
+
   } catch (error) {
     console.error('❌ Test failed:', error.message)
     console.error(error.stack)

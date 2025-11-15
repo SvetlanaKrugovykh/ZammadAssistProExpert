@@ -14,7 +14,7 @@ async function fixUserAccount() {
     const email = process.argv[3] || `telegram_${userId}@lotok.in.ua`
     const firstname = process.argv[4] || 'Telegram'
     const lastname = process.argv[5] || 'User'
-    
+
     console.log(`🔧 Fixing user account via Zammad API...`)
     console.log(`   User ID: ${userId}`)
     console.log(`   Email: ${email}`)
@@ -23,7 +23,7 @@ async function fixUserAccount() {
 
     const apiUrl = process.env.ZAMMAD_API_URL
     const apiToken = process.env.ZAMMAD_API_TOKEN
-    
+
     if (!apiUrl || !apiToken) {
       throw new Error('ZAMMAD_API_URL or ZAMMAD_API_TOKEN not configured in .env')
     }
@@ -35,31 +35,31 @@ async function fixUserAccount() {
 
     // 1) Check if user already exists
     console.log('📋 Step 1: Checking if user exists...')
-    
+
     try {
       const searchResponse = await axios.get(`${apiUrl}/users/search`, {
         headers,
         params: { query: userId }
       })
-      
+
       if (searchResponse.data && searchResponse.data.length > 0) {
         console.log(`📊 Found ${searchResponse.data.length} existing user(s):`)
         searchResponse.data.forEach((user, index) => {
           console.log(`   ${index + 1}. ID: ${user.id} | Login: ${user.login} | Email: ${user.email} | Active: ${user.active}`)
         })
-        
+
         // Check if exact match exists
         const exactMatch = searchResponse.data.find(u => u.login === userId)
         if (exactMatch) {
           console.log(`✅ Exact match found for login ${userId}`)
-          
+
           if (!exactMatch.active) {
             console.log('🔧 User exists but is inactive, activating...')
-            
+
             const updateResponse = await axios.put(`${apiUrl}/users/${exactMatch.id}`, {
               active: true
             }, { headers })
-            
+
             if (updateResponse.status === 200) {
               console.log('✅ User successfully activated')
             } else {
@@ -68,7 +68,7 @@ async function fixUserAccount() {
           } else {
             console.log('✅ User is already active')
           }
-          
+
           console.log('✅ Fix completed - user should work now')
           return
         }
@@ -84,7 +84,7 @@ async function fixUserAccount() {
 
     // 2) Create new user
     console.log('📋 Step 2: Creating new user...')
-    
+
     const newUserData = {
       login: userId,
       email: email,
@@ -100,12 +100,12 @@ async function fixUserAccount() {
 
     try {
       const createResponse = await axios.post(`${apiUrl}/users`, newUserData, { headers })
-      
+
       if (createResponse.status === 201) {
         const createdUser = createResponse.data
         console.log('✅ User successfully created:')
         console.log(`   ID: ${createdUser.id}`)
-        console.log(`   Login: ${createdUser.login}`)  
+        console.log(`   Login: ${createdUser.login}`)
         console.log(`   Email: ${createdUser.email}`)
         console.log(`   Name: ${createdUser.firstname} ${createdUser.lastname}`)
         console.log(`   Active: ${createdUser.active}`)
@@ -117,11 +117,11 @@ async function fixUserAccount() {
       }
     } catch (createError) {
       console.error('❌ Failed to create user:')
-      
+
       if (createError.response) {
         console.error(`   Status: ${createError.response.status}`)
         console.error(`   Error: ${JSON.stringify(createError.response.data, null, 2)}`)
-        
+
         if (createError.response.status === 422) {
           console.log('')
           console.log('💡 Possible reasons:')
@@ -133,13 +133,13 @@ async function fixUserAccount() {
       } else {
         console.error(`   Error: ${createError.message}`)
       }
-      
+
       throw createError
     }
 
     console.log('='.repeat(80))
     console.log('✅ Fix completed successfully')
-    
+
   } catch (error) {
     console.error('❌ Fix failed:', error.message)
     if (error.response) {

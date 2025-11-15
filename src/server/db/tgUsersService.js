@@ -14,7 +14,7 @@ async function findUserById(ID) {
       console.log(`Error findUserById: ${cleanedId} is belong ti the groupID`)
       return null
     }
-    
+
     if (ID.length < 7) {
       data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId], false, true)
       console.log(`findUserById: ${data?.[0]?.id}`)
@@ -22,7 +22,7 @@ async function findUserById(ID) {
       data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [cleanedId], false, true)
       console.log(`findUserByLogin: ${data?.[0]?.login} (found ${data?.length || 0} results)`)
     }
-    
+
     if (!data || data.length === 0) {
       if (ID.length >= 7) {
         data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [ID], false, true)
@@ -32,7 +32,7 @@ async function findUserById(ID) {
         console.log(`findUserByLogin (fallback by original ID): ${data?.[0]?.login} (found ${data?.length || 0} results)`)
       }
     }
-    
+
     if (!data || data.length === 0) {
       console.log(`findUserById: No user found for ID/login: ${ID}`)
       return null
