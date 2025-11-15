@@ -102,6 +102,10 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     } else {
       user = await findUserById(msg.chat.id)
     }
+    
+    console.log(`ticketRegistration: user found:`, user)
+    console.log(`ticketRegistration: owner found:`, owner)
+    
     const subject = selectedByUser.ticketTitle
     const body = selectedByUser.ticketBody
     const ticket = await create_ticket(user, subject, body, owner)
@@ -204,6 +208,13 @@ async function ticketUpdates(bot, msg, selectedByUser) {
 
 async function create_ticket(user, subject, body, owner = null) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
+  
+  console.log(`create_ticket received user:`, user)
+  if (!user || !user.id) {
+    console.error('create_ticket: user is null or missing id')
+    return null
+  }
+  
   let customer_id = user['id']
   let owner_id = owner?.id || null
 
