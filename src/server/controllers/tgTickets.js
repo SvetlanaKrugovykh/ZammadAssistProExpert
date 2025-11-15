@@ -91,6 +91,10 @@ async function ticketRegistration(bot, msg, selectedByUser) {
         try {
           user = await findUserByEmail(email)
           owner = await findUserById(msg.chat.id)
+          if (!user) {
+            console.log(`Email ${email} не знайдено в базі, використовую поточного користувача`)
+            user = await findUserById(msg.chat.id)
+          }
         } catch (err) {
           console.error('Email не знайдено в базі', email)
           user = await findUserById(msg.chat.id)
