@@ -5,7 +5,8 @@ require('dotenv').config()
 
 async function findUserById(ID) {
   try {
-    if (typeof ID !== 'string') ID = ID.toString()
+    if (!ID) return null
+    if (typeof ID !== 'string') ID = String(ID)
     if (!/^\d{1,12}$/.test(ID)) return null
     let data = null
     let cleanedId = ID.replace(/\D/g, '')
@@ -13,14 +14,34 @@ async function findUserById(ID) {
       console.log(`Error findUserById: ${cleanedId} is belong ti the groupID`)
       return null
     }
+    
     if (ID.length < 7) {
-      data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
-      console.log(`findUserById: ${data?.id}`)
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId], false, true)
+      console.log(`findUserById: ${data?.[0]?.id}`)
     } else {
-      data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [cleanedId])
-      console.log(`findUserByLogin: ${data?.login}`)
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [cleanedId], false, true)
+      console.log(`findUserByLogin: ${data?.[0]?.login} (found ${data?.length || 0} results)`)
     }
-    if (!data || data.length === 0) return null
+    
+    if (!data || data.length === 0) {
+      if (ID.length >= 7) {
+        data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [ID], false, true)
+        console.log(`findUserById (fallback by original ID): ${data?.[0]?.id} (found ${data?.length || 0} results)`)
+      } else {
+        data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [ID], false, true)
+        console.log(`findUserByLogin (fallback by original ID): ${data?.[0]?.login} (found ${data?.length || 0} results)`)
+      }
+    }
+    
+    if (!data || data.length === 0) {
+      console.log(`findUserById: No user found for ID/login: ${ID}`)
+      return null
+    }
+    if (data[0] && data[0].id) {
+      console.log(`findUserById: Returning user ${data[0].id} (${data[0].login})`)
+    } else {
+      console.log(`findUserById: Data found but invalid structure:`, data[0])
+    }
     return data
   } catch (error) {
     console.error('Error in findUserById:', error)
@@ -30,14 +51,15 @@ async function findUserById(ID) {
 
 async function findOwnerById(owner_id) {
   try {
-    if (typeof owner_id !== 'string') owner_id = owner_id.toString()
+    if (!owner_id) return null
+    if (typeof owner_id !== 'string') owner_id = String(owner_id)
     if (!/^\d{1,12}$/.test(owner_id)) return null
     let data = null
     let cleanedId = owner_id.replace(/\D/g, '')
-    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
+    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId], false, true)
     return data
   } catch (error) {
-    console.error('Error in findUserById:', error)
+    console.error('Error in findOwnerById:', error)
     return null
   }
 }
