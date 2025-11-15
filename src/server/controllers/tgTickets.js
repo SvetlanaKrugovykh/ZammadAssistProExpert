@@ -92,7 +92,7 @@ async function ticketRegistration(bot, msg, selectedByUser) {
           user = await findUserByEmail(email)
           owner = await findUserById(msg.chat.id)
           if (!user) {
-            console.log(`Email ${email} не знайдено в базі, використовую поточного користувача`)
+            console.log(`Email ${email} not found, using current user`)
             user = await findUserById(msg.chat.id)
           }
         } catch (err) {
@@ -106,9 +106,6 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     } else {
       user = await findUserById(msg.chat.id)
     }
-
-    console.log(`ticketRegistration: user found:`, user)
-    console.log(`ticketRegistration: owner found:`, owner)
 
     const subject = selectedByUser.ticketTitle
     const body = selectedByUser.ticketBody
@@ -213,7 +210,6 @@ async function ticketUpdates(bot, msg, selectedByUser) {
 async function create_ticket(user, subject, body, owner = null) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
 
-  console.log(`create_ticket received user:`, user)
   if (!user || !user.id) {
     console.error('create_ticket: user is null or missing id')
     return null
