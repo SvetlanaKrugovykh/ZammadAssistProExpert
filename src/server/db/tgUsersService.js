@@ -42,7 +42,7 @@ async function findUserById(ID) {
     } else {
       console.log(`findUserById: Data found but invalid structure:`, data[0])
     }
-    return data
+    return data[0]
   } catch (error) {
     console.error('Error in findUserById:', error)
     return null
@@ -56,7 +56,7 @@ async function findOwnerById(owner_id) {
     if (!/^\d{1,12}$/.test(owner_id)) return null
     let data = null
     let cleanedId = owner_id.replace(/\D/g, '')
-    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId], false, true)
+    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
     return data
   } catch (error) {
     console.error('Error in findOwnerById:', error)
