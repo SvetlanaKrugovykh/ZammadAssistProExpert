@@ -12,3 +12,7 @@
 
 # find / -name "application.js"
 /opt/zammad/app/assets/javascripts/application.js
+
+
+/opt/zammad/public/assets/telegram.js
+
