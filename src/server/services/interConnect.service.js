@@ -37,9 +37,10 @@ module.exports.newRecord = async function (body) {
 module.exports.newRequest = async function (body) {
   try {
     const { currentPageURL } = body
-    const psrts = currentPageURL.split('/')
-    const ticket_id = psrts[psrts.length - 1]
+    const match = currentPageURL.match(/zoom\/(\d+)/)
+    const ticket_id = match ? match[1] : null
     console.log('inter-connect: ticket_id extracted:', ticket_id)
+
     if (!(ticket_id > 0)) return false
     const ticket = await getTicketData(ticket_id)
     if (!ticket) return null
@@ -80,7 +81,7 @@ module.exports.newRequest = async function (body) {
     return true
   } catch (error) {
     console.error('Error executing commands:', error.message)
-    return false
+    return 'error: ' + error.message
   }
 }
 
