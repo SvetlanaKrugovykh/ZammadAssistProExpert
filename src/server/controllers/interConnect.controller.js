@@ -17,15 +17,23 @@ module.exports.newRecord = async function (request, _reply) {
 
 module.exports.newRequest = async function (request, _reply) {
   try {
-    console.log('newRequest', request?.body)
-    const body = request.body
-    const message = await interConnectService.newRequest(body)
+    let url = request.body?.currentPageURL
+    if (!url) {
+      console.log('inter-connect: currentPageURL not provided')
+      return
+    }
+    url = url.replace(/(zoom\/\d+)(\/\d+)?/, '$1')
+    request.body.currentPageURL = url
+
+    console.log('newRequest', url)
+    const message = await interConnectService.newRequest(url)
+
     if (!message) {
       throw new HttpError[501]('Command execution failed')
     }
     return {
       message: `done `
-    }
+    };
   } catch (error) {
     throw new HttpError[500](error.message)
   }
