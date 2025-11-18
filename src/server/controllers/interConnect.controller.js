@@ -18,14 +18,6 @@ module.exports.newRecord = async function (request, _reply) {
 
 module.exports.newRequest = async function (request, _reply) {
   try {
-    let url = request.body?.currentPageURL
-    if (!url) {
-      console.log('inter-connect: currentPageURL not provided')
-      return
-    }
-    url = url.replace(/(zoom\/\d+)(\/\d+)?/, '$1')
-    request.body.currentPageURL = url
-
     console.log('newRequest', request.body)
     const message = await interConnectService.newRequest(request.body)
 
