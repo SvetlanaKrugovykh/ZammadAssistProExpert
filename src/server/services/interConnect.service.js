@@ -47,6 +47,7 @@ module.exports.newRequest = async function (body) {
     const article = await getTicketArticles(ticket_id)
     if (!article) return false
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
+    console.log('inter-connect: article_body extracted:', article_body)
     if (article_body.includes('Отримана відповідь від Замовника')) return false
     if (article_body.includes(' відправлено замовнику ')) return false
     const message_in = article_body ? ` ${article_body}` : 'Додатковий запит відсутній'
