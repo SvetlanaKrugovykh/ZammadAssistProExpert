@@ -48,8 +48,16 @@ module.exports.newRequest = async function (body) {
     if (!article) return false
     const article_body = (article ? article?.body : '').replace(/<[^>]*>/g, '')
     console.log('inter-connect: article_body extracted:', article_body)
-    if (article_body.includes('Отримана відповідь від Замовника')) return false
-    if (article_body.includes(' відправлено замовнику ')) return false
+
+    if (article_body.includes('Отримана відповідь від Замовника')) {
+      console.log('inter-connect: already answered by customer')
+      return 'no action: already answered'
+    }
+    if (article_body.includes(' відправлено замовнику ')) {
+      console.log('inter-connect: already sent to customer')
+      return 'no action: already sent to customer'
+    }
+
     const message_in = article_body ? ` ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
     const comment = ` Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
