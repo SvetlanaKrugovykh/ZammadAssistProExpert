@@ -39,6 +39,7 @@ module.exports.newRequest = async function (body) {
     const { currentPageURL } = body
     const psrts = currentPageURL.split('/')
     const ticket_id = psrts[psrts.length - 1]
+    console.log('inter-connect: ticket_id extracted:', ticket_id)
     if (!(ticket_id > 0)) return false
     const ticket = await getTicketData(ticket_id)
     if (!ticket) return null
