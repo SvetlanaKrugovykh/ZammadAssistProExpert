@@ -25,8 +25,8 @@ module.exports.newRequest = async function (request, _reply) {
     url = url.replace(/(zoom\/\d+)(\/\d+)?/, '$1')
     request.body.currentPageURL = url
 
-    console.log('newRequest', url)
-    const message = await interConnectService.newRequest(url)
+    console.log('newRequest', request.body)
+    const message = await interConnectService.newRequest(request.body)
 
     if (!message) {
       throw new HttpError[501]('Command execution failed')
