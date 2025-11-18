@@ -1,5 +1,5 @@
 const interConnectService = require('../services/interConnect.service')
-const HttpError = require('../modules/httpError')
+const HttpError = require('http-errors')
 
 module.exports.newRecord = async function (request, _reply) {
   try {
