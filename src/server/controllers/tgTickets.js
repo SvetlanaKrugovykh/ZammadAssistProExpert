@@ -153,10 +153,14 @@ async function ticketUpdates(bot, msg, selectedByUser) {
     const ticketNumber = ticketData.number
     const timestamp = fDateTime('uk-UA', new Date())
     let comment = ''
+
     const user_data = await findUserById(owner_id)
-    const owner_login = user_data.login
-    const customer_data = await findUserById(customer_id)
-    const login = customer_data.login
+    const owner_login = user_data && user_data.login ? user_data.login : msg.chat.id
+    if (!user_data) console.log(`findUserById: owner_id ${owner_id} not found, using msg.chat.id`)
+
+    const customer_data = await findUserById(customer_id);
+    const login = customer_data && customer_data.login ? customer_data.login : msg.chat.id;
+    if (!customer_data) console.log(`findUserById: customer_id ${customer_id} not found, using msg.chat.id`)
 
     if (Number(owner_login) === msg.chat.id && !selectedByUser?.customer_login) {
       comment = `Надіслан запит Замовнику ${timestamp}: ${selectedByUser.ticketBody}`
