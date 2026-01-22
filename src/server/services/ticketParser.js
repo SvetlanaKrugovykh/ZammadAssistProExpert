@@ -1,5 +1,5 @@
 const logger = require('../utils/logger')
-const logMessages = require('../../data/logMessages')
+const logMessages = require('../data/logMessages')
 
 class TicketParser {
   constructor() {

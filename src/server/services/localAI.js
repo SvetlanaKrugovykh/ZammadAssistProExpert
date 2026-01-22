@@ -2,12 +2,12 @@ const axios = require('axios')
 const FormData = require('form-data')
 const fs = require('fs')
 const logger = require('../utils/logger')
-const messages = require('../../data/messages')
-const logMessages = require('../../data/logMessages')
-const serviceErrors = require('../../data/serviceErrors')
+const messages = require('../data/messages')
+const logMessages = require('../data/logMessages')
+const serviceErrors = require('../data/serviceErrors')
 const ticketParser = require('./ticketParser')
-const postAiCorrections = require('../../data/postAiCorrections')
-const buildQwenRequest = require('../../data/ai-requests').buildQwenRequest
+const postAiCorrections = require('../data/postAiCorrections')
+const buildQwenRequest = require('../data/ai-requests').buildQwenRequest
 require('dotenv').config()
 
 function deduplicateSentences(text) {
@@ -133,6 +133,8 @@ class LocalAIService {
           const parsed = JSON.parse(response.data.response)
           textResult = parsed.text || text
           topicResult = parsed.topic || ''
+          const reply_data = {textResult, topicResult}
+          return reply_data
         } catch (e) {
           const _localAiDuration = Date.now() - _localAiStart
           logger.warn(`Local AI failed for user ${clientId} after ${_localAiDuration}ms: ${e.message}`)

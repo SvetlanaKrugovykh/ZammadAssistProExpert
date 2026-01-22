@@ -30,6 +30,15 @@ async function ticketCreateScene(bot, msg) {
   }
 }
 
+async function ticketSubjectEditor(bot, msg, data, selectedByUser) {
+  try {
+    const subj = selectedByUser?.ticketTitle || '> Введіть змістовну тему заявки'
+
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 async function ticketUpdateScene(bot, msg, ticketID = '') {
   try {
     const chatId = msg.chat.id
@@ -322,4 +331,4 @@ async function checkUserTickets(bot, msg, menuItem) {
   }
 }
 
-module.exports = { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistration, ticketUpdates, checkUserTickets }
+module.exports = { ticketCreateScene, ticketUpdateScene, ticketSubjectEditor, ticketsTextInput, ticketRegistration, ticketUpdates, checkUserTickets }

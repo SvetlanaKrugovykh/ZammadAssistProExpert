@@ -1,7 +1,7 @@
 const { buttonsConfig } = require('../modules/keyboard')
 const { clientsAdminGetInfo, clientsAdminResponseToRequest, userApproveOrDecline } = require('./clientsAdmin')
 const supportScene = require('./support')
-const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketRegistration, ticketUpdates, checkUserTickets } = require('./tgTickets')
+const { ticketCreateScene, ticketUpdateScene, ticketsTextInput, ticketSubjectEditor, ticketRegistration, ticketUpdates, checkUserTickets } = require('./tgTickets')
 const { askForPicture, askForAttachment } = require('../services/attachment.service')
 const { signUpForm, signUpOldForm, usersTextInput, usersRegistration } = require('./signUp')
 const { chooseData, selectPeriod, chooseGroups, chooseTypeOfPeriod, checkReadyForReport } = require('./reportsController')
@@ -14,6 +14,7 @@ const { showTicketInfo } = require('../modules/notifications')
 const { isThisGroupId } = require('../modules/bot')
 const { globalBuffer, selectedByUser } = require('../globalBuffer')
 const { findCustomers, createListOfCustomers } = require('../services/finder.service')
+const { processText } = require('../services/localAI')
 
 //#region staticKeyboad
 function getCallbackData(text) {
@@ -50,178 +51,197 @@ async function handler(bot, msg, webAppUrl) {
   const adminUser = users.find(user => user.id === chatId)
   console.log('The choise is:', data);
   switch (data) {
-    case '0_2':
-      await supportScene(bot, msg, false)
-      break
-    case '0_3':
-      await signUpForm(bot, msg, webAppUrl)
-      break
-    case '0_5':
-      await signUpOldForm(bot, msg)
-      break
-    case '0_10':
-    case '0_11':
-    case '0_12':
-      selected_ = await usersTextInput(bot, msg, data, selectedByUser[chatId])
-      if (selected_) selectedByUser[chatId] = selected_
-      break
-    case '0_13':
-      await usersRegistration(bot, msg, selectedByUser[chatId])
-      break
-    case '0_4':
-      if (adminUser) {
-        await await clientAdminMenuStarter(bot, msg, buttonsConfig["clientAdminStarterButtons"])
-      } else {
-        await usersStarterMenu(bot, msg)
+		case "0_2":
+			await supportScene(bot, msg, false)
+			break
+		case "0_3":
+			await signUpForm(bot, msg, webAppUrl)
+			break
+		case "0_5":
+			await signUpOldForm(bot, msg)
+			break
+		case "0_10":
+		case "0_11":
+		case "0_12":
+			selected_ = await usersTextInput(bot, msg, data, selectedByUser[chatId])
+			if (selected_) selectedByUser[chatId] = selected_
+			break
+		case "0_13":
+			await usersRegistration(bot, msg, selectedByUser[chatId])
+			break
+		case "0_4":
+			if (adminUser) {
+				await await clientAdminMenuStarter(
+					bot,
+					msg,
+					buttonsConfig["clientAdminStarterButtons"],
+				)
+			} else {
+				await usersStarterMenu(bot, msg)
+			}
+			break
+		case "2_1":
+			await ticketCreateScene(bot, msg)
+			break
+		case "2_2":
+		case "2_3":
+		case "2_11":
+		case "2_4":
+			await checkUserTickets(bot, msg, data)
+			break
+		case "2_5":
+			await reports(bot, msg)
+			break
+		case "2_7":
+			selectedByUser[chatId] = {}
+			globalBuffer[chatId].selectedCustomers = []
+			globalBuffer[chatId].selectedSubdivisions = []
+			globalBuffer[chatId].ticketAttachmentFileNames = []
+			globalBuffer[chatId].selectionSubdivisionFlag = false
+			globalBuffer[chatId].selectionFlag = false
+			await msgSenderMenu(bot, msg)
+			break
+		case "3_1":
+			await clientsAdminGetInfo(bot, msg)
+			break
+		case "3_2":
+			await clientsAdminResponseToRequest(bot, msg)
+			break
+		case "3_3":
+			await registeredUserMenu(bot, msg, false)
+			break
+		case "13_3":
+			await bot.sendMessage(msg.chat.id, `Ok!\n`, {
+				reply_markup: {
+					remove_keyboard: true,
+				},
+			})
+			break
+		case "5_1":
+			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+			if (selected_) selectedByUser[chatId] = selected_
+			break
+		case "5_2":
+			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+			if (selected_) selectedByUser[chatId] = selected_
+      const processedText = await processText(selected_.text, msg.chat.id)
+      if (processedText) {
+        selectedByUser[chatId].text = processedText.textResult
+        selectedByUser[chatId].ticketSubject = processedText.topicResult || selectedByUser[chatId].ticketSubject
       }
-      break
-    case '2_1':
-      await ticketCreateScene(bot, msg)
-      break
-    case '2_2':
-    case '2_3':
-    case '2_11':
-    case '2_4':
-      await checkUserTickets(bot, msg, data)
-      break
-    case '2_5':
-      await reports(bot, msg)
-      break
-    case '2_7':
-      selectedByUser[chatId] = {}
-      globalBuffer[chatId].selectedCustomers = []
-      globalBuffer[chatId].selectedSubdivisions = []
-      globalBuffer[chatId].ticketAttachmentFileNames = []
-      globalBuffer[chatId].selectionSubdivisionFlag = false
-      globalBuffer[chatId].selectionFlag = false
-      await msgSenderMenu(bot, msg)
-      break
-    case '3_1':
-      await clientsAdminGetInfo(bot, msg)
-      break
-    case '3_2':
-      await clientsAdminResponseToRequest(bot, msg)
-      break
-    case '3_3':
-      await registeredUserMenu(bot, msg, false)
-      break
-    case '13_3':
-      await bot.sendMessage(msg.chat.id, `Ok!\n`, {
-        reply_markup: {
-          remove_keyboard: true
-        }
-      })
-      break
-    case '5_1':
-      selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
-      if (selected_) selectedByUser[chatId] = selected_
-      break
-    case '5_2':
-      selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
-      if (selected_) selectedByUser[chatId] = selected_
-      break
-    case '5_3':
-      selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
-      if (selected_) {
-        selectedByUser[chatId].ticketAttachmentFileNames = Array.from(new Set([
-          ...(selectedByUser[chatId].ticketAttachmentFileNames || []),
-          ...(selected_?.ticketAttachmentFileNames || [])
-        ]))
-      }
-      break
-    case '5_5':
-      selected_ = await askForPicture(bot, msg, selectedByUser[chatId])
-      if (selected_) {
-        selectedByUser[chatId].ticketAttachmentFileNames = Array.from(new Set([
-          ...(selectedByUser[chatId].ticketAttachmentFileNames || []),
-          ...selected_.ticketAttachmentFileNames
-        ]))
-      }
-      break
-    case '5_4':
-      globalBuffer[chatId].TicketCreated = false
-      await ticketRegistration(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketCreated) {
-        selectedByUser[chatId] = {}
-        globalBuffer[chatId].TicketCreated = false
-      }
-      break
-    case '5_14':
-      globalBuffer[chatId].TicketUpdated = false
-      await ticketUpdates(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketUpdated) {
-        selectedByUser[chatId] = {}
-        globalBuffer[chatId].TicketUpdated = false
-      }
-      break
-    case '7_1':
-      await ticketApprove(bot, msg)
-      break
-    case '7_2':
-      await ticketReturn(bot, msg)
-      break
-    case '8_1':
-      await userApproveOrDecline(bot, msg, true)
-      break
-    case '8_2':
-      await userApproveOrDecline(bot, msg, false)
-      break
-    case '9_1':
-      await chooseGroups(bot, msg)
-      await checkReadyForReport(bot, msg)
-      break
-    case '19_1':
-      globalBuffer[chatId].selectionSubdivisionFlag = false
-      await chooseSubdivisionsFromList(bot, msg)
-      break
-    case '19_4':
-      messageCreateScene(bot, msg)
-      break
-    case '15_4':
-      await messageSender(bot, msg, selectedByUser[chatId])
-      if (globalBuffer[chatId]?.TicketCreated || globalBuffer[chatId]?.msgSent) {
-        selectedByUser[chatId] = {}
-        globalBuffer[chatId].selectedCustomers = []
-        globalBuffer[chatId].selectedSubdivisions = []
-        globalBuffer[chatId].ticketAttachmentFileNames = []
-        goBack(bot, msg, true)
-      }
-      break
-    case '9_2':
-      await chooseTypeOfPeriod(bot, msg)
-      break
-    case '9_3':
-      await getReport(bot, msg)
-      break
-    case '9_4':
-      await everyDayOrWeek(bot, msg)
-      break
-    case 'any_period':
-      await chooseData(bot, msg, 'початкову')
-      await chooseData(bot, msg, 'кінцеву')
-      break
-    case '11_1':
-      await getNetReport(bot, msg, 'day')
-      break
-    case '11_2':
-      await getNetReport(bot, msg, 'week')
-      break
-    case '19_2':
-      await createListOfCustomers(bot, msg, 'selection')
-      break
-    case '19_3':
-      await findCustomers(bot, msg)
-      break
-    case '19_5':
-      await createListOfCustomers(bot, msg, 'finalize')
-      break
-    default:
-      if (msg.text === undefined) return
-      if (await isThisGroupId(bot, msg.chat.id, msg)) return
-      console.log(`default: ${msg.text}`)
-      switchDynamicSceenes(bot, msg)
-      break
-  }
+			break
+		case "5_3":
+			selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
+			if (selected_) {
+				selectedByUser[chatId].ticketAttachmentFileNames = Array.from(
+					new Set([
+						...(selectedByUser[chatId].ticketAttachmentFileNames || []),
+						...(selected_?.ticketAttachmentFileNames || []),
+					]),
+				)
+			}
+			break
+		case "5_5":
+			selected_ = await askForPicture(bot, msg, selectedByUser[chatId])
+			if (selected_) {
+				selectedByUser[chatId].ticketAttachmentFileNames = Array.from(
+					new Set([
+						...(selectedByUser[chatId].ticketAttachmentFileNames || []),
+						...selected_.ticketAttachmentFileNames,
+					]),
+				)
+			}
+			break
+		case "5_4":
+			globalBuffer[chatId].TicketCreated = false
+			await ticketRegistration(bot, msg, selectedByUser[chatId])
+			if (globalBuffer[chatId]?.TicketCreated) {
+				selectedByUser[chatId] = {}
+				globalBuffer[chatId].TicketCreated = false
+			}
+			break
+		case "5_6":
+      await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
+			break
+		case "5_14":
+			globalBuffer[chatId].TicketUpdated = false
+			await ticketUpdates(bot, msg, selectedByUser[chatId])
+			if (globalBuffer[chatId]?.TicketUpdated) {
+				selectedByUser[chatId] = {}
+				globalBuffer[chatId].TicketUpdated = false
+			}
+			break
+		case "7_1":
+			await ticketApprove(bot, msg)
+			break
+		case "7_2":
+			await ticketReturn(bot, msg)
+			break
+		case "8_1":
+			await userApproveOrDecline(bot, msg, true)
+			break
+		case "8_2":
+			await userApproveOrDecline(bot, msg, false)
+			break
+		case "9_1":
+			await chooseGroups(bot, msg)
+			await checkReadyForReport(bot, msg)
+			break
+		case "19_1":
+			globalBuffer[chatId].selectionSubdivisionFlag = false
+			await chooseSubdivisionsFromList(bot, msg)
+			break
+		case "19_4":
+			messageCreateScene(bot, msg)
+			break
+		case "15_4":
+			await messageSender(bot, msg, selectedByUser[chatId])
+			if (
+				globalBuffer[chatId]?.TicketCreated ||
+				globalBuffer[chatId]?.msgSent
+			) {
+				selectedByUser[chatId] = {}
+				globalBuffer[chatId].selectedCustomers = []
+				globalBuffer[chatId].selectedSubdivisions = []
+				globalBuffer[chatId].ticketAttachmentFileNames = []
+				goBack(bot, msg, true)
+			}
+			break
+		case "9_2":
+			await chooseTypeOfPeriod(bot, msg)
+			break
+		case "9_3":
+			await getReport(bot, msg)
+			break
+		case "9_4":
+			await everyDayOrWeek(bot, msg)
+			break
+		case "any_period":
+			await chooseData(bot, msg, "початкову")
+			await chooseData(bot, msg, "кінцеву")
+			break
+		case "11_1":
+			await getNetReport(bot, msg, "day")
+			break
+		case "11_2":
+			await getNetReport(bot, msg, "week")
+			break
+		case "19_2":
+			await createListOfCustomers(bot, msg, "selection")
+			break
+		case "19_3":
+			await findCustomers(bot, msg)
+			break
+		case "19_5":
+			await createListOfCustomers(bot, msg, "finalize")
+			break
+		default:
+			if (msg.text === undefined) return
+			if (await isThisGroupId(bot, msg.chat.id, msg)) return
+			console.log(`default: ${msg.text}`)
+			switchDynamicSceenes(bot, msg)
+			break
+	}
 }
 //#endregion
 
