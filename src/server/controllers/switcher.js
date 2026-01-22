@@ -164,7 +164,8 @@ async function handler(bot, msg, webAppUrl) {
 			}
 			break
 		case "5_6":
-      await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
+      const newSubject = await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
+      if (newSubject) selectedByUser[chatId].ticketSubject = newSubject
 			break
 		case "5_14":
 			globalBuffer[chatId].TicketUpdated = false

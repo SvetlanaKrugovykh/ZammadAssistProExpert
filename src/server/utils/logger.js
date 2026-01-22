@@ -1,6 +1,6 @@
 const fs = require("fs")
 const path = require("path")
-
+require('dotenv').config()
 class Logger {
 	constructor() {
 		this.logDir = path.join(__dirname, "../../logs")
@@ -31,8 +31,11 @@ class Logger {
 
 	info(message, data = null) {
 		const formattedMessage = this.formatMessage("INFO", message, data)
-		console.log(formattedMessage)
-		this.writeToFile("INFO", formattedMessage)
+    const debug_level = Number(process.env.DEBUG_LEVEL)
+    if (debug_level >= 1) {
+		  console.log(formattedMessage)
+		  this.writeToFile("INFO", formattedMessage)
+    }
 	}
 
 	error(message, data = null) {

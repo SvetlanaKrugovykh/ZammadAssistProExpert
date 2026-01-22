@@ -156,7 +156,7 @@ class LocalAIService {
       const validation = ticketParser.validateTicketContent(textResult)
       if (!validation.isValid) {
         logger.warn(`Ticket validation failed for user ${clientId}: ${validation.reason}`)
-        throw new Error(`VALIDATION_FAILED: ${validation.reason}`)
+        return
       }
 
       const ticket = ticketParser.parseTicket(textResult, topicResult, clientId)
@@ -167,7 +167,7 @@ class LocalAIService {
       return {ticket, formattedTicket}
     } catch (error) {
       if (error.message && error.message.startsWith('VALIDATION_FAILED:')) {
-        throw error
+        return Promise.reject(error)
       }
       logger.warn(`External AI service failed, using ticket parser result: ${error.message}`)
 

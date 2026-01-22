@@ -32,8 +32,13 @@ async function ticketCreateScene(bot, msg) {
 
 async function ticketSubjectEditor(bot, msg, data, selectedByUser) {
   try {
-    const subj = selectedByUser?.ticketTitle || '> Введіть змістовну тему заявки'
-
+        const chatId = msg.chat.id
+        let selected_ = null
+        const subj = selectedByUser?.ticketSubject || '> Введіть змістовну тему заявки'
+			  const msg_text = `📌 Тема звернення:\n<b>${subj}</b> 💬 \n Введіть нову тему нижче:`
+				await bot.sendMessage(msg.chat.id, msg_text, { parse_mode: "HTML" })
+			  selected_ = await ticketsTextInput(bot, msg, '5_1', selectedByUser[chatId])
+			  return selected_?.ticketTitle || null
   } catch (err) {
     console.log(err)
   }
