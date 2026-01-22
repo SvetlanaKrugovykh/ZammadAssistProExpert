@@ -8,8 +8,6 @@ const path = require('path')
 
 class MessageHandler {
   constructor() {
-    this.tempDir = path.join(__dirname, '../../temp')
-    this.ensureTempDir()
     this.authCache = new Map()
   }
 
@@ -166,10 +164,10 @@ class MessageHandler {
   async handleVoiceMessage(bot, msg) {
     const chatId = msg.chat.id
     const userId = msg.from.id.toString()
-    const session = sessionService.getSession(userId)
+    const tempDir = process.env.TEMP_CATALOG
 
     try {
-      // Show processing indicator
+      await bot.sendChatAction(chatId, 'typing')
       await bot.sendChatAction(chatId, 'typing')
       await bot.sendMessage(chatId, messages.processing.voiceProcessing)
 
@@ -180,7 +178,7 @@ class MessageHandler {
 
       // Save voice file temporarily
       const tempFileName = `voice_${userId}_${Date.now()}.oga`
-      const tempFilePath = path.join(this.tempDir, tempFileName)
+      const tempFilePath =  tempDir + tempFileName
 
       const response = await require('axios').get(fileUrl, { responseType: 'stream' })
       const writer = fs.createWriteStream(tempFilePath)
@@ -191,66 +189,32 @@ class MessageHandler {
         writer.on('error', reject)
       })
 
-      // Check if user is in voice editing mode
-      if (session.editingTicket && session.editingTicket.mode === 'voice') {
-        if (process.env.ENABLE_SPEECH_TO_TEXT === 'true') {
-          // Process voice for editing
-          const segmentNumber = session.conversationHistory.length + 1
-          const transcription = await localAIService.speechToText(tempFilePath, userId, segmentNumber)
-          await this.processTicketEdit(bot, chatId, userId, transcription, 'voice')
-        } else {
-          await bot.sendMessage(chatId, messages.errors.voiceProcessingError)
-        }
+      const userVoiceFiles = fs.readdirSync(tempDir).filter(f => f.startsWith(`voice_${userId}_`))
+      const segmentNumber = userVoiceFiles.length + 1
 
-        // Clean up temp file
-        fs.unlink(tempFilePath, (err) => {
-          if (err) logger.warn(logMessages.files.tempFileDeleteFailed, err)
-        })
-        return
-      }
-
-      // Get current message number for this user
-      const segmentNumber = session.conversationHistory.length + 1
-
+      let result = null
       try {
         if (process.env.ENABLE_SPEECH_TO_TEXT === 'true') {
-          // Process voice through local AI
-          const result = await localAIService.processVoiceMessage(tempFilePath, userId, segmentNumber, bot, chatId)
-
-          // Save to history
-          sessionService.addToHistory(userId, 'voice_message', `[Voice message #${segmentNumber}]`)
-          sessionService.addToHistory(userId, 'ai_response', result)
-
-          // Create pending ticket for confirmation instead of sending directly
-          await this.createPendingTicket(bot, chatId, userId, result, 'voice')
-
+          result = await localAIService.processVoiceMessage(tempFilePath, userId, segmentNumber, bot, chatId)
+          await bot.sendMessage(chatId, `Результат обработки голосового сообщения: ${result}`)
         } else {
-          // Speech-to-text is disabled - skip to fallback
           logger.warn(logMessages.processing.speechToTextDisabled(userId))
-
           if (process.env.ENABLE_CHATGPT_FALLBACK === 'true') {
             await this.fallbackToChatGPT(bot, msg, '[Voice message - Speech-to-text disabled]', 'ENABLE_SPEECH_TO_TEXT is false')
           } else {
             await bot.sendMessage(chatId, messages.errors.voiceProcessingError)
           }
         }
-
       } catch (localError) {
         logger.warn(logMessages.processing.localAIFailed(userId, localError))
-
-        // Check if this is a validation error
         if (localError.message && localError.message.startsWith('VALIDATION_FAILED:')) {
           const reason = localError.message.replace('VALIDATION_FAILED: ', '')
           await bot.sendMessage(chatId, `❌ **Заявку відхилено**\n\n${reason}\n\nБудь ласка, опишіть вашу проблему більш детально та конкретно.`, { parse_mode: 'Markdown' })
           return
         }
-
-        // Check if ChatGPT fallback is enabled for voice processing
         if (process.env.ENABLE_CHATGPT_FALLBACK === 'true') {
-          // Try ChatGPT fallback for voice message (it can't transcribe, but can process general voice message request)
           await this.fallbackToChatGPT(bot, msg, '[Voice message - local transcription failed, processing as general voice request]', localError.message)
         } else {
-          // Send error message without fallback
           await bot.sendMessage(chatId, messages.errors.voiceProcessingError)
         }
       }
@@ -261,7 +225,8 @@ class MessageHandler {
       })
 
     } catch (error) {
-      logger.error(logMessages.processing.voiceProcessingError(userId), error)
+      const errorInfo = error && (error.stack || error.message) ? (error.stack || error.message) : JSON.stringify(error)
+      logger.error(logMessages.processing.voiceProcessingError(userId), errorInfo)
       await bot.sendMessage(chatId, messages.errors.voiceProcessingError)
     }
   }

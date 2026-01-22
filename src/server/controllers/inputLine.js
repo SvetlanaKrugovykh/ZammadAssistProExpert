@@ -1,10 +1,12 @@
+const { handleVoiceMessage } = require('../handlers/messageHandler')
+
 async function inputLineScene(bot, msg, templateString = "") {
 	const chatId = msg.chat.id
 	const promise = new Promise((resolve) => {
 		if (templateString.length > 0) {
 			//bot.sendMessage(msg.chat.id, templateString)
 		}
-		const messageHandler = (message) => {
+		const messageHandler = async (message) => {
 			if (message.chat.id === chatId) {
 				if (message.text) {
 					const inputLine = message.text
@@ -13,8 +15,8 @@ async function inputLineScene(bot, msg, templateString = "") {
 					resolve(inputLine)
 				} else if (message.voice) {
 					console.log("Received input Line (voice message)")
+					await handleVoiceMessage(bot, message)
 					bot.removeListener("message", messageHandler)
-					resolve("[voice_message]") 
 				}
 			}
 		}
