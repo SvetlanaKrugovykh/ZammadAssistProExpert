@@ -164,7 +164,7 @@ class LocalAIService {
       logger.info(logMessages.processing.ticketParsing(clientId, text))
       logger.info(logMessages.processing.textResult(clientId, formattedTicket))
 
-      return formattedTicket
+      return {ticket, formattedTicket}
     } catch (error) {
       if (error.message && error.message.startsWith('VALIDATION_FAILED:')) {
         throw error

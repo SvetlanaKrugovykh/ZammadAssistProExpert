@@ -125,11 +125,13 @@ async function handler(bot, msg, webAppUrl) {
 			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
 			if (selected_) selectedByUser[chatId] = selected_
       if (!selectedByUser[chatId].ticketBody) break
-      const processedText = await processText(selectedByUser[chatId].ticketBody, chatId)
-      if (processedText) {
-        selectedByUser[chatId].text = processedText.textResult
-        selectedByUser[chatId].ticketSubject = processedText.topicResult || selectedByUser[chatId].ticketSubject
-      }
+      const processedData = await processText(selectedByUser[chatId].ticketBody, chatId)
+      if (processedData) {
+        selectedByUser[chatId].ticketBody = processedData.ticket?.description
+        selectedByUser[chatId].ticketSubject = processedData.ticket?.title || selectedByUser[chatId].ticketSubject
+			  const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketSubject}</b> 💬`
+		    await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
+      } 
 			break
 		case "5_3":
 			selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
