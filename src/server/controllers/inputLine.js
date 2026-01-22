@@ -6,10 +6,16 @@ async function inputLineScene(bot, msg, templateString = "") {
 		}
 		const messageHandler = (message) => {
 			if (message.chat.id === chatId) {
-				const inputLine = message.text
-				console.log("Received input Line:", inputLine)
-				bot.removeListener("message", messageHandler)
-				resolve(inputLine)
+				if (message.text) {
+					const inputLine = message.text
+					console.log("Received input Line (text):", inputLine)
+					bot.removeListener("message", messageHandler)
+					resolve(inputLine)
+				} else if (message.voice) {
+					console.log("Received input Line (voice message)")
+					bot.removeListener("message", messageHandler)
+					resolve("[voice_message]") 
+				}
 			}
 		}
 

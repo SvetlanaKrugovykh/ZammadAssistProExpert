@@ -128,8 +128,8 @@ async function handler(bot, msg, webAppUrl) {
       const processedData = await processText(selectedByUser[chatId].ticketBody, chatId)
       if (processedData) {
         selectedByUser[chatId].ticketBody = processedData.ticket?.description
-        selectedByUser[chatId].ticketSubject = processedData.ticket?.title || selectedByUser[chatId].ticketSubject
-			  const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketSubject}</b> 💬`
+        selectedByUser[chatId].ticketTitle = processedData.ticket?.title || selectedByUser[chatId].ticketTitle
+			  const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketTitle}</b> 💬`
 		    await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
       } 
 			break
@@ -165,7 +165,7 @@ async function handler(bot, msg, webAppUrl) {
 			break
 		case "5_6":
       const newSubject = await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
-      if (newSubject) selectedByUser[chatId].ticketSubject = newSubject
+      if (newSubject) selectedByUser[chatId].ticketTitle = newSubject
 			break
 		case "5_14":
 			globalBuffer[chatId].TicketUpdated = false
