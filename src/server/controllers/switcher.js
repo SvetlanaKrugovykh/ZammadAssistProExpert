@@ -124,7 +124,8 @@ async function handler(bot, msg, webAppUrl) {
 		case "5_2":
 			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
 			if (selected_) selectedByUser[chatId] = selected_
-      const processedText = await processText(selected_.text, msg.chat.id)
+      if (!selectedByUser[chatId].ticketBody) break
+      const processedText = await processText(selectedByUser[chatId].ticketBody, chatId)
       if (processedText) {
         selectedByUser[chatId].text = processedText.textResult
         selectedByUser[chatId].ticketSubject = processedText.topicResult || selectedByUser[chatId].ticketSubject
