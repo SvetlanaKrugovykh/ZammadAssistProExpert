@@ -165,7 +165,7 @@ class MessageHandler {
     const chatId = msg.chat.id
     const userId = msg.from.id.toString()
     const tempDir = process.env.TEMP_CATALOG
-
+    
     try {
       await bot.sendChatAction(chatId, 'typing')
       await bot.sendChatAction(chatId, 'typing')
@@ -196,7 +196,6 @@ class MessageHandler {
       try {
         if (process.env.ENABLE_SPEECH_TO_TEXT === 'true') {
           result = await localAIService.processVoiceMessage(tempFilePath, userId, segmentNumber, bot, chatId)
-          await bot.sendMessage(chatId, `Результат обработки голосового сообщения: ${result}`)
         } else {
           logger.warn(logMessages.processing.speechToTextDisabled(userId))
           if (process.env.ENABLE_CHATGPT_FALLBACK === 'true') {
@@ -224,6 +223,7 @@ class MessageHandler {
         if (err) logger.warn(logMessages.files.tempFileDeleteFailed, err)
       })
 
+      return result
     } catch (error) {
       const errorInfo = error && (error.stack || error.message) ? (error.stack || error.message) : JSON.stringify(error)
       logger.error(logMessages.processing.voiceProcessingError(userId), errorInfo)
