@@ -157,7 +157,7 @@ async function handler(bot, msg, webAppUrl) {
 			break
 		case "5_4":
 			globalBuffer[chatId].TicketCreated = false
-			await ticketRegistration(bot, msg, selectedByUser[chatId])
+			await ticketRegistration(bot, msg, selectedByUser[chatId],true)
 			if (globalBuffer[chatId]?.TicketCreated) {
 				selectedByUser[chatId] = {}
 				globalBuffer[chatId].TicketCreated = false

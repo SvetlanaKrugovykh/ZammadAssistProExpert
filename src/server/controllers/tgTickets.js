@@ -13,6 +13,7 @@ const interConnectService = require('../services/interConnect.service')
 const { registeredUserMenu } = require('../modules/common')
 const { update_ticket } = require('../modules/update_ticket')
 const { globalBuffer } = require('../globalBuffer')
+const { goToApiControllerForCheck } = require('./apiController')
 
 //#region staticKeyboad
 async function ticketCreateScene(bot, msg) {
@@ -83,7 +84,7 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   }
 }
 
-async function ticketRegistration(bot, msg, selectedByUser) {
+async function ticketRegistration(bot, msg, selectedByUser,isFromSwitcher = false) {
   try {
     if (!selectedByUser?.ticketTitle || selectedByUser?.ticketTitle.includes('🟣 Ввести змістовну тему')) {
       await bot.sendMessage(msg.chat.id, 'Не заповнена тема заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
@@ -95,7 +96,13 @@ async function ticketRegistration(bot, msg, selectedByUser) {
     }
     let user = null
     let owner = null
-
+    if (isFromSwitcher) {
+      const isOK = await goToApiControllerForCheck(bot, msg, selectedByUser)
+      if (!isOK) {
+        await bot.sendMessage(msg.chat.id, 'Заявку скасовано. Дубль реєстрації проблеми [\n', { parse_mode: 'HTML' })
+        return
+      }
+    }  
 
     if (selectedByUser?.ticketBody.includes('@lotok.in.ua') || selectedByUser?.ticketBody.includes('@ito.in.ua')) {
       const emailMatch = selectedByUser.ticketBody.match(/\b[A-Za-z0-9._%+-]+@lotok\.in\.ua\b/)

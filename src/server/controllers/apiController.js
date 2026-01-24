@@ -20,6 +20,16 @@ function isInternetRelatedTicket(ticketData) {
   return internetKeywords.some(keyword => text.includes(keyword))
 }
 
+async function goToApiControllerForCheck(bot, msg, selectedByUser) {
+const ticketData = {
+    title: selectedByUser.ticketTitle,
+    body: selectedByUser.ticketBody,
+  }
+  const chatId = msg.chat.id
+const isAlreadyRegistered = await checkAlreadyRegistered(ticketData, chatId)
+  return !isAlreadyRegistered
+}
+
 async function checkAlreadyRegistered(ticketData, customer_id) {
   try {
     if (!isInternetRelatedTicket(ticketData)) {
@@ -157,5 +167,6 @@ async function createNewTicket(request, reply) {
 
 module.exports = {
   checkUser,
-  createNewTicket
+  createNewTicket,
+  goToApiControllerForCheck
 }
