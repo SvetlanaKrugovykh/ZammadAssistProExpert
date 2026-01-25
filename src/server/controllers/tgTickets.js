@@ -320,13 +320,16 @@ async function checkUserTickets(bot, msg, menuItem) {
       parsedData = [data]
     }
     if (parsedData.length !== 0 && parsedData[0] !== null) {
-      const ticketsButtons = {
-        title: 'Оберіть будь ласка заявку',
-        options: [{ resize_keyboard: true }],
-        buttons: parsedData.map(ticket => [
-          { text: `${statusIcon} №${ticket.id}: ${ticket.title} | Код запиту:${ticket?.article_id} | ${ticket.number} від ${fDateTime('uk-UA', ticket.created_at, true, true)}`, callback_data: `43_${ticket.id}` }
-        ])
-      }
+        const ticketsButtons = {
+          title: 'Оберіть будь ласка заявку',
+          options: [{ resize_keyboard: true }],
+          buttons: parsedData.map(ticket => {
+            let codeText = ticket?.article_id !== undefined && ticket?.article_id !== null ? ` | Код запиту:${ticket.article_id}` : '';
+            return [
+              { text: `${statusIcon} №${ticket.id}: ${ticket.title}${codeText} | ${ticket.number} від ${fDateTime('uk-UA', ticket.created_at, true, true)}`, callback_data: `43_${ticket.id}` }
+            ];
+          })
+        }
       ticketsButtons.buttons.push([{ text: '↩️', callback_data: '0_1' }])
       await bot.sendMessage(chatId, ticketsButtons.title, {
         reply_markup: {

@@ -61,7 +61,8 @@ module.exports.newRequest = async function (body) {
 
     const message_in = article_body ? ` ${article_body}` : 'Додатковий запит відсутній'
     const article_id = article?.id
-    const comment = ` Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}. Код запиту:${article_id}`
+    const codeText = article_id !== undefined && article_id !== null ? ` Код запиту:${article_id}` : '';
+    const comment = ` Коментар від ${article?.from} відправлено замовнику ${fDateTime('uk-UA')}.${codeText}`
     await writeTimeToTicket(ticket, message_in + comment)
     const attachmentIds = await getAttachmentIds(article_id)
     const urls_in = [`(*) Запит надіслано від: ${article?.from}`]
