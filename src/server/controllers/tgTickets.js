@@ -90,10 +90,16 @@ async function ticketRegistration(bot, msg, selectedByUser,isFromSwitcher = fals
       await bot.sendMessage(msg.chat.id, 'Не заповнена тема заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
       return
     }
-    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести зміст (такий')) {
-      await bot.sendMessage(msg.chat.id, 'Не заповнен зміст заявки. Операцію скасовано\n', { parse_mode: 'HTML' })
-      return
-    }
+    if (!selectedByUser?.ticketBody || 			selectedByUser?.ticketBody.includes("🔵 Ввести зміст (такий") ||
+			selectedByUser?.ticketBody.includes("📌 Зареєструвати заявку")) {
+			await bot.sendMessage(
+				msg.chat.id,
+				"Не заповнен зміст заявки. Операцію скасовано\n",
+				{ parse_mode: "HTML" },
+			)
+			return
+		}
+
     let user = null
     let owner = null
     if (isFromSwitcher) {
