@@ -126,12 +126,16 @@ async function handler(bot, msg, webAppUrl) {
 			if (selected_) selectedByUser[chatId] = selected_
       if (!selectedByUser[chatId].ticketBody) break
       const processedData = await processText(selectedByUser[chatId].ticketBody, chatId)
-      if (processedData) {
-        selectedByUser[chatId].ticketBody = processedData.ticket?.description
-        selectedByUser[chatId].ticketTitle = processedData.ticket?.title || selectedByUser[chatId].ticketTitle
-			  const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketTitle}</b> 💬`
-		    await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
-      } 
+			if (processedData) {
+				selectedByUser[chatId].ticketBody = processedData.ticket?.description
+				selectedByUser[chatId].ticketTitle = processedData.ticket?.title || selectedByUser[chatId].ticketTitle
+				if ((selectedByUser[chatId].ticketBody === '📌 Зареєструвати заявку') 
+					|| !selectedByUser[chatId].ticketBody || selectedByUser[chatId].ticketBody.trim() === '') {
+					break
+				}
+				const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketTitle}</b> 💬`
+				await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
+			} 
 			break
 		case "5_3":
 			selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
