@@ -1,5 +1,4 @@
 const localAIService = require('../services/localAI')
-const ticketParser = require('../services/ticketParser')
 const logger = require('../utils/logger')
 const messages = require('../data/messages')
 const logMessages = require('../data/logMessages')
