@@ -135,6 +135,7 @@ async function handler(bot, msg, webAppUrl) {
 				}
 				const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketTitle}</b> 💬`
 				await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
+        await ticketCreateScene(bot, msg)
 			} 
 			break
 		case "5_3":
