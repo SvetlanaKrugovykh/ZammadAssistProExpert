@@ -21,16 +21,17 @@ function isInternetRelatedTicket(ticketData) {
 }
 
 async function goToApiControllerForCheck(bot, msg, selectedByUser) {
-const ticketData = {
-    title: selectedByUser.ticketTitle,
-    body: selectedByUser.ticketBody,
+  const ticketData = {
+      title: selectedByUser.ticketTitle,
+      body: selectedByUser.ticketBody,
+    }
+    const chatId = msg.chat.id
+  const isAlreadyRegistered = await checkAlreadyRegistered(ticketData, chatId)
+    return !isAlreadyRegistered
   }
-  const chatId = msg.chat.id
-const isAlreadyRegistered = await checkAlreadyRegistered(ticketData, chatId)
-  return !isAlreadyRegistered
-}
 
-async function checkAlreadyRegistered(ticketData, customer_id) {
+
+  async function checkAlreadyRegistered(ticketData, customer_id) {
   try {
     if (!isInternetRelatedTicket(ticketData)) {
       return false
@@ -93,6 +94,26 @@ async function checkUser(request, reply) {
       message: 'Internal server error'
     })
   }
+}
+
+async function blockUser(request, reply) {
+	try {
+		const { telegram_id } = request.body
+
+		//const result = await checkUserByTelegramId(telegram_id)
+
+		return reply.send({
+			success: true,
+			exists: result.exists,
+			user: result.user,
+		})
+	} catch (error) {
+		console.error("Error in blockUser controller:", error)
+		return reply.code(500).send({
+			success: false,
+			message: "Internal server error",
+		})
+	}
 }
 
 async function createNewTicket(request, reply) {
@@ -167,6 +188,7 @@ async function createNewTicket(request, reply) {
 
 module.exports = {
   checkUser,
+  blockUser,
   createNewTicket,
   goToApiControllerForCheck
 }

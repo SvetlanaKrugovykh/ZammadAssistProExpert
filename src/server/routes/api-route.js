@@ -1,4 +1,4 @@
-const { checkUser, createNewTicket } = require('../controllers/apiController')
+const { checkUser, blockUser, createNewTicket } = require('../controllers/apiController')
 
 module.exports = (fastify, _opts, done) => {
   fastify.route({
@@ -6,6 +6,12 @@ module.exports = (fastify, _opts, done) => {
     url: '/check-user',
     handler: checkUser
   })
+
+  fastify.route({
+		method: "POST",
+		url: "/block-user",
+		handler: blockUser,
+	})
 
   fastify.route({
     method: 'POST',
