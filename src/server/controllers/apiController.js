@@ -1,7 +1,8 @@
 const { checkUserByTelegramId } = require('../services/users-api')
 const { createTicket } = require('../services/tickets-api')
 const { checkStoreInternetStatus, getStoreNumberByCustomerID } = require('../db/monitoring-notifications')
-
+const { execPgQuery } = require('../db/common')
+const { bot } = require('../globalBuffer')
 /**
  * Check if ticket is related to internet issues
  * @param {Object} ticketData - Ticket data with title and body
@@ -98,15 +99,28 @@ async function checkUser(request, reply) {
 
 async function blockUser(request, reply) {
 	try {
-		const { telegram_id } = request.body
+    
+		const result = await findUserByOneOfFirstNameOrLastNameOrPhone(request.body)
+    const { firstname, lastname, phone } = request.body
 
-		//const result = await checkUserByTelegramId(telegram_id)
+    if (result?.user) {
+      await execPgQuery('UPDATE users SET active=false WHERE id=$1', [result.user.id])
+      const { firstname, lastname, phone } = result.user
+      const msg = `✅ Користувача заблоковано з причини звільнення:\nID: ${result.user.id}\nІм'я: ${firstname || '-'}\nПрізвище: ${lastname || '-'}\nТелефон: ${phone || '-'}\n`;
+      console.log(msg)
+      await sendMessageToGroup(msg)
+    } else {
+      const msg = `⚠️ Не вдалося знайти користувача для блокування з причини звільнення за такими даними:\nІм'я: ${firstname || '-'}\nПрізвище: ${lastname || '-'}\nТелефон: ${phone || '-'}\n\nБудь ласка, знайдіть цього користувача вручну та вимкніть його.`
+      console.warn(msg)
+      await sendMessageToGroup(msg)
+    }
 
 		return reply.send({
 			success: true,
 			exists: result.exists,
 			user: result.user,
 		})
+
 	} catch (error) {
 		console.error("Error in blockUser controller:", error)
 		return reply.code(500).send({
@@ -114,6 +128,68 @@ async function blockUser(request, reply) {
 			message: "Internal server error",
 		})
 	}
+}
+
+async function sendMessageToGroup(message) {
+  try {
+    const groupChatId = process.env.GROUP_ID
+    if (!groupChatId) {
+      console.warn('TELEGRAM_GROUP_CHAT_ID is not set. Cannot send message to group.')
+      return
+    }
+    await bot.telegram.sendMessage(groupChatId, message)
+
+  } catch (error) {
+    console.error('Error in sendMessageToGroup:', error)
+  }
+}
+
+async function findUserByOneOfFirstNameOrLastNameOrPhone( data ) {
+  const { firstname, lastname, phone } = data
+  try {
+    if (!firstname && !lastname && !phone) {
+      return { exists: false, user: null }
+    }
+
+    let phoneDigits = null
+    if (phone) {
+      phoneDigits = phone.replace(/\D/g, '')
+      if (phoneDigits.length > 10) {
+        phoneDigits = phoneDigits.slice(-10)
+      }
+    }
+
+    let cleanFirstName = firstname ? firstname.replace(/\s+/g, '') : null
+    let cleanLastName = lastname ? lastname.replace(/\s+/g, '') : null
+
+    let query = 'SELECT * FROM users WHERE ('
+    let params = []
+    let conditions = []
+
+    if (phoneDigits) {
+      conditions.push(`RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $${params.length + 1}`)
+      params.push(phoneDigits)
+    }
+    if (cleanFirstName && cleanLastName) {
+      conditions.push(`REPLACE(LOWER(firstname), ' ', '') ILIKE $${params.length + 1} AND REPLACE(LOWER(lastname), ' ', '') ILIKE $${params.length + 2}`)
+      params.push(`%${cleanFirstName.toLowerCase()}%`)
+      params.push(`%${cleanLastName.toLowerCase()}%`)
+    }
+    if (conditions.length === 0) {
+      return { exists: false, user: null }
+    }
+    query += conditions.join(' OR ') + ') LIMIT 1'
+
+    const { rows } = await execPgQuery(query, params)
+    if (rows && rows.length > 0) {
+      return { exists: true, user: rows[0] }
+    } else {
+      return { exists: false, user: null }
+    }
+  } catch (error) {
+    console.error("Error in findUserByOneOfFirstNameOrLastNameOrPhone:", error)
+    return { exists: false, user: null }
+  }
 }
 
 async function createNewTicket(request, reply) {
