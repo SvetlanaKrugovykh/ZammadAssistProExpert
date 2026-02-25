@@ -101,11 +101,12 @@ async function blockUser(request, reply) {
 	try {
     
 		const result = await findUserByOneOfFirstNameOrLastNameOrPhone(request.body)
-    const { firstname, lastname, phone } = request.body
+    const { firstname, lastname, phone, zip } = request.body
 
     if (result?.user) {
-      await execPgQuery("UPDATE users SET verified =false, active=false WHERE id=$1", [
+      await execPgQuery("UPDATE users SET verified =false, active=false, zip=$2 WHERE id=$1", [
 				result.user.id,
+        zip || null
 			])      
       const { firstname, lastname, phone } = result.user
       const msg = `🚷 Користувача заблоковано з причини звільнення:\nID: ${result.user.id}\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n`
