@@ -147,47 +147,44 @@ async function sendMessageToGroup(message) {
 }
 
 async function findUserByOneOfFirstNameOrLastNameOrPhone( data ) {
-  const { firstname, lastname, phone } = data
+  const { firstname, lastname, phone, zip } = data
   try {
-    if (!firstname && !lastname && !phone) {
+    if (!firstname && !lastname && !phone && !zip) {
       return { exists: false, user: null }
     }
 
-    let phoneDigits = null
-    if (phone) {
-      phoneDigits = phone.replace(/\D/g, '')
-      if (phoneDigits.length > 10) {
-        phoneDigits = phoneDigits.slice(-10)
+    if (zip) {
+      const cleanZip = zip.replace(/\s+/g, '')
+      const queryZip = "SELECT * FROM users WHERE REPLACE(zip, ' ', '') = $1 LIMIT 1"
+      const { rows } = await execPgQuery(queryZip, [cleanZip])
+      if (rows && rows.length > 0 && rows[0].zip) {
+        return { exists: true, user: rows[0] }
       }
     }
 
-    let cleanFirstName = firstname ? firstname.replace(/\s+/g, '') : null
-    let cleanLastName = lastname ? lastname.replace(/\s+/g, '') : null
+    if (phone) {
+      let phoneDigits = phone.replace(/\D/g, '')
+      if (phoneDigits.length > 10) {
+        phoneDigits = phoneDigits.slice(-10)
+      }
+      const queryPhone = "SELECT * FROM users WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1 LIMIT 1"
+      const { rows } = await execPgQuery(queryPhone, [phoneDigits])
+      if (rows && rows.length > 0 && rows[0].phone) {
+        return { exists: true, user: rows[0] }
+      }
+    }
 
-    let query = 'SELECT * FROM users WHERE ('
-    let params = []
-    let conditions = []
+    if (firstname && lastname) {
+      const cleanFirstName = firstname.replace(/\s+/g, '').toLowerCase()
+      const cleanLastName = lastname.replace(/\s+/g, '').toLowerCase()
+      const queryName = "SELECT * FROM users WHERE REPLACE(LOWER(firstname), ' ', '') ILIKE $1 AND REPLACE(LOWER(lastname), ' ', '') ILIKE $2 LIMIT 1"
+      const { rows } = await execPgQuery(queryName, [`%${cleanFirstName}%`, `%${cleanLastName}%`])
+      if (rows && rows.length > 0) {
+        return { exists: true, user: rows[0] }
+      }
+    }
 
-    if (phoneDigits) {
-      conditions.push(`RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $${params.length + 1}`)
-      params.push(phoneDigits)
-    }
-    if (cleanFirstName && cleanLastName) {
-      conditions.push(`REPLACE(LOWER(firstname), ' ', '') ILIKE $${params.length + 1} AND REPLACE(LOWER(lastname), ' ', '') ILIKE $${params.length + 2}`)
-      params.push(`%${cleanFirstName.toLowerCase()}%`)
-      params.push(`%${cleanLastName.toLowerCase()}%`)
-    }
-    if (conditions.length === 0) {
-      return { exists: false, user: null }
-    }
-    query += conditions.join(' OR ') + ') LIMIT 1'
-
-    const { rows } = await execPgQuery(query, params)
-    if (rows && rows.length > 0) {
-      return { exists: true, user: rows[0] }
-    } else {
-      return { exists: false, user: null }
-    }
+    return { exists: false, user: null }
   } catch (error) {
     console.error("Error in findUserByOneOfFirstNameOrLastNameOrPhone:", error)
     return { exists: false, user: null }
