@@ -102,17 +102,31 @@ async function createUser(request, reply) {
 		const result = await findUserByOneOfFirstNameOrLastNameOrPhone(request.body)
 		const { firstname, lastname, phone, zip, organization_id } = request.body
 
+    let phoneDigits = phone ? phone.replace(/\D/g, '') : null;
+    if (phoneDigits && phoneDigits.length > 10) {
+      phoneDigits = phoneDigits.slice(-10);
+    }
+
     if (result?.user) {
       await execPgQuery(
         "UPDATE users SET firstname=$2, lastname=$3, phone=$4, zip=$5, organization_id=$6 WHERE id=$1",
-        [result.user.id, firstname || null, lastname || null, phone || null, zip || null, organization_id || null],
+        [result.user.id, firstname || null, lastname || null, phoneDigits || null, zip || null, organization_id || null],
       )
       const { firstname, lastname, phone } = result.user
       const msg = `🛂 Користувача оновлено:\nID: ${result.user.id}\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n`
       console.log(msg)
     } else {
-      const insertQuery = `INSERT INTO users (firstname, lastname, phone, zip, organization_id, verified, active) VALUES ($1, $2, $3, $4, $5, false, false) RETURNING *`
-      const { rows } = await execPgQuery(insertQuery, [firstname || null, lastname || null, phone || null, zip || null, organization_id || null])
+      const insertQuery = `INSERT INTO users (firstname, lastname, phone, zip, organization_id, login, updated_by_id, created_by_id, created_at, updated_at, verified, active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW(), false, false) RETURNING *`
+      const { rows } = await execPgQuery(insertQuery, [
+        firstname || null,
+        lastname || null,
+        phoneDigits || null,
+        zip || null,
+        organization_id || null,
+        phoneDigits || null,
+        1, // updated_by_id
+        1  // created_by_id
+      ])
       const newUser = rows && rows[0] ? rows[0] : null
       const msg = `🛃 Увага! Створено нового користувача з причини прийняття на роботу:\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n\n⚠️ Не забудьте встановити email для цього користувача, інакше активація буде неможлива!`
       console.log(msg)
@@ -184,8 +198,11 @@ async function sendMessageToGroup(message) {
       console.warn('TELEGRAM_GROUP_CHAT_ID is not set. Cannot send message to group.')
       return
     }
-    await bot.telegram.sendMessage(groupChatId, message)
-
+    if (bot) {
+      await bot.sendMessage(groupChatId, message)
+    } else {
+      console.error('Telegram bot не инициализирован или sendMessage недоступен')
+    }
   } catch (error) {
     console.error('Error in sendMessageToGroup:', error)
   }
