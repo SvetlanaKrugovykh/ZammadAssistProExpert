@@ -97,6 +97,44 @@ async function checkUser(request, reply) {
   }
 }
 
+async function createUser(request, reply) {
+	try {
+		const result = await findUserByOneOfFirstNameOrLastNameOrPhone(request.body)
+		const { firstname, lastname, phone, zip, organization_id } = request.body
+
+    if (result?.user) {
+      await execPgQuery(
+        "UPDATE users SET firstname=$2, lastname=$3, phone=$4, zip=$5, organization_id=$6 WHERE id=$1",
+        [result.user.id, firstname || null, lastname || null, phone || null, zip || null, organization_id || null],
+      )
+      const { firstname, lastname, phone } = result.user
+      const msg = `🛂 Користувача оновлено:\nID: ${result.user.id}\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n`
+      console.log(msg)
+    } else {
+      const insertQuery = `INSERT INTO users (firstname, lastname, phone, zip, organization_id, verified, active) VALUES ($1, $2, $3, $4, $5, false, false) RETURNING *`
+      const { rows } = await execPgQuery(insertQuery, [firstname || null, lastname || null, phone || null, zip || null, organization_id || null])
+      const newUser = rows && rows[0] ? rows[0] : null
+      const msg = `🛃 Увага! Створено нового користувача з причини прийняття на роботу:\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n\n⚠️ Не забудьте встановити email для цього користувача, інакше активація буде неможлива!`
+      console.log(msg)
+      await sendMessageToGroup(msg)
+      result.user = newUser
+      result.exists = false
+    }
+
+		return reply.send({
+			success: true,
+			exists: result.exists,
+			user: result.user,
+		})
+	} catch (error) {
+		console.error("Error in createUser controller:", error)
+		return reply.code(500).send({
+			success: false,
+			message: "Internal server error",
+		})
+	}
+}
+
 async function blockUser(request, reply) {
 	try {
     
@@ -104,10 +142,16 @@ async function blockUser(request, reply) {
     const { firstname, lastname, phone, zip } = request.body
 
     if (result?.user) {
-      await execPgQuery("UPDATE users SET verified =false, active=false, zip=$2 WHERE id=$1", [
-				result.user.id,
-        zip || null
-			])      
+      await execPgQuery(
+        "UPDATE users SET verified =false, active=false, firstname=$2, lastname=$3, phone=$4, zip=$5 WHERE id=$1",
+        [
+          result.user.id,
+          firstname || null,
+          lastname || null,
+          phone || null,
+          zip || null
+        ]
+      )
       const { firstname, lastname, phone } = result.user
       const msg = `🚷 Користувача заблоковано з причини звільнення:\nID: ${result.user.id}\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n`
       console.log(msg)
@@ -157,9 +201,9 @@ async function findUserByOneOfFirstNameOrLastNameOrPhone( data ) {
     if (zip) {
       const cleanZip = zip.replace(/\s+/g, '')
       const queryZip = "SELECT * FROM users WHERE REPLACE(zip, ' ', '') = $1 LIMIT 1"
-      const { rows } = await execPgQuery(queryZip, [cleanZip])
-      if (rows && rows.length > 0 && rows[0].zip) {
-        return { exists: true, user: rows[0] }
+      const result = await execPgQuery(queryZip, [cleanZip])
+      if (result && result.rows && result.rows.length > 0 && result.rows[0].zip) {
+        return { exists: true, user: result.rows[0] }
       }
     }
 
@@ -169,9 +213,9 @@ async function findUserByOneOfFirstNameOrLastNameOrPhone( data ) {
         phoneDigits = phoneDigits.slice(-10)
       }
       const queryPhone = "SELECT * FROM users WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1 LIMIT 1"
-      const { rows } = await execPgQuery(queryPhone, [phoneDigits])
-      if (rows && rows.length > 0 && rows[0].phone) {
-        return { exists: true, user: rows[0] }
+      const result = await execPgQuery(queryPhone, [phoneDigits])
+      if (result && result.rows && result.rows.length > 0 && result.rows[0].phone) {
+        return { exists: true, user: result.rows[0] }
       }
     }
 
@@ -179,9 +223,9 @@ async function findUserByOneOfFirstNameOrLastNameOrPhone( data ) {
       const cleanFirstName = firstname.replace(/\s+/g, '').toLowerCase()
       const cleanLastName = lastname.replace(/\s+/g, '').toLowerCase()
       const queryName = "SELECT * FROM users WHERE REPLACE(LOWER(firstname), ' ', '') ILIKE $1 AND REPLACE(LOWER(lastname), ' ', '') ILIKE $2 LIMIT 1"
-      const { rows } = await execPgQuery(queryName, [`%${cleanFirstName}%`, `%${cleanLastName}%`])
-      if (rows && rows.length > 0) {
-        return { exists: true, user: rows[0] }
+      const result = await execPgQuery(queryName, [`%${cleanFirstName}%`, `%${cleanLastName}%`])
+      if (result && result.rows && result.rows.length > 0) {
+        return { exists: true, user: result.rows[0] }
       }
     }
 
@@ -265,6 +309,7 @@ async function createNewTicket(request, reply) {
 module.exports = {
   checkUser,
   blockUser,
+  createUser,
   createNewTicket,
   goToApiControllerForCheck
 }
