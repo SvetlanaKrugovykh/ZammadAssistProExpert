@@ -104,13 +104,15 @@ async function blockUser(request, reply) {
     const { firstname, lastname, phone } = request.body
 
     if (result?.user) {
-      await execPgQuery('UPDATE users SET active=false WHERE id=$1', [result.user.id])
+      await execPgQuery("UPDATE users SET verified =false, active=false WHERE id=$1", [
+				result.user.id,
+			])      
       const { firstname, lastname, phone } = result.user
-      const msg = `✅ Користувача заблоковано з причини звільнення:\nID: ${result.user.id}\nІм'я: ${firstname || '-'}\nПрізвище: ${lastname || '-'}\nТелефон: ${phone || '-'}\n`;
+      const msg = `🚷 Користувача заблоковано з причини звільнення:\nID: ${result.user.id}\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n`
       console.log(msg)
       await sendMessageToGroup(msg)
     } else {
-      const msg = `⚠️ Не вдалося знайти користувача для блокування з причини звільнення за такими даними:\nІм'я: ${firstname || '-'}\nПрізвище: ${lastname || '-'}\nТелефон: ${phone || '-'}\n\nБудь ласка, знайдіть цього користувача вручну та вимкніть його.`
+      const msg = `📛 Не вдалося знайти користувача для блокування з причини звільнення за такими даними:\nІм'я: ${firstname || "-"}\nПрізвище: ${lastname || "-"}\nТелефон: ${phone || "-"}\n\nБудь ласка, знайдіть цього користувача вручну та вимкніть його з потребою.`
       console.warn(msg)
       await sendMessageToGroup(msg)
     }
