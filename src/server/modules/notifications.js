@@ -96,10 +96,13 @@ async function ticketReturn(bot, msg) {
     "internal": false
   }
   const { title, group_id, priority_id, state_id, pending_time, customer_id } = body
+  
   const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
-  newTicketBody.state_id = 2
+
+  newTicketBody.state_id = 1
   newTicketBody.article = article
   newTicketBody.pending_time = null
+  newTicketBody.customer_id = null
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true, msg.chat.id)
   if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
