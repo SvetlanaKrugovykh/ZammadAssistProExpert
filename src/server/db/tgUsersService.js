@@ -88,6 +88,36 @@ async function findUserByEmail(email) {
   }
 }
 
+async function findUserByPhone(phone) {
+  try {
+    const rawPhone = String(phone || '')
+    let phoneDigits = rawPhone.replace(/\D/g, '')
+    if (!phoneDigits) return null
+
+    if (phoneDigits.length > 10) {
+      phoneDigits = phoneDigits.slice(-10)
+    }
+
+    let data = null
+    if (phoneDigits.length === 10) {
+      data = await execPgQuery(
+        "SELECT * FROM users WHERE active=true AND RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9]', '', 'g'), 10) = $1",
+        [phoneDigits]
+      )
+    } else {
+      data = await execPgQuery(
+        "SELECT * FROM users WHERE active=true AND REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9]', '', 'g') = $1",
+        [phoneDigits]
+      )
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error in findUserByPhone:', error)
+    return null
+  }
+}
+
 async function userVerification(id, verified) {
   const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
   const httpsAgent = new https.Agent({ rejectUnauthorized: false })
@@ -109,8 +139,9 @@ async function userVerification(id, verified) {
 async function createOrUpdateUserIntoDb(chatId, user_info) {
   try {
     const DEBUG_LEVEL = Number(process.env.DEBUG_LEVEL) || 0
-    const email_ = user_info.email.toLowerCase()
-    const [lastName, firstName] = user_info.PIB.split(' ')
+    const email_ = String(user_info?.email || '').trim().toLowerCase()
+    const fullName = String(user_info?.PIB || '').trim()
+    const [lastName = '', firstName = ''] = fullName.split(/\s+/)
     const cleanPhone = user_info.phoneNumber?.replace(/\D/g, '') || ''
     const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
 
@@ -125,6 +156,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     let existingUser = await findUserById(chatId)
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
     if (!existingUser) existingUser = await findUserByEmail(email_.replace(/\s+/g, ''))
+    if (!existingUser && cleanPhone) existingUser = await findUserByPhone(cleanPhone)
     if (DEBUG_LEVEL > 0) console.log(`existingUser: ${JSON.stringify(existingUser)}`)
     if (existingUser) {
       const updUserData = {
@@ -189,4 +221,4 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
   }
 }
 
-module.exports = { findUserById, findOwnerById, findUserByEmail, createOrUpdateUserIntoDb, userVerification }
+module.exports = { findUserById, findOwnerById, findUserByEmail, findUserByPhone, createOrUpdateUserIntoDb, userVerification }

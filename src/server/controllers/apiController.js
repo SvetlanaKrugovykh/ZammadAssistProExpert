@@ -102,9 +102,9 @@ async function createUser(request, reply) {
 		const result = await findUserByOneOfFirstNameOrLastNameOrPhone(request.body)
 		const { firstname, lastname, phone, zip, organization_id } = request.body
 
-    let phoneDigits = phone ? phone.replace(/\D/g, '') : null;
+    let phoneDigits = phone ? phone.replace(/\D/g, '') : null
     if (phoneDigits && phoneDigits.length > 10) {
-      phoneDigits = phoneDigits.slice(-10);
+      phoneDigits = phoneDigits.slice(-10)
     }
 
     if (result?.user) {
