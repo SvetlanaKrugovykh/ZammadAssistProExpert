@@ -111,6 +111,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     const DEBUG_LEVEL = Number(process.env.DEBUG_LEVEL) || 0
     const email_ = user_info.email.toLowerCase()
     const [lastName, firstName] = user_info.PIB.split(' ')
+    const cleanPhone = user_info.phoneNumber?.replace(/\D/g, '') || ''
     const headers = { Authorization: process.env.ZAMMAD_API_TOKEN, "Content-Type": "application/json" }
 
     if (!/^[^\s@]+@(lotok\.in\.ua|ito\.in\.ua)$/.test(email_)) {
@@ -128,7 +129,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
     if (existingUser) {
       const updUserData = {
         "login": chatId,
-        "phone": user_info.phoneNumber,
+        "phone": cleanPhone,
         "firstname": firstName,
         "lastname": lastName,
         "email": email_,
@@ -144,7 +145,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         const query = `UPDATE users SET login = $1, phone = $2, firstname = $3, lastname = $4, email = $5, source = $6 WHERE id = ${existingUser.id} RETURNING *`
         const values = [
           chatId,
-          user_info.phoneNumber,
+          cleanPhone,
           firstName,
           lastName,
           email_,
@@ -162,7 +163,7 @@ async function createOrUpdateUserIntoDb(chatId, user_info) {
         "organization_id": 1,
         "updated_by_id": 1,
         "login": chatId,
-        "phone": user_info.phoneNumber,
+        "phone": cleanPhone,
         "firstname": firstName,
         "lastname": lastName,
         "email": email_,
