@@ -10,9 +10,14 @@ async function findUserById(ID) {
     if (!/^\d{1,12}$/.test(ID)) return null
     let data = null
     let cleanedId = ID.replace(/\D/g, '')
-    if (cleanedId < -2147483648) {
-      console.log(`Error findUserById: ${cleanedId} is belong ti the groupID`)
-      return null
+    const INT32_MAX = 2147483647
+    // ⚠️ Telegram ID может превышать INT32_MAX (2.1 млрд), что вызывает ошибку БД
+    // Решение: если ID превышает INT32_MAX, ищем только по login (не по id)
+    if (cleanedId < -2147483648 || cleanedId > INT32_MAX) {
+      console.log(`Warning findUserById: ${cleanedId} exceeds 32-bit integer range, searching by login only`)
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [ID], false, true)
+      console.log(`findUserByLogin (large ID): ${data?.[0]?.login} (found ${data?.length || 0} results)`)
+      return data?.[0] || null
     }
 
     if (ID.length < 7) {
@@ -56,7 +61,14 @@ async function findOwnerById(owner_id) {
     if (!/^\d{1,12}$/.test(owner_id)) return null
     let data = null
     let cleanedId = owner_id.replace(/\D/g, '')
-    data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
+    const INT32_MAX = 2147483647
+    // ⚠️ Защита от overflow при больших ID (аналогично findUserById)
+    if (cleanedId > INT32_MAX) {
+      console.log(`Warning findOwnerById: ${cleanedId} exceeds 32-bit integer range, searching by login only`)
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND login = $1', [owner_id])
+    } else {
+      data = await execPgQuery('SELECT * FROM users WHERE active=true AND id = $1', [cleanedId])
+    }
     return data
   } catch (error) {
     console.error('Error in findOwnerById:', error)
