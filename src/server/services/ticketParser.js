@@ -1,5 +1,6 @@
 const logger = require('../utils/logger')
 const logMessages = require('../data/logMessages')
+const { detectTopic, isSpecificTopic } = require('./topicDetector')
 
 class TicketParser {
   constructor() {
@@ -275,17 +276,33 @@ class TicketParser {
   }
 
   /**
-   * Generate title from text
-   * @param {string} text - full text
-   * @returns {string} - generated title
+   * Generate ticket title using two-pass topic detection:
+   *   PASS 1 — PROPER_NOUNS.json (abbreviations, brand names, narrow terms)
+   *   PASS 2 — TRIGGERS.csv keyword scoring
+   * Falls back to user-provided subject (if meaningful) or truncated text.
+   * @param {string} text    - full body text (transcribed or typed)
+   * @param {string} subject - optional subject line provided by user
+   * @returns {string} - capitalised title
    */
   generateTitle(text, subject) {
-    let title = text.trim()
-    if (subject.length > 6) {
-      title = subject.trim()
-      return title.charAt(0).toUpperCase() + title.slice(1)
+    // Combine subject + body so topic detection uses full context
+    const combined = [subject, text].filter(Boolean).join(' ').trim()
+
+    // PASS 1 + 2: try to detect a specific topic
+    const detectedTopic = detectTopic(combined)
+    if (isSpecificTopic(detectedTopic)) {
+      logger.debug(`generateTitle: detected topic="${detectedTopic}"`)
+      return detectedTopic
     }
 
+    // Fallback 1: use explicit subject if meaningful
+    if (subject && subject.trim().length > 6) {
+      const s = subject.trim()
+      return s.charAt(0).toUpperCase() + s.slice(1)
+    }
+
+    // Fallback 2: truncate body text
+    let title = text.trim()
     if (title.length > 50) {
       const sentenceEnd = title.search(/[.!?]\s/)
       if (sentenceEnd > 10 && sentenceEnd < 50) {

@@ -6,7 +6,7 @@ const messages = require('../data/messages')
 const logMessages = require('../data/logMessages')
 const serviceErrors = require('../data/serviceErrors')
 const ticketParser = require('./ticketParser')
-const postAiCorrections = require('../data/postAiCorrections')
+const postAiCorrections = require('./postAiCorrections')
 const buildQwenRequest = require('../data/ai-requests').buildQwenRequest
 require('dotenv').config()
 
