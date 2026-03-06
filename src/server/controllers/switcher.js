@@ -164,9 +164,10 @@ async function handler(bot, msg, webAppUrl) {
 			globalBuffer[chatId].TicketCreated = false
 			await ticketRegistration(bot, msg, selectedByUser[chatId],true)
 			if (globalBuffer[chatId]?.TicketCreated) {
-				selectedByUser[chatId] = {}
 				globalBuffer[chatId].TicketCreated = false
 			}
+			selectedByUser[chatId] = {}
+      await registeredUserMenu(bot, msg, false)
 			break
 		case "5_6":
       const newSubject = await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
