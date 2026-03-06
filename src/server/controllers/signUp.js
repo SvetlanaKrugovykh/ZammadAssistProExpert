@@ -82,7 +82,11 @@ async function usersTextInput(bot, msg, menuItem, selectedByUser) {
       selectedByUser = { ...selectedByUser, userEmail: txtCommand }
     } else if (menuItem === '0_11') {
       if (txtCommand.length < 5) {
-        await bot.sendMessage(msg.chat.id, 'Незрозуміле введення <b>Прізвища та ім`я</b>. Операцію скасовано\n', { parse_mode: 'HTML' })
+        await bot.sendMessage(
+					msg.chat.id,
+					"📍Незрозуміле введення <b>Прізвища та ім`я</b>. Операцію скасовано\n",
+					{ parse_mode: "HTML" },
+				)
         return selectedByUser
       }
       await bot.sendMessage(msg.chat.id, 'Поверніться до меню та оберіть <b>Ввести номер телефону</b>\n', { parse_mode: 'HTML' })

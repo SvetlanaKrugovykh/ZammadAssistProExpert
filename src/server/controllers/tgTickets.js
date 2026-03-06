@@ -65,18 +65,30 @@ async function ticketUpdateScene(bot, msg, ticketID = '') {
 async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   try {
     if (menuItem === '5_2') {
-      bot.sendMessage(
-				msg.chat.id,
-				"🔖 Опишіть Вашу проблему текстом, або затисніть 🎙️(мікрофон) і надиктуйте голосом.",
-				{ parse_mode: "HTML" },
-			)
+        bot.sendMessage(
+          msg.chat.id,
+          "🔖 Опишіть Вашу проблему текстом, або затисніть 🎙️(мікрофон) і надиктуйте голосом.",
+          {
+            parse_mode: "HTML",
+            reply_markup: {
+              keyboard: [[{ text: "↩️" }]],
+              resize_keyboard: true,
+              one_time_keyboard: true,
+            },
+          },
+        )
     }
     let inputLenghth = 7
     if (msg?.text.includes('оментар')) inputLenghth = 2
     const txtCommand = await inputLineScene(bot, msg)
 
     if (!txtCommand || txtCommand.length < inputLenghth) {
-      await bot.sendMessage(msg.chat.id, 'Незрозуміле введення. Операцію скасовано\n', { parse_mode: 'HTML' })
+      await bot.sendMessage(
+				msg.chat.id,
+				"📍Незрозуміле введення. Операцію скасовано\n",
+				{ parse_mode: "HTML" },
+			)
+      selectedByUser = { ...selectedByUser, ticketBody: null }
       return selectedByUser
     }
     if (menuItem === '5_1') {

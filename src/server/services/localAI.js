@@ -158,7 +158,7 @@ class LocalAIService {
       if (!validation.isValid) {
         logger.warn(`Ticket validation failed for user ${clientId}: ${validation.reason}`)
         bot.sendMessage(clientId, `📍 ${validation.reason}`, {parse_mode: "HTML",})
-        return
+        return null
       }
 
       const ticket = ticketParser.parseTicket(textResult, topicResult, clientId)

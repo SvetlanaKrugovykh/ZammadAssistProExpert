@@ -136,7 +136,11 @@ async function clientsAdminResponseToRequest(bot, msg) {
   await bot.sendMessage(msg.chat.id, commandHtmlText, { parse_mode: 'HTML' })
   const txtCommand = await inputLineScene(bot, msg)
   if (txtCommand.length < 7) {
-    await bot.sendMessage(msg.chat.id, 'Незрозуміла відповідь. Операцію скасовано\n', { parse_mode: 'HTML' })
+    await bot.sendMessage(
+			msg.chat.id,
+			"📍Незрозуміла відповідь. Операцію скасовано\n",
+			{ parse_mode: "HTML" },
+		)
     return null
   }
   const txtCommandForSend = 'id#' + codeChat + 'id#' + txtCommand
