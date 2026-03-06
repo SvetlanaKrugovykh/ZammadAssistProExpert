@@ -64,6 +64,13 @@ async function ticketUpdateScene(bot, msg, ticketID = '') {
 
 async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   try {
+    if (menuItem === '5_2') {
+      bot.sendMessage(
+				msg.chat.id,
+				"🔖 Опишіть Вашу проблему текстом, або затисніть 🎙️(мікрофон) і надиктуйте голосом.",
+				{ parse_mode: "HTML" },
+			)
+    }
     let inputLenghth = 7
     if (msg?.text.includes('оментар')) inputLenghth = 2
     const txtCommand = await inputLineScene(bot, msg)

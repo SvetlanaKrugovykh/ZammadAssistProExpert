@@ -8,6 +8,7 @@ const serviceErrors = require('../data/serviceErrors')
 const ticketParser = require('./ticketParser')
 const postAiCorrections = require('./postAiCorrections')
 const buildQwenRequest = require('../data/ai-requests').buildQwenRequest
+const { bot } = require('../globalBuffer')
 require('dotenv').config()
 
 function deduplicateSentences(text) {
@@ -156,6 +157,7 @@ class LocalAIService {
       const validation = ticketParser.validateTicketContent(textResult)
       if (!validation.isValid) {
         logger.warn(`Ticket validation failed for user ${clientId}: ${validation.reason}`)
+        bot.sendMessage(clientId, `📍 ${validation.reason}`, {parse_mode: "HTML",})
         return
       }
 
