@@ -225,7 +225,7 @@ class LocalAIService {
   /**
    * Helper method for speech to text with debug info
    */
-  async speechToTextWithDebug(voiceFilePath, clientId, segmentNumber) {
+  async speechToTextWithDebug(voiceFilePath, clientId, segmentNumber, includeWords = false) {
     try {
       console.log('DEBUG: speechToTextWithDebug called for client:', clientId)
       logger.info(logMessages.processing.speechToText(clientId, segmentNumber))
@@ -233,6 +233,7 @@ class LocalAIService {
       const formData = new FormData()
       formData.append('clientId', clientId)
       formData.append('segment_number', segmentNumber.toString())
+      formData.append("include_words", includeWords ? "true" : "false")
       formData.append('file', fs.createReadStream(voiceFilePath))
 
       const response = await axios.post(this.speechToTextUrl, formData, {
