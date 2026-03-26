@@ -120,7 +120,7 @@ const buttonsConfig = {
 		title: "Оберіть, будь ласка, дію",
 		options: [{ resize_keyboard: true }],
 		buttons: [
-			[{ text: "🔵 Ввести текст відправлення", callback_data: "5_2" }],
+			[{ text: "🔵 Ввести текст відправлення", callback_data: "5_7" }],
 			// [{ text: '🏢 Додати картинку до відправлення (1 клік = 1 картинка!)', callback_data: '5_5' }],
 			[{ text: "🧷 Додати файл до відправлення", callback_data: "5_3" }],
 			[{ text: "✉  Відправити повідомлення", callback_data: "15_4" }],
