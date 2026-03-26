@@ -66,10 +66,16 @@ module.exports.messageCreateScene = async function (bot, msg) {
   }
 }
 
+
 module.exports.messageSender = async function (bot, msg, selectedByUser) {
+  let chatId
   try {
-    const chatId = msg.chat.id
+    chatId = msg.chat.id
     const selectedSubdivisions = globalBuffer[chatId]?.selectedSubdivisions
+    if (!Array.isArray(selectedSubdivisions)) {
+      await bot.sendMessage(chatId, 'Для можливості відправки повідомлення оберіть підрозділ(и)')
+      return false
+    }
     const modifiedSubdivisions = selectedSubdivisions.map(subdivision => subdivision.replace('63_', ''))
 
     if (globalBuffer[chatId]?.selectedCustomers === undefined
@@ -208,7 +214,10 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
 
   } catch (err) {
     console.error('Критична помилка в messageSender:', err)
-    await bot.sendMessage(chatId, 'Виникла критична помилка під час розсилки. Перевірте логи.')
+    const safeChatId = chatId || msg?.chat?.id
+    if (safeChatId) {
+      await bot.sendMessage(safeChatId, 'Виникла критична помилка під час розсилки. Перевірте логи.')
+    }
   }
 }
 

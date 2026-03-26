@@ -257,7 +257,8 @@ async function handler(bot, msg, webAppUrl) {
 			await createListOfCustomers(bot, msg, "selection")
 			break
 		case "19_3":
-			await findCustomers(bot, msg)
+			selected_ = await findCustomers(bot, msg)
+      if (selected_) globalBuffer[chatId] = { ...globalBuffer[chatId], ...selected_ }
 			break
 		case "19_4":
 			await messageCreateScene(bot, msg)
