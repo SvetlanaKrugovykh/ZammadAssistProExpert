@@ -124,19 +124,26 @@ async function handler(bot, msg, webAppUrl) {
 		case "5_2":
 			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
 			if (selected_) selectedByUser[chatId] = selected_
-      if (!selectedByUser[chatId].ticketBody) break
-      const processedData = await processText(selectedByUser[chatId].ticketBody, chatId)
+			if (!selectedByUser[chatId].ticketBody) break
+			const processedData = await processText(
+				selectedByUser[chatId].ticketBody,
+				chatId,
+			)
 			if (processedData) {
 				selectedByUser[chatId].ticketBody = processedData.ticket?.description
-				selectedByUser[chatId].ticketTitle = processedData.ticket?.title || selectedByUser[chatId].ticketTitle
-				if ((selectedByUser[chatId].ticketBody === '📌 Зареєструвати заявку') 
-					|| !selectedByUser[chatId].ticketBody || selectedByUser[chatId].ticketBody.trim() === '') {
+				selectedByUser[chatId].ticketTitle =
+					processedData.ticket?.title || selectedByUser[chatId].ticketTitle
+				if (
+					selectedByUser[chatId].ticketBody === "📌 Зареєструвати заявку" ||
+					!selectedByUser[chatId].ticketBody ||
+					selectedByUser[chatId].ticketBody.trim() === ""
+				) {
 					break
 				}
 				const msg_text = `📝 Ваш запит:\n<b>${selectedByUser[chatId].ticketBody}</b>\n\n📌 Тема звернення:\n<b>${selectedByUser[chatId].ticketTitle}</b> 💬`
-				await bot.sendMessage(msg.chat.id, msg_text, {  parse_mode: 'HTML' })
-        await ticketCreateScene(bot, msg)
-			} 
+				await bot.sendMessage(msg.chat.id, msg_text, { parse_mode: "HTML" })
+				await ticketCreateScene(bot, msg)
+			}
 			break
 		case "5_3":
 			selected_ = await askForAttachment(bot, msg, selectedByUser[chatId])
@@ -162,16 +169,29 @@ async function handler(bot, msg, webAppUrl) {
 			break
 		case "5_4":
 			globalBuffer[chatId].TicketCreated = false
-			await ticketRegistration(bot, msg, selectedByUser[chatId],true)
+			await ticketRegistration(bot, msg, selectedByUser[chatId], true)
 			if (globalBuffer[chatId]?.TicketCreated) {
 				globalBuffer[chatId].TicketCreated = false
 			}
 			selectedByUser[chatId] = {}
-      await registeredUserMenu(bot, msg, false)
+			await registeredUserMenu(bot, msg, false)
 			break
 		case "5_6":
-      const newSubject = await ticketSubjectEditor(bot, msg, data, selectedByUser[chatId])
-      if (newSubject) selectedByUser[chatId].ticketTitle = newSubject
+			const newSubject = await ticketSubjectEditor(
+				bot,
+				msg,
+				data,
+				selectedByUser[chatId],
+			)
+			if (newSubject) selectedByUser[chatId].ticketTitle = newSubject
+			break
+		case "5_7":
+			selected_ = await ticketsTextInput(bot, msg, data, selectedByUser[chatId])
+			if (!selected_?.messageBody) break
+			if (selected_) {
+				selectedByUser[chatId] = { ...selectedByUser[chatId], ...selected_ }
+			}
+			await messageCreateScene(bot, msg)
 			break
 		case "5_14":
 			globalBuffer[chatId].TicketUpdated = false
@@ -196,13 +216,6 @@ async function handler(bot, msg, webAppUrl) {
 		case "9_1":
 			await chooseGroups(bot, msg)
 			await checkReadyForReport(bot, msg)
-			break
-		case "19_1":
-			globalBuffer[chatId].selectionSubdivisionFlag = false
-			await chooseSubdivisionsFromList(bot, msg)
-			break
-		case "19_4":
-			messageCreateScene(bot, msg)
 			break
 		case "15_4":
 			await messageSender(bot, msg, selectedByUser[chatId])
@@ -236,11 +249,18 @@ async function handler(bot, msg, webAppUrl) {
 		case "11_2":
 			await getNetReport(bot, msg, "week")
 			break
+		case "19_1":
+			globalBuffer[chatId].selectionSubdivisionFlag = false
+			await chooseSubdivisionsFromList(bot, msg)
+			break
 		case "19_2":
 			await createListOfCustomers(bot, msg, "selection")
 			break
 		case "19_3":
 			await findCustomers(bot, msg)
+			break
+		case "19_4":
+			await messageCreateScene(bot, msg)
 			break
 		case "19_5":
 			await createListOfCustomers(bot, msg, "finalize")

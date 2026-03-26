@@ -90,7 +90,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
     }
     globalBuffer[chatId].selectedCustomers = [...new Set(globalBuffer[chatId].selectedCustomers)]
 
-    if (!selectedByUser?.ticketBody || selectedByUser?.ticketBody.includes('🔵 Ввести текст відправлення')) {
+    if (!selectedByUser?.messageBody || selectedByUser?.messageBody.includes('🔵 Ввести текст відправлення')) {
       await bot.sendMessage(chatId, 'Не заповнен текст відправлення. Операцію скасовано\n', { parse_mode: 'HTML' })
       return false
     }
@@ -118,7 +118,7 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
 
       if (user && user.login && String(user.login).trim() !== '' && !isNaN(user.login)) {
         try {
-          await bot.sendMessage(user.login, selectedByUser?.ticketBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
+          await bot.sendMessage(user.login, selectedByUser?.messageBody || '🔵 Відправлення:', { parse_mode: 'HTML' })
           console.log(`✅ Повідомлення відправлено користувачу: ${user.login}`)
 
           // Send success notification to sender

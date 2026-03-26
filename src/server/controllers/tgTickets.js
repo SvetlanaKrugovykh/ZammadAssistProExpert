@@ -64,7 +64,7 @@ async function ticketUpdateScene(bot, msg, ticketID = '') {
 
 async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
   try {
-    if (menuItem === '5_2') {
+    if (menuItem === '5_2' || menuItem === '5_7') {
         bot.sendMessage(
           msg.chat.id,
           "🔖 Опишіть Вашу проблему текстом, або затисніть 🎙️(мікрофон) і надиктуйте голосом.",
@@ -91,11 +91,13 @@ async function ticketsTextInput(bot, msg, menuItem, selectedByUser) {
       selectedByUser = { ...selectedByUser, ticketBody: null }
       return selectedByUser
     }
-    if (menuItem === '5_1') {
-      selectedByUser = { ...selectedByUser, ticketTitle: txtCommand }
-    } else if (menuItem === '5_2') {
-      selectedByUser = { ...selectedByUser, ticketBody: txtCommand }
-    }
+    if (menuItem === "5_1") {
+			selectedByUser = { ...selectedByUser, ticketTitle: txtCommand }
+		} else if (menuItem === "5_2") {
+			selectedByUser = { ...selectedByUser, ticketBody: txtCommand }
+		} else if (menuItem === "5_7") {
+			selectedByUser = { ...selectedByUser, messageBody: txtCommand }
+		}
     return selectedByUser
   } catch (err) {
     console.log(err)
