@@ -3,6 +3,7 @@ const { globalBuffer } = require('../globalBuffer')
 const { execPgQuery } = require('../db/common')
 const { findUserById } = require('../db/tgUsersService')
 const { getCombinedData } = require('../services/getCombinedData.service')
+const { sendMail } = require('../modules/sendMail')
 const fs = require('fs')
 require('dotenv').config()
 
@@ -155,6 +156,19 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
           await bot.sendMessage(chatId, `❌ Не відправлено: ${userInfo} - ${errorReason}`)
           await new Promise(resolve => setTimeout(resolve, 500)) // Delay after error notification
 
+          errorCount++
+        }
+      } else if (user && user.email && user.email.includes('@')) {
+        try {
+          await sendMail(user.email, selectedByUser?.messageBody || '🔵 Відправлення:', user)
+          console.log(`📧 Email відправлено користувачу: ${user.email}`)
+          await bot.sendMessage(chatId, `📧 Email відправлено: ${userInfo}`)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          successCount++
+        } catch (mailError) {
+          console.error(`❌ Помилка відправки email ${user.email}:`, mailError.message)
+          await bot.sendMessage(chatId, `❌ Не відправлено email: ${userInfo} - технічна помилка`)
+          await new Promise(resolve => setTimeout(resolve, 500))
           errorCount++
         }
       } else {
