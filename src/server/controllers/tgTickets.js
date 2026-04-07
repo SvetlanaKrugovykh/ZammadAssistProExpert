@@ -173,7 +173,8 @@ async function ticketRegistration(bot, msg, selectedByUser,isFromSwitcher = fals
       }
     }
 
-    await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
+    // await bot.sendMessage(msg.chat.id, `Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки в системі: ${ticket.id}. Номер для користувача: ${ticket.number}`)
+    await bot.sendMessage(msg.chat.id,`Дякую, Ваша заявка на тему ${subject} зареєстрована. Номер заявки : ${ticket.number}`, { parse_mode: 'HTML' })
     globalBuffer[msg.chat.id].ticketCreated = true
   } catch (err) {
     console.log(err)
