@@ -35,7 +35,7 @@ async function sendMail(to, messageBody, user = {}) {
   `;
 
   await transporter.sendMail({
-    from: process.env.SMTP_FROM || 'Service Desk LotOk bot <noreply@lotok.com>',
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to,
     subject: 'Service Desk LotOk bot: Повідомлення',
     html
