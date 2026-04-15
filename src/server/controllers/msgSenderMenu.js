@@ -160,7 +160,12 @@ module.exports.messageSender = async function (bot, msg, selectedByUser) {
         }
       } else if (user && user.email && user.email.includes('@')) {
         try {
-          await sendMail(user.email, selectedByUser?.messageBody || '🔵 Відправлення:', user)
+          await sendMail(
+            user.email,
+            selectedByUser?.messageBody || '🔵 Відправлення:',
+            user,
+            selectedByUser?.ticketAttachmentFileNames || []
+          )
           console.log(`📧 Email відправлено користувачу: ${user.email}`)
           await bot.sendMessage(chatId, `📧 Email відправлено: ${userInfo}`)
           await new Promise(resolve => setTimeout(resolve, 500))

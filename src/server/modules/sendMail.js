@@ -6,9 +6,10 @@ require('dotenv').config();
  * @param {string} to - Recipient email
  * @param {string} messageBody - Main message body (plain text)
  * @param {object} user - User object (for name)
+ * @param {string[]} [ticketAttachmentFileNames] - Array of attachment file names (relative to a known folder)
  * @returns {Promise<void>}
  */
-async function sendMail(to, messageBody, user = {}) {
+async function sendMail(to, messageBody, user = {}, ticketAttachmentFileNames = []) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
@@ -27,18 +28,30 @@ async function sendMail(to, messageBody, user = {}) {
         <div style="margin: 24px 0; padding: 16px; background: #f0f4fa; border-radius: 6px;">
           <div style="font-size: 16px; color: #333;">${messageBody}</div>
         </div>
-        <p style="font-size: 15px; color: #444;">За логікою боту, краще отримувати мої повідомлення в Telegram, а не на email.<br>
-        <b>Прохання</b>: зареєструйте у базі даних свій Telegram ID, або продовжуйте отримувати email, якщо Вам так зручніше.<br>
+        <p style="font-size: 15px; color: #444;"><br>
         <br>З повагою,<br>Service Desk LotOk bot</p>
       </div>
     </div>
   `;
 
+  // Prepare attachments if any
+  let attachments = [];
+  if (Array.isArray(ticketAttachmentFileNames) && ticketAttachmentFileNames.length > 0) {
+    // Use DOWNLOAD_APP_PATH from .env for attachment directory
+    const path = require('path');
+    const baseDir = process.env.DOWNLOAD_APP_PATH
+    attachments = ticketAttachmentFileNames.map(filename => ({
+      filename,
+      path: path.join(baseDir, filename)
+    }));
+  }
+
   await transporter.sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to,
     subject: 'Service Desk LotOk bot: Повідомлення',
-    html
+    html,
+    attachments: attachments.length > 0 ? attachments : undefined
   });
 }
 
