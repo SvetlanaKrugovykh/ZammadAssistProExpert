@@ -7,7 +7,7 @@ const { execPgQuery } = require('../db/common')
  */
 async function wasNotificationSent(ticket_id, notification_type = 'newPriorityTask') {
   const res = await execPgQuery(
-    'SELECT 1 FROM ticket_notifications WHERE ticket_id = $1 AND notification_type = $2',
+    'SELECT 1 FROM ticket_email_notifications WHERE ticket_id = $1 AND notification_type = $2',
     [ticket_id, notification_type],
     false,
     true
@@ -20,7 +20,7 @@ async function wasNotificationSent(ticket_id, notification_type = 'newPriorityTa
  */
 async function saveNotification(ticket_id, notification_type = 'newPriorityTask') {
   await execPgQuery(
-    'INSERT INTO ticket_notifications (ticket_id, notification_type, sent_at) VALUES ($1, $2, NOW())',
+    'INSERT INTO ticket_email_notifications (ticket_id, notification_type, sent_at) VALUES ($1, $2, NOW())',
     [ticket_id, notification_type],
     false,
     true

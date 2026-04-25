@@ -41,6 +41,13 @@ const tableQueries = {
   'ticket_notifications': `
     CREATE TABLE ticket_notifications (
       id SERIAL PRIMARY KEY,
+      ticket_id INT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+      notification_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+  'ticket_email_notifications': `
+    CREATE TABLE ticket_email_notifications (
+      id SERIAL PRIMARY KEY,
       notification_type VARCHAR(64) NOT NULL,
       ticket_id INT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
       sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
