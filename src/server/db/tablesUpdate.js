@@ -13,7 +13,7 @@ const pool = new Pool({
   port: process.env.ZAMMAD_DB_PORT,
 })
 
-const tableNames = ['ticket_updates', 'subdivisions', 'ticket_notifications']
+const tableNames = ['ticket_updates', 'subdivisions', 'ticket_notifications', 'ticket_email_notifications']
 
 const tableQueries = {
   'ticket_updates': `
