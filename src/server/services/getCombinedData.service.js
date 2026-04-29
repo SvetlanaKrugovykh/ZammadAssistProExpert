@@ -7,9 +7,16 @@ module.exports.getCombinedData = async function (chatId, modifiedSubdivisions, s
   if (!globalBuffer[chatId]?.selectedCustomers) globalBuffer[chatId].selectedCustomers = []
 
   if (!globalBuffer[chatId]?.selectionSubdivisionFlag) {
-    data = await execPgQuery(`SELECT * FROM users WHERE active=true AND departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
-    if (selectedSubdivisions.includes("63_28"))
-      data_shops = await execPgQuery(`SELECT * FROM users WHERE active=true AND email LIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
+    // 63_97 = Всім, 63_98 = Офіс
+    if (selectedSubdivisions.includes("63_97")) {
+      data = await execPgQuery(`SELECT * FROM users WHERE active=true`, [], false, true) || []
+    } else if (selectedSubdivisions.includes("63_98")) {
+      data = await execPgQuery(`SELECT * FROM users WHERE active=true AND email NOT ILIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true) || []
+    } else {
+      data = await execPgQuery(`SELECT * FROM users WHERE active=true AND departments = ANY($1)`, [modifiedSubdivisions], false, true) || []
+      if (selectedSubdivisions.includes("63_28"))
+        data_shops = await execPgQuery(`SELECT * FROM users WHERE active=true AND email ILIKE $1`, ['lotok%.uprav@lotok.in.ua'], false, true)
+    }
   }
 
   if (action === 'selection') {
