@@ -25,7 +25,7 @@ module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
   const data = await getSubdivisions()
   const chatId = msg.chat.id
 
-  if (!data && data.length === 0) {
+  if (!data || data.length === 0) {
     await bot.sendMessage(msg.chat.id, 'На жаль, на даний момент немає доступних підрозділів.')
     return
   }
@@ -35,12 +35,19 @@ module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
   globalBuffer[chatId].selectedSubdivisions = []
   globalBuffer[msg.chat.id].SubdivisionsCounter = 0
 
+  // Добавляем "Всім" и "Офіс" первыми
+  const specialButtons = [
+    [{ text: '🤽🏿‍♂️ Всім', callback_data: '63_97' }],
+    [{ text: '🤽🏿‍♂️ Офіс', callback_data: '63_98' }]
+  ]
+  const subdivisionButtons = data.map(subdivision => [
+    { text: `🤽🏿‍♂️ ${subdivision.subdivision_name} `, callback_data: `63_${subdivision.id}` }
+  ])
+
   const subdivisionsButtons = {
     title: 'Оберіть, будь ласка, підрозділ(и):',
     options: [{ resize_keyboard: true }],
-    buttons: data.map(subdivision => [
-      { text: `🤽🏿‍♂️ ${subdivision.subdivision_name} `, callback_data: `63_${subdivision.id}` }
-    ])
+    buttons: [...specialButtons, ...subdivisionButtons]
   }
   await bot.sendMessage(msg.chat.id, subdivisionsButtons.title, {
     reply_markup: {
@@ -49,6 +56,7 @@ module.exports.chooseSubdivisionsFromList = async function (bot, msg) {
     }
   })
 }
+
 module.exports.messageCreateScene = async function (bot, msg) {
   try {
     if (globalBuffer[msg.chat.id]?.selectedCustomers === undefined) {
