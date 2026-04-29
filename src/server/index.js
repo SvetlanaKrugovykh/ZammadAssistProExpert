@@ -73,14 +73,23 @@ bot.on('callback_query', async (callbackQuery) => {
     if (callbackQuery.data.startsWith('63_')) {
       globalBuffer[chatId].selectionFlag = false
       const selectedSubdivision = callbackQuery.data
-      selectedSubdivisions.push(selectedSubdivision)
-      globalBuffer[chatId].selectedSubdivisions = selectedSubdivisions
-      console.log(`1_selectedSubdivisions for  ${chatId} is ${globalBuffer[chatId]?.selectedSubdivisions}`)
-      const Subdivisions = await execPgQuery(`SELECT * FROM subdivisions`, [], false, true)
-      const Subdivision = Subdivisions.find(g => g.id === Number(selectedSubdivision.replace('63_', '')))
-      console.log(`[${chatId}-${messageId}].Обрано: ${selectedSubdivision}`)
-      let SubdivisionName = Subdivision ? Subdivision.subdivision_name : id
-      await bot.sendMessage(chatId, `Обрано: ${SubdivisionName}`)
+      // Если выбрано "Всім" (63_97) или "Офіс" (63_98), сбрасываем остальные и оставляем только выбранное
+      if (selectedSubdivision === '63_97') {
+        globalBuffer[chatId].selectedSubdivisions = ['63_97']
+        await bot.sendMessage(chatId, `Обрано: Всім`)
+      } else if (selectedSubdivision === '63_98') {
+        globalBuffer[chatId].selectedSubdivisions = ['63_98']
+        await bot.sendMessage(chatId, `Обрано: Офіс`)
+      } else {
+        selectedSubdivisions.push(selectedSubdivision)
+        globalBuffer[chatId].selectedSubdivisions = selectedSubdivisions
+        console.log(`1_selectedSubdivisions for  ${chatId} is ${globalBuffer[chatId]?.selectedSubdivisions}`)
+        const Subdivisions = await execPgQuery(`SELECT * FROM subdivisions`, [], false, true)
+        const Subdivision = Subdivisions.find(g => g.id === Number(selectedSubdivision.replace('63_', '')))
+        console.log(`[${chatId}-${messageId}].Обрано: ${selectedSubdivision}`)
+        let SubdivisionName = Subdivision ? Subdivision.subdivision_name : id
+        await bot.sendMessage(chatId, `Обрано: ${SubdivisionName}`)
+      }
     }
 
     if (callbackQuery.data.startsWith('73_')) {
