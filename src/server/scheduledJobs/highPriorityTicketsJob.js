@@ -19,7 +19,7 @@ async function checkHighPriorityTickets() {
       let eventType = 'created'
       if (ticket.owner_id) {
         notifyUsers = await execPgQuery(
-          `SELECT * FROM users WHERE id = $1`,
+          `SELECT * FROM users WHERE id = $1 AND active = true`,
           [ticket.owner_id], false, true
         )
       } else if (ticket.group_id === 10) {
