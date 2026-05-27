@@ -56,6 +56,7 @@ const tableQueries = {
 }
 
 
+
 module.exports.updateTables = function () {
   const promises = tableNames.map(tableName => new Promise((resolve, reject) => {
     pool.query(
@@ -74,8 +75,52 @@ module.exports.updateTables = function () {
         if (!tableExists) {
           createTable(tableName).then(resolve).catch(reject)
         } else {
-          console.log(`Table ${tableName} already exists.`)
-          resolve()
+          // Миграции для ticket_email_notifications
+          if (tableName === 'ticket_email_notifications') {
+            console.log('[MIGRATION] Проверка/добавление user_id...')
+            const p1 = new Promise((res, rej) => {
+              pool.query(`ALTER TABLE ticket_email_notifications ADD COLUMN IF NOT EXISTS user_id INT`, err => {
+                if (err) {
+                  console.error('[MIGRATION] add user_id failed', err)
+                  rej(err)
+                } else {
+                  console.log('[MIGRATION] user_id: OK')
+                  res()
+                }
+              })
+            })
+            console.log('[MIGRATION] Проверка/добавление event_type...')
+            const p2 = new Promise((res, rej) => {
+              pool.query(`ALTER TABLE ticket_email_notifications ADD COLUMN IF NOT EXISTS event_type VARCHAR(32)`, err => {
+                if (err) {
+                  console.error('[MIGRATION] add event_type failed', err)
+                  rej(err)
+                } else {
+                  console.log('[MIGRATION] event_type: OK')
+                  res()
+                }
+              })
+            })
+            console.log('[MIGRATION] Проверка/создание уникального индекса...')
+            const p3 = new Promise((res, rej) => {
+              pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_ticket_email_notifications_unique ON ticket_email_notifications (ticket_id, user_id, event_type)`, err => {
+                if (err) {
+                  console.error('[MIGRATION] add unique index failed', err)
+                  rej(err)
+                } else {
+                  console.log('[MIGRATION] unique index: OK')
+                  res()
+                }
+              })
+            })
+            Promise.all([p1, p2, p3]).then(() => {
+              console.log(`Table ${tableName} already exists and migrations applied.`)
+              resolve()
+            }).catch(reject)
+          } else {
+            console.log(`Table ${tableName} already exists.`)
+            resolve()
+          }
         }
       }
     )

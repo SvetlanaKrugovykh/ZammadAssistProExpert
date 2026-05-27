@@ -5,10 +5,14 @@ const { execPgQuery } = require('../db/common')
 /**
  * Проверяет, были ли уже отправлены уведомления по тикету
  */
-async function wasNotificationSent(ticket_id, notification_type = 'newPriorityTask') {
+
+/**
+ * Проверяет, было ли уже отправлено уведомление по тикету, пользователю и событию
+ */
+async function wasNotificationSent(ticket_id, user_id, event_type = 'created') {
   const res = await execPgQuery(
-    'SELECT 1 FROM ticket_email_notifications WHERE ticket_id = $1 AND notification_type = $2',
-    [ticket_id, notification_type],
+    'SELECT 1 FROM ticket_email_notifications WHERE ticket_id = $1 AND user_id = $2 AND event_type = $3',
+    [ticket_id, user_id, event_type],
     false,
     true
   )
@@ -18,10 +22,14 @@ async function wasNotificationSent(ticket_id, notification_type = 'newPriorityTa
 /**
  * Сохраняет факт отправки уведомления
  */
-async function saveNotification(ticket_id, notification_type = 'newPriorityTask') {
+
+/**
+ * Сохраняет факт отправки уведомления по тикету, пользователю и событию
+ */
+async function saveNotification(ticket_id, user_id, event_type = 'created') {
   await execPgQuery(
-    'INSERT INTO ticket_email_notifications (ticket_id, notification_type, sent_at) VALUES ($1, $2, NOW())',
-    [ticket_id, notification_type],
+    'INSERT INTO ticket_email_notifications (ticket_id, user_id, event_type, sent_at) VALUES ($1, $2, $3, NOW())',
+    [ticket_id, user_id, event_type],
     false,
     true
   )
@@ -30,7 +38,13 @@ async function saveNotification(ticket_id, notification_type = 'newPriorityTask'
 /**
  * Отправляет email всем участникам группы о новом тикете с высоким приоритетом
  */
-async function notifyAboutHighPriorityTicket(ticket, groupUsers) {
+/**
+ * Универсальная функция уведомления: email и Telegram owner'у (если есть), иначе всем из отдела
+ * @param {object} ticket - тикет
+ * @param {object[]} groupUsers - пользователи отдела
+ * @param {object|null} owner - объект пользователя-владельца или null
+ */
+async function notifyAboutHighPriorityTicket(ticket, groupUsers, owner) {
   const ticketUrl = `https://service-desk.lotok.ua/#ticket/zoom/${ticket.id}`
   const subject = 'Важливе завдання з максимальним пріоритетом!'
   const htmlBody = `
@@ -51,16 +65,43 @@ async function notifyAboutHighPriorityTicket(ticket, groupUsers) {
       </div>
     </div>
   `
-  for (const user of groupUsers) {
-    if (!user.email) continue
-    try {
-      await sendMail(user.email, htmlBody, user)
-      console.log(`[emailTicketsNotification] Email sent to ${user.email} for ticket ${ticket.id}`)
-    } catch (e) {
-      console.log(`[emailTicketsNotification] Error sending email to ${user.email}:`, e)
+    const tgText = `Важливе завдання з максимальним пріоритетом!
+  Заявка №${ticket.id}
+  ${ticket.title ? 'Тема: ' + ticket.title + '\n' : ''}Посилання: ${ticketUrl}`
+
+    // Кого уведомлять: owner или всех из отдела
+    let notifyUsers = []
+    if (owner && owner.id) {
+      notifyUsers = [owner]
+    } else {
+      notifyUsers = groupUsers
     }
-  }
+
+    for (const user of notifyUsers) {
+      // Email
+      if (user.email) {
+        try {
+          await sendMail(user.email, htmlBody, user)
+          console.log(`[emailTicketsNotification] Email sent to ${user.email} for ticket ${ticket.id}`)
+        } catch (e) {
+          console.log(`[emailTicketsNotification] Error sending email to ${user.email}:`, e)
+        }
+      }
+      // Telegram
+      if (user.login && /^\d+$/.test(user.login)) {
+        try {
+          await bot.sendMessage(user.login, tgText)
+          console.log(`[emailTicketsNotification] Telegram sent to ${user.login} for ticket ${ticket.id}`)
+        } catch (e) {
+          console.log(`[emailTicketsNotification] Error sending Telegram to ${user.login}:`, e)
+        }
+      }
+    }
+
 }
+
+// Получить Telegram bot
+const { bot } = require('../globalBuffer')
 
 module.exports = {
   wasNotificationSent,
