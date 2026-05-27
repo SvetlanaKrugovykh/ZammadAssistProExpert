@@ -27,9 +27,10 @@ async function wasNotificationSent(ticket_id, user_id, event_type = 'created') {
  * Сохраняет факт отправки уведомления по тикету, пользователю и событию
  */
 async function saveNotification(ticket_id, user_id, event_type = 'created') {
+  // notification_type = event_type (или 'created' по умолчанию)
   await execPgQuery(
-    'INSERT INTO ticket_email_notifications (ticket_id, user_id, event_type, sent_at) VALUES ($1, $2, $3, NOW())',
-    [ticket_id, user_id, event_type],
+    'INSERT INTO ticket_email_notifications (ticket_id, user_id, event_type, notification_type, sent_at) VALUES ($1, $2, $3, $4, NOW())',
+    [ticket_id, user_id, event_type, event_type],
     false,
     true
   )
