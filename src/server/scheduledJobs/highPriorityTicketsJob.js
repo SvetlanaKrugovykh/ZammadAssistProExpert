@@ -43,7 +43,6 @@ async function processTicket(ticket) {
 }
 
 async function processOwnerTicket(ticket) {
-	// Перевіряємо snapshot: чи змінився owner або це перший раз
 	const snapshot = await execPgQuery(
 		`SELECT owner_id FROM ticket_owner_snapshots WHERE ticket_id = $1`,
 		[ticket.id],
@@ -54,19 +53,7 @@ async function processOwnerTicket(ticket) {
 	const prevOwnerId = snapshot.length > 0 ? snapshot[0].owner_id : null
 	const isNewAssignment = prevOwnerId !== ticket.owner_id
 
-	if (!isNewAssignment) {
-		return // owner не змінився — не відправляємо повторно
-	}
-
-	// Оновлюємо snapshot
-	await execPgQuery(
-		`INSERT INTO ticket_owner_snapshots (ticket_id, owner_id, updated_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (ticket_id) DO UPDATE SET owner_id = $2, updated_at = NOW()`,
-		[ticket.id, ticket.owner_id],
-		false,
-		true,
-	)
+	if (!isNewAssignment) return
 
 	const users = await execPgQuery(
 		`SELECT * FROM users WHERE id = $1 AND active = true`,
@@ -76,7 +63,7 @@ async function processOwnerTicket(ticket) {
 	)
 
 	for (const user of users) {
-		const eventType = `assigned_to_${ticket.owner_id}` // унікально на кожну "сесію"
+		const eventType = `assigned_to_${ticket.owner_id}`
 		const alreadySent = await wasNotificationSent(ticket.id, user.id, eventType)
 		if (alreadySent) continue
 
@@ -86,6 +73,16 @@ async function processOwnerTicket(ticket) {
 			`[highPriorityTicketsJob] Notified owner user ${user.id} for ticket ${ticket.id}`,
 		)
 	}
+
+	// Оновлюємо snapshot тільки після успішної відправки
+	await execPgQuery(
+		`INSERT INTO ticket_owner_snapshots (ticket_id, owner_id, updated_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (ticket_id) DO UPDATE SET owner_id = $2, updated_at = NOW()`,
+		[ticket.id, ticket.owner_id],
+		false,
+		true,
+	)
 }
 
 async function processGroupTicket(ticket) {
