@@ -13,10 +13,16 @@ const pool = new Pool({
   port: process.env.ZAMMAD_DB_PORT,
 })
 
-const tableNames = ['ticket_updates', 'subdivisions', 'ticket_notifications', 'ticket_email_notifications']
+const tableNames = [
+	"ticket_updates",
+	"subdivisions",
+	"ticket_notifications",
+	"ticket_email_notifications",
+	"ticket_owner_snapshots",
+]
 
 const tableQueries = {
-  'ticket_updates': `
+	ticket_updates: `
     CREATE TABLE ticket_updates (
       id SERIAL PRIMARY KEY,
       ticket_id INTEGER,
@@ -31,28 +37,34 @@ const tableQueries = {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
-  'subdivisions': `
+	subdivisions: `
     CREATE TABLE subdivisions (
       id SERIAL PRIMARY KEY,
       subdivision_name VARCHAR,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
-  'ticket_notifications': `
+	ticket_notifications: `
     CREATE TABLE ticket_notifications (
       id SERIAL PRIMARY KEY,
       ticket_id INT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
       notification_date DATE NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
-  'ticket_email_notifications': `
+	ticket_email_notifications: `
     CREATE TABLE ticket_email_notifications (
       id SERIAL PRIMARY KEY,
       notification_type VARCHAR(64) NOT NULL,
       ticket_id INT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
       sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`
+    )`,
+	ticket_owner_snapshots: `
+    CREATE TABLE ticket_owner_snapshots (
+      ticket_id  INT PRIMARY KEY,
+      owner_id   INT,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
 }
 
 
