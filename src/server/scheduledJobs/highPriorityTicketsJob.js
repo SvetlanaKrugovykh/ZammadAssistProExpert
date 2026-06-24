@@ -24,7 +24,14 @@ async function checkHighPriorityTickets() {
 		)
 
 		for (const ticket of tickets) {
-			await processTicket(ticket)
+			try {
+				await processTicket(ticket)
+			} catch (e) {
+				console.error(
+					`[highPriorityTicketsJob] Error processing ticket ${ticket.id}:`,
+					e,
+				)
+			}
 		}
 
 		console.log("[highPriorityTicketsJob] Done")
@@ -39,7 +46,6 @@ async function processTicket(ticket) {
 	} else if (ticket.group_id) {
 		await processGroupTicket(ticket)
 	}
-	// якщо немає ні owner, ні group — ігноруємо
 }
 
 async function processOwnerTicket(ticket) {
@@ -74,7 +80,6 @@ async function processOwnerTicket(ticket) {
 		)
 	}
 
-	// Оновлюємо snapshot тільки після успішної відправки
 	await execPgQuery(
 		`INSERT INTO ticket_owner_snapshots (ticket_id, owner_id, updated_at)
      VALUES ($1, $2, NOW())
@@ -86,13 +91,11 @@ async function processOwnerTicket(ticket) {
 }
 
 async function processGroupTicket(ticket) {
-	// Перша лінія підтримки — не сповіщаємо
 	if (ticket.group_id === FIRST_LINE_GROUP_ID) return
 
 	let notifyUsers = []
 
 	if (ticket.group_id === MONTAGE_GROUP_ID) {
-		// Відділ монтажників — тільки Біляєв
 		notifyUsers = await execPgQuery(
 			`SELECT * FROM users WHERE id = $1`,
 			[BILIAYEV_USER_ID],
@@ -100,7 +103,6 @@ async function processGroupTicket(ticket) {
 			true,
 		)
 	} else {
-		// Всі активні в групі
 		notifyUsers = await execPgQuery(
 			`SELECT u.* FROM groups_users gu
        JOIN users u ON gu.user_id = u.id
