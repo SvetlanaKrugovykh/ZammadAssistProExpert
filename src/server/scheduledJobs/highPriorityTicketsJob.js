@@ -23,7 +23,7 @@ async function checkHighPriorityTickets() {
 			true,
 		)
 
-		for (const ticket of tickets) {
+		for (const ticket of tickets || []) {
 			try {
 				await processTicket(ticket)
 			} catch (e) {
@@ -56,7 +56,7 @@ async function processOwnerTicket(ticket) {
 		true,
 	)
 
-	const prevOwnerId = snapshot.length > 0 ? snapshot[0].owner_id : null
+	const prevOwnerId = snapshot?.length > 0 ? snapshot[0].owner_id : null
 	const isNewAssignment = prevOwnerId !== ticket.owner_id
 
 	if (!isNewAssignment) return
@@ -68,7 +68,7 @@ async function processOwnerTicket(ticket) {
 		true,
 	)
 
-	for (const user of users) {
+	for (const user of users || []) {
 		const eventType = `assigned_to_${ticket.owner_id}`
 		const alreadySent = await wasNotificationSent(ticket.id, user.id, eventType)
 		if (alreadySent) continue
@@ -115,7 +115,7 @@ async function processGroupTicket(ticket) {
 
 	const eventType = "group_created"
 
-	for (const user of notifyUsers) {
+	for (const user of notifyUsers || []) {
 		const alreadySent = await wasNotificationSent(ticket.id, user.id, eventType)
 		if (alreadySent) continue
 
