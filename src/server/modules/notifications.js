@@ -5,6 +5,8 @@ const { execPgQuery } = require('../db/common')
 const { getTicketData, ticketRemoveFromMenu, usersStarterMenu } = require('../modules/common')
 const { fDateTime, pendingTimeInIntervalMin } = require('../services/various')
 
+const FIRST_LINE_GROUP_ID = 1
+
 async function showTicketInfo(bot, msg, isRequest = false) {
   try {
     const ticketID = msg.text.match(/\d+/)?.[0]
@@ -95,17 +97,28 @@ async function ticketReturn(bot, msg) {
     "type": "note",
     "internal": false
   }
-  const { title, group_id, priority_id, state_id, pending_time, customer_id } = body
-  
-  const newTicketBody = { title, group_id, priority_id, state_id, pending_time, customer_id, article }
+  const { title, priority_id, state_id, pending_time, customer_id } = body
+  const newTicketBody = {
+    title,
+    group_id: FIRST_LINE_GROUP_ID,
+    priority_id,
+    state_id,
+    pending_time,
+    customer_id,
+    owner_id: null,
+    article
+  }
 
-  newTicketBody.state_id = 1
+  newTicketBody.state_id = 2
   newTicketBody.article = article
   newTicketBody.pending_time = null
-  newTicketBody.customer_id = null
 
   const updatedTicket = await update_ticket(ticketID, newTicketBody, [], true, msg.chat.id)
-  if (updatedTicket) console.log(`Update ticket to ticketReturn: ${ticketID}`)
+  if (!updatedTicket) {
+    await bot.sendMessage(msg.chat.id, `Не вдалося повернути заявку №_${ticketID} на доопрацювання. Будь ласка, спробуйте пізніше або зверніться до підтримки.`)
+    return null
+  }
+  console.log(`Update ticket to ticketReturn: ${ticketID}`)
   const ticket_body = await getTicketData(ticketID)
   saveChangesToTicket(ticketID, ticket_body, 'повернуто')
   ticketRemoveFromMenu(ticketID)
